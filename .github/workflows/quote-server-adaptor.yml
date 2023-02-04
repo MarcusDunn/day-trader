@@ -17,6 +17,7 @@ jobs:
     outputs:
       quoteserveradaptor: ${{ steps.filter.outputs.quoteserveradaptor }}
     steps:
+      - uses: actions/checkout@v2
       - uses: dorny/paths-filter@v2
         id: filter
         with:
