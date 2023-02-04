@@ -36,12 +36,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --all -- --check
+          args: --manifest-path quote-server-adaptor/Cargo.toml --all -- --check
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: --manifest-path quote-server-adaptor/Cargo.toml -- -D warnings
   test:
     name: Tests
     needs: changes
@@ -55,4 +55,4 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          command: test
+          command: --manifest-path quote-server-adaptor/Cargo.toml test
