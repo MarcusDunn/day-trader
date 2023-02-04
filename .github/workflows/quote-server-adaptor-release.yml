@@ -33,6 +33,7 @@ jobs:
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .
+          file: quote-server-adaptor.Dockerfile
           push: true
           tags: |
             docker.pkg.github.com/${{ env.IMAGE_REPOSITORY }}/quote-server-adaptor:${{ github.sha }}
