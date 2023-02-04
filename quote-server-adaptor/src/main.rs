@@ -20,10 +20,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let socket_handler = tokio::spawn(async move {
         let addr = env::var("QUOTE_SERVER_URI")
-            .expect("QUOTE_SERVER_URI environment variable should be set");
+            .expect("QUOTE_SERVER_URI environment variable should be set.");
         let (reader, mut writer) = TcpStream::connect(&addr)
             .await
-            .expect("The passed in quote server URI should be possible to connect to")
+            .expect("The passed in quote server URI should be possible to connect to.")
             .into_split();
         println!("connected to {addr}");
 
@@ -33,12 +33,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let (send, respond) = tcp_handler_recv
                 .recv()
                 .await
-                .expect("The send side of the tcp_handler should never be closed");
+                .expect("The send side of the tcp_handler should never be closed.");
 
             match respond.send(get_response(&mut writer, &mut reader, send).await) {
                 Ok(()) => {}
                 Err(err) => {
-                    println!("failed to send {err:?} to oneshot channel")
+                    println!("Failed to send {err:?} to oneshot channel.")
                 }
             };
         }
@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     Err(err.into())
                 },
                 Ok(()) => {
-                    Err("socket handler exited successfully.".into())
+                    Err("Socket handler exited successfully. (It should never exit)".into())
                 },
             }
         }
@@ -65,7 +65,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     Err(err.into())
                 }
                 Ok(()) => {
-                    Err("server exited successfully.".into())
+                    Err("Server exited successfully.".into())
                 }
             }
         }
@@ -82,12 +82,12 @@ where
     R: AsyncBufRead + Unpin,
 {
     if (writer.write_all(message.as_bytes()).await).is_err() {
-        return Err("failed to write to socket");
+        return Err("Failed to write to socket.");
     }
 
     let mut line = String::new();
     if (reader.read_line(&mut line).await).is_err() {
-        return Err("failed to read from socket");
+        return Err("Failed to read from socket.");
     }
     Ok(line)
 }
@@ -147,25 +147,25 @@ fn response_from_quote_server_string(line: &str) -> Result<QuoteResponse, &'stat
     let response = QuoteResponse {
         quote: returned
             .next()
-            .ok_or("invalid response from quote server (missing quote)")?
+            .ok_or("Invalid response from quote server. (Missing quote)")?
             .parse()
-            .map_err(|_| "invalid response from quote server (invalid quote)")?,
+            .map_err(|_| "Invalid response from quote server. (Invalid quote)")?,
         sym: returned
             .next()
-            .ok_or("invalid response from quote server (missing sym)")?
+            .ok_or("Invalid response from quote server. (Missing sym)")?
             .to_string(),
         user_id: returned
             .next()
-            .ok_or("invalid response from quote server (missing user_id)")?
+            .ok_or("Invalid response from quote server. (Missing user_id)")?
             .to_string(),
         timestamp: returned
             .next()
-            .ok_or("invalid response from quote server (missing timestamp)")?
+            .ok_or("Invalid response from quote server. (Missing timestamp)")?
             .parse()
-            .map_err(|_| "invalid response from quote server (invalid timestamp)")?,
+            .map_err(|_| "Invalid response from quote server. (Invalid timestamp)")?,
         crypto_key: returned
             .next()
-            .ok_or("invalid response from quote server (missing crypto_key)")?
+            .ok_or("Invalid response from quote server. (Missing crypto_key)")?
             .to_string(),
     };
     Ok(response)
