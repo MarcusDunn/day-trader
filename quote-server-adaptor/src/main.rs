@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     Err(err.into())
                 },
                 Ok(()) => {
-                    Err("Socket handler exited successfully.".into())
+                    Err("Socket handler exited successfully. (It should never exit)".into())
                 },
             }
         }
