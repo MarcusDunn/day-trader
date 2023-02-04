@@ -4,6 +4,7 @@
 This is an implementation of a scalable day trading application for UVic's Scalable Systems offering (SENG 468).
 
 ```mermaid
+ graph TD
     WebBrowser[Web Browser]
     NextServer[Next Server]
     CLI[CLI + Load Tester]
