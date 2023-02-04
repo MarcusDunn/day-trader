@@ -24,6 +24,7 @@ jobs:
           filters: |
             quoteserveradaptor:
               - 'quote-server-adaptor/**'
+              - 'protos/**'
   lints:
     name: Lints
     needs: changes
