@@ -4,7 +4,6 @@
 This is an implementation of a scalable day trading application for UVic's Scalable Systems offering (SENG 468).
 
 ```mermaid
-graph TD
     WebBrowser[Web Browser]
     NextServer[Next Server]
     CLI[CLI + Load Tester]
@@ -28,7 +27,7 @@ graph TD
     DistributionServer --> |audit requests| AuditService
     DistributionServer <-->|gRPC calls| QSA
     TransactionServer --> |processed events| LogIngest
-    DB --> |user data| DistributionServer
-    DistributionServer --> |updates and queries| DB
+    DB --> |user data| TransactionServer
+    TransactionServer --> |updates and queries| DB
     QSA <-->|TCP socket| UQS
 ```
