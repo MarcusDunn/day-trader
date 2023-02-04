@@ -77,9 +77,9 @@ async fn get_response<W, R>(
     reader: &mut R,
     message: String,
 ) -> Result<String, &'static str>
-    where
-        W: AsyncWrite + Unpin,
-        R: AsyncBufRead + Unpin,
+where
+    W: AsyncWrite + Unpin,
+    R: AsyncBufRead + Unpin,
 {
     if (writer.write_all(message.as_bytes()).await).is_err() {
         return Err("Failed to write to socket.");
@@ -198,12 +198,12 @@ mod tests {
         let response = Quoter {
             tcp_handler_send: send,
         }
-            .quote(Request::new(QuoteRequest {
-                user_id: "marcus".to_string(),
-                stock_symbol: "TSLA".to_string(),
-            }))
-            .await
-            .unwrap();
+        .quote(Request::new(QuoteRequest {
+            user_id: "marcus".to_string(),
+            stock_symbol: "TSLA".to_string(),
+        }))
+        .await
+        .unwrap();
 
         assert_eq!(
             QuoteResponse {
