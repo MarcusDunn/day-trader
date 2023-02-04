@@ -5,20 +5,30 @@ This is an implementation of a scalable day trading application for UVic's Scala
 
 ```mermaid
 graph TD
-    A[Web Browser] -->|requests| B
-    B -->|html + js + css| A
-    B[Next Server] <-->|gRPC calls| C
-    L[CLI + Load Tester] <--> |gRPC calls| C
-    C[Distribution Server] <--> |gRPC calls| D
-    C --> |calls recived events| E
-    LogDB[Log Database] -->|normalized logs| F
-    E[Log Ingest] --> |normalized events| LogDB
-    F[Audit Service] -->|formatted logs| C
-    C --> |audit requests| F
-    D[Transaction Server] <-->|gRPC calls| QSA
-    D --> |processed events| E
-    DB[Postgres Database] --> |user data| D
-    D --> |updates and queries| DB
+    WebBrowser[Web Browser]
+    NextServer[Next Server]
+    CLI[CLI + Load Tester]
+    DistributionServer[Distribution Server]
+    LogDB[Log Database]
+    LogIngest[Log Ingest]
+    AuditService[Audit Service]
+    TransactionServer[Transaction Server]
+    DB[Postgres Database]
     UQS[Uvic Quote Server]
-    QSA[Quote Server Adaptor] <-->|TCP socket| UQS
+    QSA[Quote Server Adaptor]
+    WebBrowser -->|requests| NextServer
+    NextServer -->|html + js + css| WebBrowser
+    NextServer <-->|gRPC calls| DistributionServer
+    CLI <--> |gRPC calls| DistributionServer
+    DistributionServer <--> |gRPC calls| TransactionServer
+    DistributionServer --> |calls recived events| LogIngest
+    LogDB -->|normalized logs| AuditService
+    LogIngest --> |normalized events| LogDB
+    AuditService -->|formatted logs| DistributionServer
+    DistributionServer --> |audit requests| AuditService
+    DistributionServer <-->|gRPC calls| QSA
+    TransactionServer --> |processed events| LogIngest
+    DB --> |user data| DistributionServer
+    DistributionServer --> |updates and queries| DB
+    QSA <-->|TCP socket| UQS
 ```
