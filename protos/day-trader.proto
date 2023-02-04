@@ -1,0 +1,148 @@
+syntax = "proto3";
+package day_trader;
+
+service Quote {
+  // Get the current quote for the stock for the specified user
+  rpc Quote(QuoteRequest) returns (QuoteResponse);
+}
+
+service Log {
+  // Print out the history of the users transactions to the user specified file
+  rpc DumplogUser(DumplogUserRequest) returns (DumplogUserResponse);
+  // Print out to the specified file the complete set of transactions that have occurred in the system.
+  rpc Dumplog(DumplogRequest) returns (DumplogResponse);
+  // Provides a summary to the client of the given user's transaction history and the current status of their accounts as well as any set buy or sell triggers and their parameters
+  rpc DisplaySummary(DisplaySummaryRequest) returns (DisplaySummaryResponse);
+}
+
+service Transaction {
+  // Add the given amount of money to the user's account
+  rpc Add(AddRequest) returns (AddResponse);
+  // Buy the dollar amount of the stock for the specified user at the current price.
+  rpc Buy(BuyRequest) returns (BuyResponse);
+  // Commits the most recently executed BUY command
+  rpc CommitBuy(CommitBuyRequest) returns (CommitBuyResponse);
+  // Cancels the most recently executed BUY Command
+  rpc CancelBuy(CancelBuyRequest) returns (CancelBuyResponse);
+  // Sell the specified dollar mount of the stock currently held by the specified user at the current price.
+  rpc Sell(SellRequest) returns (SellResponse);
+  // Commits the most recently executed SELL command
+  rpc CommitSell(CommitSellRequest) returns (CommitSellResponse);
+  // Cancels the most recently executed SELL Command
+  rpc CancelSell(CancelSellRequest) returns (CancelSellResponse);
+}
+
+service Trigger {
+  // Sets a defined amount of the given stock to buy when the current stock price is less than or equal to the BUY_TRIGGER
+  rpc SetBuyAmount(SetBuyAmountRequest) returns (SetBuyAmountResponse);
+  // Cancels a SET_BUY command issued for the given stock
+  rpc CancelSetBuy(CancelSetBuyRequest) returns (CancelSetBuyResponse);
+  // Sets the trigger point base on the current stock price when any SET_BUY will execute.
+  rpc SetBuyTrigger(SetBuyTriggerRequest) returns (SetBuyTriggerResponse);
+  // Sets a defined amount of the specified stock to sell when the current stock price is equal or greater than the sell trigger point
+  rpc SetSellAmount(SetSellAmountRequest) returns (SetSellAmountResponse);
+  // Sets the stock price trigger point for executing any SET_SELL triggers associated with the given stock and user
+  rpc SetSellTrigger(SetSellTriggerRequest) returns (SetSellTriggerResponse);
+  // Cancels the SET_SELL associated with the given stock and user
+  rpc CancelSetSell(CancelSetSellRequest) returns (CancelSetSellResponse);
+}
+
+message AddRequest {
+  string user_id = 1;;
+  float amount = 2;
+}
+
+message AddResponse {}
+
+message QuoteRequest {
+  string user_id = 1;;
+  string stock_symbol = 2;
+}
+
+message QuoteResponse {
+  float quote = 1;
+  string sym = 2;
+  string user_id = 3;
+  int32 timestamp = 4;
+  string crypto_key = 5;
+}
+
+message BuyRequest {
+  string user_id = 1;;
+  string stock_symbol = 2;
+  float amount = 3;
+}
+
+message BuyResponse {}
+
+message CommitBuyRequest{
+  string user_id = 1;;
+}
+
+message CommitBuyResponse {}
+
+message CancelBuyRequest {string user_id = 1;}
+message  CancelBuyResponse {}
+
+message SellRequest {
+  string user_id = 1;;
+  string stock_symbol = 2;
+  float amount = 3;
+}
+message SellResponse {}
+
+message CommitSellRequest {
+  string user_id = 1;
+}
+message  CommitSellResponse {}
+message CancelSellRequest {
+  string user_id = 1;
+}
+message  CancelSellResponse {}
+message SetBuyAmountRequest {
+  string user_id = 1;
+  string stock_symbol = 2;
+  float amount = 3;
+}
+message  SetBuyAmountResponse {}
+message CancelSetBuyRequest {
+  string user_id = 1;
+  string stock_symbol = 2;
+}
+message  CancelSetBuyResponse {}
+message SetBuyTriggerRequest {
+  string user_id = 1;
+  string stock_symbol = 2;
+  float amount = 3;
+}
+message  SetBuyTriggerResponse {}
+message SetSellAmountRequest {
+  string user_id = 1;
+  string stock_symbol = 2;
+  float amount = 3;
+}
+message  SetSellAmountResponse {}
+message SetSellTriggerRequest {
+  string user_id = 1;
+  string stock_symbol = 2;
+  float amount = 3;
+}
+message  SetSellTriggerResponse {}
+message CancelSetSellRequest {
+  string user_id = 1;
+  string stock_symbol = 2;
+}
+message  CancelSetSellResponse {}
+message DumplogUserRequest  {
+  string user_id = 1;
+  string filename = 2;
+}
+message  DumplogUserResponse {}
+message DumplogRequest {
+  string filename = 1;
+}
+message  DumplogResponse {}
+message DisplaySummaryRequest {
+  string user_id = 1;
+}
+message  DisplaySummaryResponse {}

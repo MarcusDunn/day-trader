@@ -1,0 +1,12 @@
+[package]
+name = "quote-server-adaptor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.25.0", features = ["io-util", "rt-multi-thread", "macros", "net", "sync"] }
+tonic = "0.8.3"
+prost = "0.11.6"
+
+[build-dependencies]
+tonic-build = "0.8.4"

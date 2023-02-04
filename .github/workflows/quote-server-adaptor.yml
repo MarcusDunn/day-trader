@@ -1,0 +1,54 @@
+on: [push, pull_request]
+name: Clippy check
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      quoteserveradaptor: ${{ steps.filter.outputs.quoteserveradaptor }}
+    steps:
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            quoteserveradaptor:
+              - 'quote-server-adaptor/**'
+lints:
+  name: Lints
+  needs: changes
+  if: ${{ needs.changes.outputs.quoteserveradaptor == 'true' }}
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v2
+    - name: Install stable toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+        components: rustfmt, clippy
+    - name: Run cargo fmt
+      uses: actions-rs/cargo@v1
+      with:
+        command: fmt
+        args: --all -- --check
+    - name: Run cargo clippy
+      uses: actions-rs/cargo@v1
+      with:
+        command: clippy
+        args: -- -D warnings
+  test:
+    name: Tests
+    needs: changes
+    if: ${{ needs.changes.outputs.quoteserveradaptor == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
