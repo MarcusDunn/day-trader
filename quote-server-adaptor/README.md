@@ -12,7 +12,7 @@ e.g. `quoteserver.seng.uvic.ca:4000`. It will serve requests from port 5000.
 The server opens a single TCP stream to the provided quote server. gRPC requests are marshalled into an appropriate
 message and sent to the quote server. The response from the quote server is than marshalled into a gRPC response and
 sent as a response. Synchronization is done through a multiple producer single consumer channel, where the single
-consumer owns the TCP stream and responds via a passed in oneshot sender.
+consumer owns the TCP stream and responds via a passed in send end of an oneshot channel.
 
 ## Future Plans
 
