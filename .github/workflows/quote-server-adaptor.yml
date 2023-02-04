@@ -55,4 +55,4 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          command: --manifest-path quote-server-adaptor/Cargo.toml test
+          command: test --manifest-path quote-server-adaptor/Cargo.toml
