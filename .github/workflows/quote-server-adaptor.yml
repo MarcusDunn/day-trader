@@ -17,7 +17,7 @@ jobs:
     outputs:
       quoteserveradaptor: ${{ steps.filter.outputs.quoteserveradaptor }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: dorny/paths-filter@v2
         id: filter
         with:
@@ -31,7 +31,7 @@ jobs:
     if: ${{ needs.changes.outputs.quoteserveradaptor == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
