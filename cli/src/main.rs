@@ -9,24 +9,6 @@ use tonic::transport::{Channel, Uri};
 use cli::command::LoadTestCommand;
 use cli::services::DayTraderServicesStack;
 
-#[derive(clap::Parser, Debug, PartialEq)]
-#[command(author, version, about, long_about = None)]
-struct CliArgs {
-    /// The uri of the gRPC services.
-    #[arg(default_value_t = String::from("http://localhost:5000"))]
-    services_uri: String,
-    #[command(subcommand)]
-    command: CliCommand,
-}
-
-#[derive(clap::Subcommand, Clone, Debug, PartialEq)]
-enum CliCommand {
-    #[command(flatten)]
-    Single(LoadTestCommand),
-    /// Run a load test file.
-    File { file: PathBuf },
-}
-
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     let args = CliArgs::parse();
@@ -45,6 +27,24 @@ async fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
+#[derive(clap::Parser, Debug, PartialEq)]
+#[command(author, version, about, long_about = None)]
+struct CliArgs {
+    /// The uri of the gRPC services.
+    #[arg(default_value_t = String::from("http://localhost:5000"))]
+    services_uri: String,
+    #[command(subcommand)]
+    command: CliCommand,
+}
+
+#[derive(clap::Subcommand, Clone, Debug, PartialEq)]
+enum CliCommand {
+    #[command(flatten)]
+    Single(LoadTestCommand),
+    /// Run a load test file.
+    File { file: PathBuf },
+}
+
 async fn join_all(mut join_set: JoinSet<()>) -> Result<(), anyhow::Error> {
     let start = SystemTime::now();
     let mut count = 0;
@@ -57,10 +57,7 @@ async fn join_all(mut join_set: JoinSet<()>) -> Result<(), anyhow::Error> {
     let elapsed_millis = start.elapsed()?.as_millis();
     let requests_per_milli = count as f64 / elapsed_millis as f64;
     let requests_per_second = requests_per_milli * 1000.0;
-    println!(
-        "Received {} commands in {}ms ({}rps)",
-        count, elapsed_millis, requests_per_second
-    );
+    println!("Received {count} commands in {elapsed_millis}ms ({requests_per_second}rps)");
     Ok(())
 }
 
@@ -82,10 +79,7 @@ fn spawn_commands(
     let elapsed_millis = start.elapsed()?.as_millis();
     let requests_per_milli = len as f64 / elapsed_millis as f64;
     let requests_per_second = requests_per_milli * 1000.0;
-    println!(
-        "Sent {} commands in {}ms, ({}rps)",
-        len, elapsed_millis, requests_per_second
-    );
+    println!("Sent {len} commands in {elapsed_millis}ms, ({requests_per_second}rps)");
     Ok(join_set)
 }
 
@@ -114,10 +108,8 @@ fn parse_commands_from_file(file: &Path) -> Result<Vec<LoadTestCommand>, anyhow:
     let bytes_per_ms = metadata(file)?.len() as f64 / millis as f64;
     let mb_per_s = bytes_per_ms / 1000.0;
     println!(
-        "Parsed {} commands in {}ms ({} mb/s)",
-        commands.len(),
-        millis,
-        mb_per_s
+        "Parsed {} commands in {millis}ms ({mb_per_s} mb/s)",
+        commands.len()
     );
     Ok(commands)
 }
