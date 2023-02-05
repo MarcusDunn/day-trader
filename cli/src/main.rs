@@ -34,9 +34,7 @@ enum CliCommand {
     #[command(flatten)]
     Single(LoadTestCommand),
     /// Run a load test file.
-    File {
-        file: PathBuf,
-    },
+    File { file: PathBuf },
 }
 
 #[tokio::main]
