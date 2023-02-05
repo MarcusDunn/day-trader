@@ -1,4 +1,4 @@
-use crate::CommandParseFailure::{FloatParseError, MissingArgs};
+use crate::CommandParseFailure::{FloatParseError, MissingArgs, TooManyArguments};
 use clap::Parser;
 use cli::log_client::LogClient;
 use cli::quote_client::QuoteClient;
@@ -7,16 +7,17 @@ use cli::trigger_client::TriggerClient;
 use cli::{
     AddRequest, BuyRequest, CancelBuyRequest, CancelSellRequest, CancelSetBuyRequest,
     CancelSetSellRequest, CommitBuyRequest, CommitSellRequest, DisplaySummaryRequest,
-    DumplogRequest, DumplogUserRequest, QuoteRequest, SellRequest, SetBuyAmountRequest,
+    DumpLogRequest, DumpLogUserRequest, QuoteRequest, SellRequest, SetBuyAmountRequest,
     SetBuyTriggerRequest, SetSellAmountRequest, SetSellTriggerRequest,
 };
-use std::fs::File;
+use std::fs::{metadata, File};
 use std::io::{BufRead, BufReader};
 use std::num::ParseFloatError;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::Split;
+use std::time::SystemTime;
 use tokio::task::JoinSet;
-use tonic::transport::Uri;
+use tonic::transport::{Channel, Uri};
 use tonic::{IntoRequest, Request, Status};
 
 #[derive(clap::Parser, Debug, PartialEq)]
@@ -41,49 +42,112 @@ enum CliCommand {
 async fn main() -> Result<(), anyhow::Error> {
     let args = CliArgs::parse();
 
-    let commands = match args.command {
-        CliCommand::File { file } => BufReader::new(File::open(file)?)
-            .lines()
-            .map(|line| line.map_err(|err| anyhow::anyhow!(err)))
-            .map(|line| {
-                line.and_then(|line| {
-                    LoadTestCommand::try_from(line.trim()).map_err(|err| anyhow::anyhow!(err))
-                })
-            })
-            .collect::<Result<Vec<_>, _>>()?,
-        CliCommand::Single(single) => vec![single],
-    };
+    let commands = command_list_from_cli_command(&args.command)?;
 
-    let channel = tonic::transport::Channel::builder(Uri::try_from(args.services_uri)?)
+    let channel = Channel::builder(Uri::try_from(args.services_uri)?)
         .connect()
         .await?;
 
-    let stack = DayTraderServicesStack {
-        quote: QuoteClient::new(channel.clone()),
-        log: LogClient::new(channel.clone()),
-        transaction: TransactionClient::new(channel.clone()),
-        trigger: TriggerClient::new(channel),
-    };
+    let stack = DayTraderServicesStack::new(&channel);
 
-    let mut join_set = JoinSet::new();
-    for command in commands {
-        let stack = stack.clone();
-        join_set.spawn(async {
-            if let Err(err) = command.execute(stack).await {
-                println!("Error: {err}");
-            }
-        });
-    }
+    let join_set = spawn_commands(commands, stack)?;
+    join_all(join_set).await?;
 
     Ok(())
 }
 
+async fn join_all(mut join_set: JoinSet<()>) -> Result<(), anyhow::Error> {
+    let start = SystemTime::now();
+    let mut count = 0;
+    while let Some(result) = join_set.join_next().await {
+        count += 1;
+        if let Err(err) = result {
+            println!("Error joining task: {err}");
+        }
+    }
+    let elapsed_millis = start.elapsed()?.as_millis();
+    let requests_per_milli = count as f64 / elapsed_millis as f64;
+    let requests_per_second = requests_per_milli * 1000.0;
+    println!(
+        "Received {} commands in {}ms ({}rps)",
+        count, elapsed_millis, requests_per_second
+    );
+    Ok(())
+}
+
+fn spawn_commands(
+    commands: Vec<LoadTestCommand>,
+    stack: DayTraderServicesStack,
+) -> Result<JoinSet<()>, anyhow::Error> {
+    let len = commands.len();
+    let start = SystemTime::now();
+    let mut join_set = JoinSet::new();
+    for command in commands {
+        let mut stack = stack.clone();
+        join_set.spawn(async move {
+            if let Err(err) = command.execute(&mut stack).await {
+                println!("Error executing command: {err}");
+            }
+        });
+    }
+    let elapsed_millis = start.elapsed()?.as_millis();
+    let requests_per_milli = len as f64 / elapsed_millis as f64;
+    let requests_per_second = requests_per_milli * 1000.0;
+    println!(
+        "Sent {} commands in {}ms, ({}rps)",
+        len, elapsed_millis, requests_per_second
+    );
+    Ok(join_set)
+}
+
+fn command_list_from_cli_command(command: &CliCommand) -> Result<Vec<LoadTestCommand>, anyhow::Error> {
+    Ok(match command {
+        CliCommand::File { file } => parse_commands_from_file(file)?,
+        CliCommand::Single(single) => vec![single.clone()],
+    })
+}
+
+fn parse_commands_from_file(file: &Path) -> Result<Vec<LoadTestCommand>, anyhow::Error> {
+    let parse_start = SystemTime::now();
+    let commands = BufReader::new(File::open(file)?)
+        .lines()
+        .map(|line| line.map_err(|err| anyhow::anyhow!(err)))
+        .map(|line| {
+            line.and_then(|line| {
+                LoadTestCommand::try_from(line.trim()).map_err(|err| anyhow::anyhow!(err))
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let millis = parse_start.elapsed()?.as_millis();
+    let bytes_per_ms = metadata(file)?.len() as f64 / millis as f64;
+    let mb_per_s = bytes_per_ms / 1000.0;
+    println!(
+        "Parsed {} commands in {}ms ({} mb/s)",
+        commands.len(),
+        millis,
+        mb_per_s
+    );
+    Ok(commands)
+}
+
 #[derive(Clone)]
 struct DayTraderServicesStack {
-    quote: QuoteClient<tonic::transport::Channel>,
-    log: LogClient<tonic::transport::Channel>,
-    transaction: TransactionClient<tonic::transport::Channel>,
-    trigger: TriggerClient<tonic::transport::Channel>,
+    quote: QuoteClient<Channel>,
+    log: LogClient<Channel>,
+    transaction: TransactionClient<Channel>,
+    trigger: TriggerClient<Channel>,
+}
+
+impl DayTraderServicesStack {
+    fn new(channel: &Channel) -> Self {
+        Self {
+            quote: QuoteClient::new(channel.clone()),
+            log: LogClient::new(channel.clone()),
+            transaction: TransactionClient::new(channel.clone()),
+            trigger: TriggerClient::new(channel.clone()),
+        }
+    }
 }
 
 trait DayTraderCall {
@@ -124,13 +188,13 @@ enum LoadTestCommand {
     /// Provides a summary to the client of the given user's transaction history and the current status of their accounts as well as any set buy or sell triggers and their parameters
     DisplaySummary(LoadTestUserIdCommand),
     /// Print out to the specified file the complete set of transactions that have occurred in the system.
-    DumpLogFileName(LoadTestDumpLog),
+    DumpLogFileName(LoadTestDumpLogFileName),
     /// Print out the history of the users transactions to the user specified file
     DumpLogUser(LoadTestDumpLogUserIdFileName),
 }
 
 impl LoadTestCommand {
-    async fn execute(self, mut client: DayTraderServicesStack) -> Result<(), Status> {
+    async fn execute(self, client: &mut DayTraderServicesStack) -> Result<(), Status> {
         match self {
             LoadTestCommand::Add(add) => client.transaction.add(add).await.map(|ok| {
                 println!("{ok:?}");
@@ -205,7 +269,7 @@ impl LoadTestCommand {
                     println!("{ok:?}");
                 }),
             LoadTestCommand::DumpLogFileName(dump_log) => {
-                client.log.dumplog(dump_log).await.map(|ok| {
+                client.log.dump_log(dump_log).await.map(|ok| {
                     println!("{ok:?}");
                 })
             }
@@ -217,7 +281,7 @@ impl LoadTestCommand {
                     println!("{ok:?}");
                 }),
             LoadTestCommand::DumpLogUser(dump_log_user) => {
-                client.log.dumplog_user(dump_log_user).await.map(|ok| {
+                client.log.dump_log_user(dump_log_user).await.map(|ok| {
                     println!("{ok:?}");
                 })
             }
@@ -250,7 +314,7 @@ impl TryFrom<&str> for LoadTestCommand {
         let (_, rest) = value.split_once(' ').ok_or_else(|| MissingSpace {
             value: value.to_string(),
         })?;
-        let mut iter: Split<char> = rest.split(',');
+        let mut iter = rest.split(',');
         Ok(
             match iter.next().ok_or_else(|| MissingCommand {
                 value: value.to_string(),
@@ -318,13 +382,15 @@ impl TryFrom<&str> for LoadTestCommand {
                     }
                 }
                 "DUMPLOG" => {
-                    let cmd =
-                        LoadTestDumpLog::try_from(iter).map_err(|reason| CommandParseFailure {
-                            command: "DUMPLOG".to_string(),
-                            value: value.to_string(),
-                            reason,
-                        })?;
-                    DumpLogFileName(cmd)
+                    let cmd = DumpLog::try_from(iter).map_err(|reason| CommandParseFailure {
+                        command: "DUMPLOG".to_string(),
+                        value: value.to_string(),
+                        reason,
+                    })?;
+                    match cmd {
+                        DumpLog::User(user) => DumpLogUser(user),
+                        DumpLog::NoUser(no_user) => DumpLogFileName(no_user),
+                    }
                 }
                 command => {
                     return Err(UnknownCommand {
@@ -389,10 +455,11 @@ impl TryFrom<Split<'_, char>> for LoadTestUserIdStockSymbolCommand {
     type Error = CommandParseFailure;
 
     fn try_from(mut value: Split<'_, char>) -> Result<Self, Self::Error> {
-        Ok(Self {
+        let command = Self {
             user_id: value.user_id(0)?,
             stock_symbol: value.stock_symbol(1)?,
-        })
+        };
+        value.require_finished(2).map(|_| command)
     }
 }
 
@@ -467,11 +534,12 @@ impl TryFrom<Split<'_, char>> for LoadTestUserIdStockSymbolAmountCommand {
     type Error = CommandParseFailure;
 
     fn try_from(mut value: Split<'_, char>) -> Result<Self, Self::Error> {
-        Ok(Self {
+        let command = Self {
             user_id: value.user_id(0)?,
             stock_symbol: value.stock_symbol(1)?,
             amount: value.amount(2)?,
-        })
+        };
+        value.require_finished(3).map(|_| command)
     }
 }
 
@@ -484,9 +552,10 @@ impl TryFrom<Split<'_, char>> for LoadTestUserIdCommand {
     type Error = CommandParseFailure;
 
     fn try_from(mut value: Split<'_, char>) -> Result<Self, Self::Error> {
-        Ok(Self {
+        let command = LoadTestUserIdCommand {
             user_id: value.user_id(0)?,
-        })
+        };
+        value.require_finished(1).map(|_| command)
     }
 }
 
@@ -545,6 +614,7 @@ trait CommandParseIterExt {
     fn amount(&mut self, position: u8) -> Result<f32, CommandParseFailure>;
     fn stock_symbol(&mut self, position: u8) -> Result<String, CommandParseFailure>;
     fn file_name(&mut self, position: u8) -> Result<String, CommandParseFailure>;
+    fn require_finished(&mut self, expected_count: u8) -> Result<(), CommandParseFailure>;
 }
 
 impl CommandParseIterExt for Split<'_, char> {
@@ -588,6 +658,17 @@ impl CommandParseIterExt for Split<'_, char> {
     fn file_name(&mut self, position: u8) -> Result<String, CommandParseFailure> {
         self.get_next_str("file_name", position).map(str::to_string)
     }
+
+    fn require_finished(&mut self, expected_count: u8) -> Result<(), CommandParseFailure> {
+        if let Some(next) = self.next() {
+            Err(TooManyArguments {
+                expected_count,
+                unexpected_arg: next.to_string(),
+            })
+        } else {
+            Ok(())
+        }
+    }
 }
 
 #[derive(thiserror::Error, Debug, PartialEq)]
@@ -603,37 +684,70 @@ enum CommandParseFailure {
         value: String,
         error: ParseFloatError,
     },
+    #[error("too many arguments, expected {expected_count} but next was \"{unexpected_arg}\" instead of None")]
+    TooManyArguments {
+        expected_count: u8,
+        unexpected_arg: String,
+    },
 }
 
 impl TryFrom<Split<'_, char>> for LoadTestAdd {
     type Error = CommandParseFailure;
 
     fn try_from(mut value: Split<char>) -> Result<Self, Self::Error> {
-        Ok(LoadTestAdd {
+        let command = LoadTestAdd {
             user_id: value.user_id(0)?,
             amount: value.amount(1)?,
-        })
+        };
+        value.require_finished(2).map(|_| command)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+enum DumpLog {
+    User(LoadTestDumpLogUserIdFileName),
+    NoUser(LoadTestDumpLogFileName),
+}
+
+impl TryFrom<Split<'_, char>> for DumpLog {
+    type Error = CommandParseFailure;
+
+    fn try_from(mut value: Split<'_, char>) -> Result<Self, Self::Error> {
+        let arg1 = value
+            .get_next_str("user_id or filename (ambiguous)", 0)?
+            .to_string();
+        match value.next() {
+            None => Ok(DumpLog::NoUser(LoadTestDumpLogFileName { file_name: arg1 })),
+            Some(filename) => {
+                let command = DumpLog::User(LoadTestDumpLogUserIdFileName {
+                    user_id: arg1,
+                    file_name: filename.to_string(),
+                });
+                value.require_finished(2).map(|_| command)
+            }
+        }
     }
 }
 
 #[derive(Clone, Debug, clap::Args, PartialEq)]
-struct LoadTestDumpLog {
+struct LoadTestDumpLogFileName {
     file_name: String,
 }
 
-impl TryFrom<Split<'_, char>> for LoadTestDumpLog {
+impl TryFrom<Split<'_, char>> for LoadTestDumpLogFileName {
     type Error = CommandParseFailure;
 
     fn try_from(mut value: Split<char>) -> Result<Self, Self::Error> {
-        Ok(LoadTestDumpLog {
+        let dump_log = LoadTestDumpLogFileName {
             file_name: value.file_name(0)?,
-        })
+        };
+        value.require_finished(1).map(|_| dump_log)
     }
 }
 
-impl IntoRequest<DumplogRequest> for LoadTestDumpLog {
-    fn into_request(self) -> Request<DumplogRequest> {
-        Request::new(DumplogRequest {
+impl IntoRequest<DumpLogRequest> for LoadTestDumpLogFileName {
+    fn into_request(self) -> Request<DumpLogRequest> {
+        Request::new(DumpLogRequest {
             filename: self.file_name,
         })
     }
@@ -649,25 +763,26 @@ impl TryFrom<Split<'_, char>> for LoadTestDumpLogUserIdFileName {
     type Error = CommandParseFailure;
 
     fn try_from(mut value: Split<char>) -> Result<Self, Self::Error> {
-        Ok(LoadTestDumpLogUserIdFileName {
+        let command = LoadTestDumpLogUserIdFileName {
             user_id: value.user_id(0)?,
             file_name: value.file_name(1)?,
-        })
+        };
+        value.require_finished(2).map(|_| command)
     }
 }
 
-impl IntoRequest<DumplogUserRequest> for LoadTestDumpLogUserIdFileName {
-    fn into_request(self) -> Request<DumplogUserRequest> {
-        Request::new(DumplogUserRequest {
+impl IntoRequest<DumpLogUserRequest> for LoadTestDumpLogUserIdFileName {
+    fn into_request(self) -> Request<DumpLogUserRequest> {
+        Request::new(DumpLogUserRequest {
             user_id: self.user_id,
             filename: self.file_name,
         })
     }
 }
 
-impl IntoRequest<DumplogRequest> for LoadTestDumpLogUserIdFileName {
-    fn into_request(self) -> Request<DumplogRequest> {
-        Request::new(DumplogRequest {
+impl IntoRequest<DumpLogRequest> for LoadTestDumpLogUserIdFileName {
+    fn into_request(self) -> Request<DumpLogRequest> {
+        Request::new(DumpLogRequest {
             filename: self.file_name,
         })
     }
@@ -745,5 +860,35 @@ mod tests {
                 },
             })
         )
+    }
+
+    #[test]
+    fn check_can_parse_users_10() {
+        let path = PathBuf::from("workloads/10-user-workload");
+        let result = parse_commands_from_file(&path).unwrap();
+        assert_eq!(result.len(), 10000);
+    }
+
+    #[test]
+    fn parse_dump_log_file() {
+        assert_eq!(
+            Ok(LoadTestCommand::DumpLogFileName(LoadTestDumpLogFileName {
+                file_name: "abc.xml".to_string(),
+            })),
+            LoadTestCommand::try_from("[1] DUMPLOG,abc.xml")
+        );
+    }
+
+    #[test]
+    fn parse_dump_log_user_file() {
+        assert_eq!(
+            Ok(LoadTestCommand::DumpLogUser(
+                LoadTestDumpLogUserIdFileName {
+                    user_id: "hello".to_string(),
+                    file_name: "abc.xml".to_string(),
+                }
+            )),
+            LoadTestCommand::try_from("[1] DUMPLOG,hello,abc.xml")
+        );
     }
 }
