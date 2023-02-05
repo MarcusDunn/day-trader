@@ -1,0 +1,21 @@
+[package]
+name = "cli"
+description = "A command line interface for testing day-trader"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.25.0", features = ["rt-multi-thread", "macros"] }
+clap = { version = "4.1.4", features = ["derive"] }
+tonic = "0.8.3"
+prost = "0.11.6"
+anyhow = "1.0.68"
+thiserror = "1.0.38"
+
+[dev-dependencies]
+pretty_assertions = "1.3.0"
+
+[build-dependencies]
+tonic-build = "0.8.4"

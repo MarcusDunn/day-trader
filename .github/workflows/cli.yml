@@ -8,27 +8,27 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-name: Quote Server Adaptor CI
+name: CLI CI
 jobs:
   changes:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
     outputs:
-      quoteserveradaptor: ${{ steps.filter.outputs.quoteserveradaptor }}
+      cli: ${{ steps.filter.outputs.cli }}
     steps:
       - uses: actions/checkout@v2
       - uses: dorny/paths-filter@v2
         id: filter
         with:
           filters: |
-            quoteserveradaptor:
-              - 'quote-server-adaptor/**'
+            cli:
+              - 'cli/**'
               - 'protos/**'
   lints:
     name: Lints
     needs: changes
-    if: ${{ needs.changes.outputs.quoteserveradaptor == 'true' }}
+    if: ${{ needs.changes.outputs.cli == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -47,16 +47,16 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --manifest-path quote-server-adaptor/Cargo.toml --all -- --check
+          args: --manifest-path cli/Cargo.toml --all -- --check
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --manifest-path quote-server-adaptor/Cargo.toml -- -D warnings
+          args: --manifest-path cli/Cargo.toml -- -D warnings
   test:
     name: Tests
     needs: changes
-    if: ${{ needs.changes.outputs.quoteserveradaptor == 'true' }}
+    if: ${{ needs.changes.outputs.cli == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -71,4 +71,4 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --manifest-path quote-server-adaptor/Cargo.toml
+          args: --manifest-path cli/Cargo.toml
