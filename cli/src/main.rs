@@ -5,7 +5,12 @@ use cli::log_client::LogClient;
 use cli::quote_client::QuoteClient;
 use cli::transaction_client::TransactionClient;
 use cli::trigger_client::TriggerClient;
-use cli::{AddRequest, BuyRequest, CancelBuyRequest, CancelSellRequest, CancelSetBuyRequest, CancelSetSellRequest, CommitBuyRequest, CommitSellRequest, DisplaySummaryRequest, DumplogRequest, QuoteRequest, SellRequest, SetBuyAmountRequest, SetSellAmountRequest, SetSellTriggerRequest};
+use cli::{
+    AddRequest, BuyRequest, CancelBuyRequest, CancelSellRequest, CancelSetBuyRequest,
+    CancelSetSellRequest, CommitBuyRequest, CommitSellRequest, DisplaySummaryRequest,
+    DumplogRequest, QuoteRequest, SellRequest, SetBuyAmountRequest, SetSellAmountRequest,
+    SetSellTriggerRequest,
+};
 use std::num::ParseFloatError;
 use std::str::Split;
 use tokio::task::JoinSet;
@@ -118,7 +123,7 @@ enum LoadTestCommand {
     CancelSetSell(LoadTestUserIdStockSymbolCommand),
     /// Display a summary of a users transactions
     DisplaySummary(LoadTestUserIdCommand),
-    DumpLogFileName(LoadTestDumpLog)
+    DumpLogFileName(LoadTestDumpLog),
 }
 
 impl LoadTestCommand {
@@ -196,9 +201,11 @@ impl LoadTestCommand {
                 .map(|ok| {
                     println!("{ok:?}");
                 }),
-            LoadTestCommand::DumpLogFileName(dump_log) => client.log.dumplog(dump_log).await.map(|ok| {
-                println!("{ok:?}");
-            }),
+            LoadTestCommand::DumpLogFileName(dump_log) => {
+                client.log.dumplog(dump_log).await.map(|ok| {
+                    println!("{ok:?}");
+                })
+            }
         }
     }
 }
@@ -258,7 +265,8 @@ impl TryFrom<&str> for LoadTestCommand {
                         _ => unreachable!(),
                     }
                 }
-                str @ ("BUY" | "SELL" |"SET_BUY_AMOUNT" | "SET_SELL_TRIGGER" | "SET_SELL_AMOUNT") => {
+                str @ ("BUY" | "SELL" | "SET_BUY_AMOUNT" | "SET_SELL_TRIGGER"
+                | "SET_SELL_AMOUNT") => {
                     let cmd = LoadTestUserIdStockSymbolAmountCommand::try_from(iter).map_err(
                         |reason| CommandParseFailure {
                             command: str.to_string(),
@@ -294,13 +302,12 @@ impl TryFrom<&str> for LoadTestCommand {
                     }
                 }
                 "DUMPLOG" => {
-                    let cmd = LoadTestDumpLog::try_from(iter).map_err(|reason| {
-                        CommandParseFailure {
+                    let cmd =
+                        LoadTestDumpLog::try_from(iter).map_err(|reason| CommandParseFailure {
                             command: "DUMPLOG".to_string(),
                             value: value.to_string(),
                             reason,
-                        }
-                    })?;
+                        })?;
                     DumpLogFileName(cmd)
                 }
                 command => {
@@ -580,7 +587,7 @@ impl TryFrom<Split<'_, char>> for LoadTestAdd {
 
 #[derive(Clone, Debug, clap::Args, PartialEq)]
 struct LoadTestDumpLog {
-    file_name: String
+    file_name: String,
 }
 
 impl TryFrom<Split<'_, char>> for LoadTestDumpLog {
@@ -588,7 +595,7 @@ impl TryFrom<Split<'_, char>> for LoadTestDumpLog {
 
     fn try_from(mut value: Split<char>) -> Result<Self, Self::Error> {
         Ok(LoadTestDumpLog {
-            file_name: value.get_next_str("file_name", 0)?.to_string()
+            file_name: value.get_next_str("file_name", 0)?.to_string(),
         })
     }
 }
@@ -677,6 +684,11 @@ mod tests {
 
     #[test]
     fn check_parsed_users1() {
-        USERS_1.lines().map(str::trim).map(LoadTestCommand::try_from).collect::<Result<Vec<_>, _>>().unwrap();
+        USERS_1
+            .lines()
+            .map(str::trim)
+            .map(LoadTestCommand::try_from)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
     }
 }
