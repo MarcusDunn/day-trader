@@ -1,5 +1,4 @@
 use crate::CommandParseFailure::{FloatParseError, MissingArgs};
-use crate::LoadTestFile::Users1;
 use clap::Parser;
 use cli::log_client::LogClient;
 use cli::quote_client::QuoteClient;
@@ -8,16 +7,17 @@ use cli::trigger_client::TriggerClient;
 use cli::{
     AddRequest, BuyRequest, CancelBuyRequest, CancelSellRequest, CancelSetBuyRequest,
     CancelSetSellRequest, CommitBuyRequest, CommitSellRequest, DisplaySummaryRequest,
-    DumplogRequest, QuoteRequest, SellRequest, SetBuyAmountRequest, SetSellAmountRequest,
-    SetSellTriggerRequest,
+    DumplogRequest, DumplogUserRequest, QuoteRequest, SellRequest, SetBuyAmountRequest,
+    SetBuyTriggerRequest, SetSellAmountRequest, SetSellTriggerRequest,
 };
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::num::ParseFloatError;
+use std::path::PathBuf;
 use std::str::Split;
 use tokio::task::JoinSet;
 use tonic::transport::Uri;
 use tonic::{IntoRequest, Request, Status};
-
-const USERS_1: &str = include_str!("../workloads/1-user-workload");
 
 #[derive(clap::Parser, Debug, PartialEq)]
 #[command(author, version, about, long_about = None)]
@@ -33,33 +33,32 @@ struct CliArgs {
 enum CliCommand {
     #[command(flatten)]
     Single(LoadTestCommand),
-    #[command(flatten)]
-    File(LoadTestFile),
-}
-
-#[derive(clap::Subcommand, Clone, Debug, PartialEq)]
-enum LoadTestFile {
-    /// Load test with a single user
-    Users1,
+    File {
+        file: PathBuf,
+    },
 }
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     let args = CliArgs::parse();
+
     let commands = match args.command {
-        CliCommand::File(file) => match file {
-            Users1 => USERS_1
-                .lines()
-                .map(str::trim)
-                .map(LoadTestCommand::try_from)
-                .collect::<Result<Vec<_>, _>>(),
-        }?,
+        CliCommand::File { file } => BufReader::new(File::open(file)?)
+            .lines()
+            .map(|line| line.map_err(|err| anyhow::anyhow!(err)))
+            .map(|line| {
+                line.and_then(|line| {
+                    LoadTestCommand::try_from(line.trim()).map_err(|err| anyhow::anyhow!(err))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?,
         CliCommand::Single(single) => vec![single],
     };
 
     let channel = tonic::transport::Channel::builder(Uri::try_from(args.services_uri)?)
         .connect()
         .await?;
+
     let stack = DayTraderServicesStack {
         quote: QuoteClient::new(channel.clone()),
         log: LogClient::new(channel.clone()),
@@ -95,35 +94,40 @@ trait DayTraderCall {
 
 #[derive(PartialEq, Debug, clap::Subcommand, Clone)]
 enum LoadTestCommand {
-    /// Add funds to a users account
+    /// Add the given amount of money to the user's account
     Add(LoadTestAdd),
-    /// Get a quote for a stock
+    /// Get the current quote for the stock for the specified user
     Quote(LoadTestUserIdStockSymbolCommand),
-    /// Create an uncommitted transaction to buy a stock
+    /// Buy the dollar amount of the stock for the specified user at the current price.
     Buy(LoadTestUserIdStockSymbolAmountCommand),
-    /// Commit the buy transaction
+    /// Commits the most recently executed BUY command
     CommitBuy(LoadTestUserIdCommand),
-    /// Cancel the buy transaction
+    /// Cancels the most recently executed BUY Command
     CancelBuy(LoadTestUserIdCommand),
-    /// Create an uncommitted transaction to sell a stock
+    /// Sell the specified dollar mount of the stock currently held by the specified user at the current price.
     Sell(LoadTestUserIdStockSymbolAmountCommand),
-    /// Commit the sell transaction
+    /// Commits the most recently executed SELL command
     CommitSell(LoadTestUserIdCommand),
-    /// Cancel the sell transaction
+    /// Cancels the most recently executed SELL Command
     CancelSell(LoadTestUserIdCommand),
-    /// Create a buy trigger for a stock at a price point
+    /// Sets a defined amount of the given stock to buy when the current stock price is less than or equal to the BUY_TRIGGER
     SetBuyAmount(LoadTestUserIdStockSymbolAmountCommand),
-    /// Sets the stock price trigger point for executing any SET_SELL triggers associated with the given stock and user
-    SetSellTrigger(LoadTestUserIdStockSymbolAmountCommand),
+    /// Cancels a SET_BUY command issued for the given stock
+    CancelSetBuy(LoadTestUserIdStockSymbolCommand),
+    /// Sets the trigger point base on the current stock price when any SET_BUY will execute.
+    SetBuyTrigger(LoadTestUserIdStockSymbolAmountCommand),
     /// Sets a defined amount of the specified stock to sell when the current stock price is equal or greater than the sell trigger point
     SetSellAmount(LoadTestUserIdStockSymbolAmountCommand),
-    /// Cancel a buy trigger for a stock
-    CancelSetBuy(LoadTestUserIdStockSymbolCommand),
-    /// Cancel a sell trigger for a stock
+    /// Sets the stock price trigger point for executing any SET_SELL triggers associated with the given stock and user
+    SetSellTrigger(LoadTestUserIdStockSymbolAmountCommand),
+    /// Cancels the SET_SELL associated with the given stock and user
     CancelSetSell(LoadTestUserIdStockSymbolCommand),
-    /// Display a summary of a users transactions
+    /// Provides a summary to the client of the given user's transaction history and the current status of their accounts as well as any set buy or sell triggers and their parameters
     DisplaySummary(LoadTestUserIdCommand),
+    /// Print out to the specified file the complete set of transactions that have occurred in the system.
     DumpLogFileName(LoadTestDumpLog),
+    /// Print out the history of the users transactions to the user specified file
+    DumpLogUser(LoadTestDumpLogUserIdFileName),
 }
 
 impl LoadTestCommand {
@@ -206,6 +210,18 @@ impl LoadTestCommand {
                     println!("{ok:?}");
                 })
             }
+            LoadTestCommand::SetBuyTrigger(set_buy_trigger) => client
+                .trigger
+                .set_buy_trigger(set_buy_trigger)
+                .await
+                .map(|ok| {
+                    println!("{ok:?}");
+                }),
+            LoadTestCommand::DumpLogUser(dump_log_user) => {
+                client.log.dumplog_user(dump_log_user).await.map(|ok| {
+                    println!("{ok:?}");
+                })
+            }
         }
     }
 }
@@ -266,7 +282,7 @@ impl TryFrom<&str> for LoadTestCommand {
                     }
                 }
                 str @ ("BUY" | "SELL" | "SET_BUY_AMOUNT" | "SET_SELL_TRIGGER"
-                | "SET_SELL_AMOUNT") => {
+                | "SET_SELL_AMOUNT" | "SET_BUY_TRIGGER") => {
                     let cmd = LoadTestUserIdStockSymbolAmountCommand::try_from(iter).map_err(
                         |reason| CommandParseFailure {
                             command: str.to_string(),
@@ -279,6 +295,7 @@ impl TryFrom<&str> for LoadTestCommand {
                         "SET_BUY_AMOUNT" => SetBuyAmount(cmd),
                         "SELL" => Sell(cmd),
                         "SET_SELL_TRIGGER" => SetSellTrigger(cmd),
+                        "SET_BUY_TRIGGER" => SetBuyTrigger(cmd),
                         "SET_SELL_AMOUNT" => SetSellAmount(cmd),
                         _ => unreachable!(),
                     }
@@ -437,6 +454,16 @@ impl IntoRequest<SetSellTriggerRequest> for LoadTestUserIdStockSymbolAmountComma
     }
 }
 
+impl IntoRequest<SetBuyTriggerRequest> for LoadTestUserIdStockSymbolAmountCommand {
+    fn into_request(self) -> Request<SetBuyTriggerRequest> {
+        Request::new(SetBuyTriggerRequest {
+            user_id: self.user_id,
+            stock_symbol: self.stock_symbol,
+            amount: self.amount,
+        })
+    }
+}
+
 impl TryFrom<Split<'_, char>> for LoadTestUserIdStockSymbolAmountCommand {
     type Error = CommandParseFailure;
 
@@ -518,6 +545,7 @@ trait CommandParseIterExt {
     fn user_id(&mut self, position: u8) -> Result<String, CommandParseFailure>;
     fn amount(&mut self, position: u8) -> Result<f32, CommandParseFailure>;
     fn stock_symbol(&mut self, position: u8) -> Result<String, CommandParseFailure>;
+    fn file_name(&mut self, position: u8) -> Result<String, CommandParseFailure>;
 }
 
 impl CommandParseIterExt for Split<'_, char> {
@@ -557,6 +585,10 @@ impl CommandParseIterExt for Split<'_, char> {
         self.get_next_str("stock_symbol", position)
             .map(str::to_string)
     }
+
+    fn file_name(&mut self, position: u8) -> Result<String, CommandParseFailure> {
+        self.get_next_str("file_name", position).map(str::to_string)
+    }
 }
 
 #[derive(thiserror::Error, Debug, PartialEq)]
@@ -595,12 +627,46 @@ impl TryFrom<Split<'_, char>> for LoadTestDumpLog {
 
     fn try_from(mut value: Split<char>) -> Result<Self, Self::Error> {
         Ok(LoadTestDumpLog {
-            file_name: value.get_next_str("file_name", 0)?.to_string(),
+            file_name: value.file_name(0)?,
         })
     }
 }
 
 impl IntoRequest<DumplogRequest> for LoadTestDumpLog {
+    fn into_request(self) -> Request<DumplogRequest> {
+        Request::new(DumplogRequest {
+            filename: self.file_name,
+        })
+    }
+}
+
+#[derive(Clone, Debug, clap::Args, PartialEq)]
+struct LoadTestDumpLogUserIdFileName {
+    user_id: String,
+    file_name: String,
+}
+
+impl TryFrom<Split<'_, char>> for LoadTestDumpLogUserIdFileName {
+    type Error = CommandParseFailure;
+
+    fn try_from(mut value: Split<char>) -> Result<Self, Self::Error> {
+        Ok(LoadTestDumpLogUserIdFileName {
+            user_id: value.user_id(0)?,
+            file_name: value.file_name(1)?,
+        })
+    }
+}
+
+impl IntoRequest<DumplogUserRequest> for LoadTestDumpLogUserIdFileName {
+    fn into_request(self) -> Request<DumplogUserRequest> {
+        Request::new(DumplogUserRequest {
+            user_id: self.user_id,
+            filename: self.file_name,
+        })
+    }
+}
+
+impl IntoRequest<DumplogRequest> for LoadTestDumpLogUserIdFileName {
     fn into_request(self) -> Request<DumplogRequest> {
         Request::new(DumplogRequest {
             filename: self.file_name,
@@ -680,15 +746,5 @@ mod tests {
                 },
             })
         )
-    }
-
-    #[test]
-    fn check_parsed_users1() {
-        USERS_1
-            .lines()
-            .map(str::trim)
-            .map(LoadTestCommand::try_from)
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap();
     }
 }
