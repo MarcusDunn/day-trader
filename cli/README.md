@@ -42,4 +42,5 @@ Options:
 
 To install on your computer, you can run `cargo install --path cli` from the root of the repository.
 
+You should then be able to run with `cli`
     
