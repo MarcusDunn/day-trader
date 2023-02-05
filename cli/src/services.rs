@@ -1,8 +1,8 @@
-use tonic::transport::Channel;
 use crate::protos::log_client::LogClient;
 use crate::protos::quote_client::QuoteClient;
 use crate::protos::transaction_client::TransactionClient;
 use crate::protos::trigger_client::TriggerClient;
+use tonic::transport::Channel;
 
 #[derive(Clone)]
 pub struct DayTraderServicesStack {

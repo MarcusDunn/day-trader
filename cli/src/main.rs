@@ -1,4 +1,3 @@
-
 use clap::Parser;
 use std::fs::{metadata, File};
 use std::io::{BufRead, BufReader};
@@ -90,7 +89,9 @@ fn spawn_commands(
     Ok(join_set)
 }
 
-fn command_list_from_cli_command(command: &CliCommand) -> Result<Vec<LoadTestCommand>, anyhow::Error> {
+fn command_list_from_cli_command(
+    command: &CliCommand,
+) -> Result<Vec<LoadTestCommand>, anyhow::Error> {
     Ok(match command {
         CliCommand::File { file } => parse_commands_from_file(file)?,
         CliCommand::Single(single) => vec![single.clone()],
@@ -121,17 +122,16 @@ fn parse_commands_from_file(file: &Path) -> Result<Vec<LoadTestCommand>, anyhow:
     Ok(commands)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
     use cli::command::add::LoadTestAdd;
     use cli::command::command_user_id_file_name::LoadTestDumpLogUserIdFileName;
     use cli::command::dump_log::LoadTestDumpLogFileName;
     use cli::CommandParseFailure::{FloatParseError, MissingArgs};
     use cli::ParseLoadTestCommandError;
     use cli::ParseLoadTestCommandError::{MissingSpace, UnknownCommand};
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_parse_add_line_success() {

@@ -1,8 +1,10 @@
+use crate::protos::{
+    CancelBuyRequest, CancelSellRequest, CommitBuyRequest, CommitSellRequest, DisplaySummaryRequest,
+};
+use crate::split_ext::CommandParseIterExt;
+use crate::CommandParseFailure;
 use std::str::Split;
 use tonic::{IntoRequest, Request};
-use crate::CommandParseFailure;
-use crate::protos::{CancelBuyRequest, CancelSellRequest, CommitBuyRequest, CommitSellRequest, DisplaySummaryRequest};
-use crate::split_ext::CommandParseIterExt;
 
 #[derive(Debug, PartialEq, clap::Args, Clone)]
 pub struct LoadTestUserIdCommand {

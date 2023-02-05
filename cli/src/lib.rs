@@ -1,6 +1,8 @@
 use std::num::ParseFloatError;
 
-mod protos { tonic::include_proto!("day_trader"); }
+mod protos {
+    tonic::include_proto!("day_trader");
+}
 pub mod command;
 pub mod services;
 mod split_ext;

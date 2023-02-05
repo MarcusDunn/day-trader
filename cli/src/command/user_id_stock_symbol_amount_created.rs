@@ -1,8 +1,11 @@
+use crate::protos::{
+    BuyRequest, SellRequest, SetBuyAmountRequest, SetBuyTriggerRequest, SetSellAmountRequest,
+    SetSellTriggerRequest,
+};
+use crate::split_ext::CommandParseIterExt;
+use crate::CommandParseFailure;
 use std::str::Split;
 use tonic::{IntoRequest, Request};
-use crate::CommandParseFailure;
-use crate::protos::{BuyRequest, SellRequest, SetBuyAmountRequest, SetBuyTriggerRequest, SetSellAmountRequest, SetSellTriggerRequest};
-use crate::split_ext::CommandParseIterExt;
 
 #[derive(PartialEq, Debug, clap::Args, Clone)]
 pub struct LoadTestUserIdStockSymbolAmountCommand {

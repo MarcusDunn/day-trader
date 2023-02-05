@@ -1,5 +1,5 @@
-use tonic::{IntoRequest, Request};
 use crate::protos::{DumpLogRequest, DumpLogUserRequest};
+use tonic::{IntoRequest, Request};
 
 #[derive(Clone, Debug, clap::Args, PartialEq)]
 pub struct LoadTestDumpLogUserIdFileName {

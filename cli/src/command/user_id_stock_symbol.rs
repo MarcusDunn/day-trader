@@ -1,8 +1,8 @@
-use std::str::Split;
-use tonic::{IntoRequest, Request};
-use crate::CommandParseFailure;
 use crate::protos::{CancelSetBuyRequest, CancelSetSellRequest, QuoteRequest};
 use crate::split_ext::CommandParseIterExt;
+use crate::CommandParseFailure;
+use std::str::Split;
+use tonic::{IntoRequest, Request};
 
 #[derive(PartialEq, Debug, clap::Args, Clone)]
 pub struct LoadTestUserIdStockSymbolCommand {

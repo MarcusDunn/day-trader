@@ -1,6 +1,6 @@
-use std::str::Split;
 use crate::CommandParseFailure;
 use crate::CommandParseFailure::{FloatParseError, MissingArgs, TooManyArguments};
+use std::str::Split;
 
 pub trait CommandParseIterExt {
     fn get_next_str(
