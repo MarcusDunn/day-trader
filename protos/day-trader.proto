@@ -8,9 +8,9 @@ service Quote {
 
 service Log {
   // Print out the history of the users transactions to the user specified file
-  rpc DumplogUser(DumplogUserRequest) returns (DumplogUserResponse);
+  rpc DumpLogUser(DumpLogUserRequest) returns (DumpLogUserResponse);
   // Print out to the specified file the complete set of transactions that have occurred in the system.
-  rpc Dumplog(DumplogRequest) returns (DumplogResponse);
+  rpc DumpLog(DumpLogRequest) returns (DumpLogResponse);
   // Provides a summary to the client of the given user's transaction history and the current status of their accounts as well as any set buy or sell triggers and their parameters
   rpc DisplaySummary(DisplaySummaryRequest) returns (DisplaySummaryResponse);
 }
@@ -133,15 +133,15 @@ message CancelSetSellRequest {
   string stock_symbol = 2;
 }
 message  CancelSetSellResponse {}
-message DumplogUserRequest  {
+message DumpLogUserRequest  {
   string user_id = 1;
   string filename = 2;
 }
-message  DumplogUserResponse {}
-message DumplogRequest {
+message  DumpLogUserResponse {}
+message DumpLogRequest {
   string filename = 1;
 }
-message  DumplogResponse {}
+message  DumpLogResponse {}
 message DisplaySummaryRequest {
   string user_id = 1;
 }

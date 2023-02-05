@@ -1,6 +1,7 @@
 [package]
 name = "cli"
 description = "A command line interface for testing day-trader"
+authors = ["Marcus Dunn"]
 version = "0.1.0"
 edition = "2021"
 
