@@ -8,3 +8,7 @@ updates:
     directory: "quote-server-adaptor"
     schedule:
       interval: "daily"
+  - package-ecosystem: "cargo"
+    directory: "cli"
+    schedule:
+      interval: "daily"
