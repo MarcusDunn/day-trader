@@ -1,11 +1,9 @@
+use opentelemetry::global;
+use opentelemetry::runtime::Tokio;
 use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
-use std::time::Duration;
-use opentelemetry::global;
-use opentelemetry::runtime::Tokio;
-use opentelemetry::trace::Tracer;
 
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
@@ -15,13 +13,11 @@ use tokio::io::{AsyncBufReadExt, AsyncWrite};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::TcpStream;
 use tokio::select;
-use tokio::sync::{mpsc, oneshot};
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender;
+use tokio::sync::{mpsc, oneshot};
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
-use tracing::{Event, Id, info_span, instrument, Metadata, Subscriber};
-use tracing::span::{Attributes, Record};
 use tracing::subscriber::set_global_default;
 use tracing_subscriber::layer::SubscriberExt;
 
@@ -36,7 +32,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let registry = tracing_subscriber::Registry::default().with(open_telemetry_layer);
     set_global_default(registry)?;
 
-    let (tcp_handler_send, mut tcp_handler_recv) = mpsc::channel::<(String, Sender<Result<String, &'static str>>)>(32);
+    let (tcp_handler_send, mut tcp_handler_recv) =
+        mpsc::channel::<(String, Sender<Result<String, &'static str>>)>(32);
 
     let socket_handler = tokio::spawn(async move {
         let quote_server_addr = env::var("QUOTE_SERVER_URI")
@@ -45,7 +42,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .await
             .expect("The passed in quote server URI should be possible to connect to.")
             .into_split();
-        println!("connected to {addr}");
+        println!("connected to {quote_server_addr}");
 
         let mut reader = BufReader::new(reader);
 
@@ -87,7 +84,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 #[tracing::instrument]
-async fn handle_socket(tcp_handler_recv: &mut Receiver<(String, Sender<Result<String, &str>>)>, mut writer: &mut OwnedWriteHalf, mut reader: &mut BufReader<OwnedReadHalf>) {
+async fn handle_socket(
+    tcp_handler_recv: &mut Receiver<(String, Sender<Result<String, &str>>)>,
+    mut writer: &mut OwnedWriteHalf,
+    mut reader: &mut BufReader<OwnedReadHalf>,
+) {
     let (send, respond) = tcp_handler_recv
         .recv()
         .await
