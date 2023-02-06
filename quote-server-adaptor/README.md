@@ -4,8 +4,14 @@ This serves as a gRPC wrapper around the UVic quote server. It has the goal of b
 
 ## Running
 
-It requires a single environment variable `QUOTE_SERVER_URI`. This should be the URI of the UVic quote server.
-e.g. `quoteserver.seng.uvic.ca:4000`. It will serve requests from port 5000.
+It requires a two environment variables:
+
+- `QUOTE_SERVER_URI`: The URI of the UVic quote server.
+    - e.g. `quoteserver.seng.uvic.ca:4000`.
+- `JAEGER_COLLECTOR_URI`: The URI of the Jaeger collector.
+  - e.g. `localhost:14268`
+
+It will serve requests from port 5000.
 
 ## Overview
 
@@ -13,6 +19,10 @@ The server opens a single TCP stream to the provided quote server. gRPC requests
 message and sent to the quote server. The response from the quote server is than marshalled into a gRPC response and
 sent as a response. Synchronization is done through a multiple producer single consumer channel, where the single
 consumer owns the TCP stream and responds via a passed in send end of an oneshot channel.
+
+## Jaeger
+
+The server expects port 
 
 ## Future Plans
 
