@@ -1,27 +1,47 @@
 use std::env;
 use std::error::Error;
+use std::fmt::Debug;
 use std::mem::size_of;
+use std::time::Duration;
+use opentelemetry::global;
+use opentelemetry::runtime::Tokio;
+use opentelemetry::trace::Tracer;
 
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
 use tokio::io::BufReader;
 use tokio::io::{AsyncBufRead, AsyncWriteExt};
 use tokio::io::{AsyncBufReadExt, AsyncWrite};
+use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::TcpStream;
 use tokio::select;
 use tokio::sync::{mpsc, oneshot};
+use tokio::sync::mpsc::Receiver;
+use tokio::sync::oneshot::Sender;
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
+use tracing::{Event, Id, info_span, instrument, Metadata, Subscriber};
+use tracing::span::{Attributes, Record};
+use tracing::subscriber::set_global_default;
+use tracing_subscriber::layer::SubscriberExt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let (tcp_handler_send, mut tcp_handler_recv) =
-        mpsc::channel::<(String, oneshot::Sender<Result<String, &'static str>>)>(32);
+    let tracer = opentelemetry_jaeger::new_collector_pipeline()
+        .with_reqwest()
+        .with_service_name("quote-server-adaptor")
+        .with_endpoint(env::var("JAEGER_URI").expect("JAEGER_URI should be set"))
+        .install_batch(Tokio)?;
+    let open_telemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
+    let registry = tracing_subscriber::Registry::default().with(open_telemetry_layer);
+    set_global_default(registry)?;
+
+    let (tcp_handler_send, mut tcp_handler_recv) = mpsc::channel::<(String, Sender<Result<String, &'static str>>)>(32);
 
     let socket_handler = tokio::spawn(async move {
-        let addr = env::var("QUOTE_SERVER_URI")
+        let quote_server_addr = env::var("QUOTE_SERVER_URI")
             .expect("QUOTE_SERVER_URI environment variable should be set.");
-        let (reader, mut writer) = TcpStream::connect(&addr)
+        let (reader, mut writer) = TcpStream::connect(&quote_server_addr)
             .await
             .expect("The passed in quote server URI should be possible to connect to.")
             .into_split();
@@ -30,17 +50,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let mut reader = BufReader::new(reader);
 
         loop {
-            let (send, respond) = tcp_handler_recv
-                .recv()
-                .await
-                .expect("The send side of the tcp_handler should never be closed.");
-
-            match respond.send(get_response(&mut writer, &mut reader, send).await) {
-                Ok(()) => {}
-                Err(err) => {
-                    println!("Failed to send {err:?} to oneshot channel.")
-                }
-            };
+            handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await;
         }
     });
 
@@ -48,7 +58,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .add_service(QuoteServer::new(Quoter { tcp_handler_send }))
         .serve(([127, 0, 0, 1], 5000).into());
 
-    select! {
+    let exit_result = select! {
         socket_handler_result = socket_handler => {
             match socket_handler_result {
                 Err(err) => {
@@ -69,17 +79,37 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 }
             }
         }
-    }
+    };
+
+    global::shutdown_tracer_provider();
+
+    exit_result
 }
 
+#[tracing::instrument]
+async fn handle_socket(tcp_handler_recv: &mut Receiver<(String, Sender<Result<String, &str>>)>, mut writer: &mut OwnedWriteHalf, mut reader: &mut BufReader<OwnedReadHalf>) {
+    let (send, respond) = tcp_handler_recv
+        .recv()
+        .await
+        .expect("The send side of the tcp_handler should never be closed.");
+
+    match respond.send(get_response(&mut writer, &mut reader, send).await) {
+        Ok(()) => {}
+        Err(err) => {
+            println!("Failed to send {err:?} to oneshot channel.")
+        }
+    };
+}
+
+#[tracing::instrument]
 async fn get_response<W, R>(
     writer: &mut W,
     reader: &mut R,
     message: String,
 ) -> Result<String, &'static str>
 where
-    W: AsyncWrite + Unpin,
-    R: AsyncBufRead + Unpin,
+    W: AsyncWrite + Unpin + Debug,
+    R: AsyncBufRead + Unpin + Debug,
 {
     if (writer.write_all(message.as_bytes()).await).is_err() {
         return Err("Failed to write to socket.");
@@ -92,12 +122,14 @@ where
     Ok(line)
 }
 
+#[derive(Debug)]
 struct Quoter {
-    tcp_handler_send: mpsc::Sender<(String, oneshot::Sender<Result<String, &'static str>>)>,
+    tcp_handler_send: mpsc::Sender<(String, Sender<Result<String, &'static str>>)>,
 }
 
 #[tonic::async_trait]
 impl Quote for Quoter {
+    #[tracing::instrument]
     async fn quote(
         &self,
         request: Request<QuoteRequest>,
@@ -185,7 +217,7 @@ mod tests {
 
     #[tokio::test]
     async fn check_quoter_success() {
-        let (send, mut recv) = mpsc::channel::<(String, oneshot::Sender<Result<String, &str>>)>(32);
+        let (send, mut recv) = mpsc::channel::<(String, Sender<Result<String, &str>>)>(32);
 
         tokio::spawn(async move {
             let (str, sender) = recv.recv().await.unwrap();
