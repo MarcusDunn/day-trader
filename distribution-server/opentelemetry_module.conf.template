@@ -1,0 +1,8 @@
+NginxModuleEnabled ON;
+NginxModuleOtelSpanExporter otlp;
+NginxModuleOtelExporterEndpoint ${OTEL_EXPORTER_URI};
+NginxModuleServiceName DemoService;
+NginxModuleServiceNamespace DemoServiceNamespace;
+NginxModuleServiceInstanceId DemoInstanceId;
+NginxModuleResolveBackends ON;
+NginxModuleTraceAsError ON;
