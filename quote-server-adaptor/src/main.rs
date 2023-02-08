@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let tracer = opentelemetry_jaeger::new_collector_pipeline()
         .with_reqwest()
         .with_service_name("quote-server-adaptor")
-        .with_endpoint(env::var("JAEGER_URI").expect("JAEGER_URI should be set"))
+        .with_endpoint(env::var("OTEL_COLLECTOR_URI").expect("OTEL_COLLECTOR_URI should be set"))
         .install_batch(Tokio)?;
 
     tracing_subscriber::registry()
