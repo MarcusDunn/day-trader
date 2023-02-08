@@ -4,6 +4,7 @@ use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
+use opentelemetry::sdk::propagation::TraceContextPropagator;
 
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
@@ -18,19 +19,28 @@ use tokio::sync::oneshot::Sender;
 use tokio::sync::{mpsc, oneshot};
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
-use tracing::subscriber::set_global_default;
+use tonic::service::interceptor;
+use tracing::{info, instrument};
 use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use quote_server_adaptor::otel::otel_tracing;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    global::set_text_map_propagator(TraceContextPropagator::new());
+
     let tracer = opentelemetry_jaeger::new_collector_pipeline()
         .with_reqwest()
         .with_service_name("quote-server-adaptor")
         .with_endpoint(env::var("JAEGER_URI").expect("JAEGER_URI should be set"))
         .install_batch(Tokio)?;
-    let open_telemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-    let registry = tracing_subscriber::Registry::default().with(open_telemetry_layer);
-    set_global_default(registry)?;
+
+    tracing_subscriber::registry()
+        .with(tracing::level_filters::LevelFilter::INFO)
+        .with(tracing_opentelemetry::layer().with_tracer(tracer))
+        .try_init()?;
+
+    info!("starting");
 
     let (tcp_handler_send, mut tcp_handler_recv) =
         mpsc::channel::<(String, Sender<Result<String, &'static str>>)>(32);
@@ -52,6 +62,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     });
 
     let server = Server::builder()
+        .layer(interceptor(otel_tracing))
         .add_service(QuoteServer::new(Quoter { tcp_handler_send }))
         .serve(([127, 0, 0, 1], 5000).into());
 
@@ -83,7 +94,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     exit_result
 }
 
-#[tracing::instrument]
+#[instrument]
 async fn handle_socket(
     tcp_handler_recv: &mut Receiver<(String, Sender<Result<String, &str>>)>,
     mut writer: &mut OwnedWriteHalf,
@@ -102,15 +113,15 @@ async fn handle_socket(
     };
 }
 
-#[tracing::instrument]
+#[instrument]
 async fn get_response<W, R>(
     writer: &mut W,
     reader: &mut R,
     message: String,
 ) -> Result<String, &'static str>
-where
-    W: AsyncWrite + Unpin + Debug,
-    R: AsyncBufRead + Unpin + Debug,
+    where
+        W: AsyncWrite + Unpin + Debug,
+        R: AsyncBufRead + Unpin + Debug,
 {
     if (writer.write_all(message.as_bytes()).await).is_err() {
         return Err("Failed to write to socket.");
@@ -130,7 +141,7 @@ struct Quoter {
 
 #[tonic::async_trait]
 impl Quote for Quoter {
-    #[tracing::instrument]
+    #[instrument]
     async fn quote(
         &self,
         request: Request<QuoteRequest>,
@@ -231,12 +242,12 @@ mod tests {
         let response = Quoter {
             tcp_handler_send: send,
         }
-        .quote(Request::new(QuoteRequest {
-            user_id: "marcus".to_string(),
-            stock_symbol: "TSLA".to_string(),
-        }))
-        .await
-        .unwrap();
+            .quote(Request::new(QuoteRequest {
+                user_id: "marcus".to_string(),
+                stock_symbol: "TSLA".to_string(),
+            }))
+            .await
+            .unwrap();
 
         assert_eq!(
             QuoteResponse {
