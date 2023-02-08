@@ -41,7 +41,7 @@ graph TD
 ```mermaid
 erDiagram
     USER {
-        string balance
+        number balance
     }
     USER ||--|{ BUY_TRIGGER : has
     BUY_TRIGGER {
