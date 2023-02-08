@@ -3,6 +3,8 @@
 
 This is an implementation of a scalable day trading application for UVic's Scalable Systems offering (SENG 468).
 
+## Architecture
+
 ```mermaid
 graph TD
     WebBrowser[Web Browser]
@@ -33,3 +35,27 @@ graph TD
     TransactionServer --> |updates and queries| DB
     QSA <-->|TCP socket| UQS
 ```
+
+## Database Schema
+
+```mermaid
+erDiagram
+    USER {
+        string balance
+    }
+    USER ||--|{ BUY_TRIGGER : has
+    BUY_TRIGGER {
+        string ticker
+        number trigger_point
+    }
+    USER ||--|{ SELL_TRIGGER : has
+    SELL_TRIGGER {
+        string ticker
+        number trigger_point
+    }
+    USER ||--|{ OWNED_STOCK : has
+    OWNED_STOCK {
+        string ticker
+        number amount
+    }
+ ```
