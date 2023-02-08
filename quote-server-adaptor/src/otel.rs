@@ -1,11 +1,12 @@
-use std::task::{Context, Poll};
 use opentelemetry::global;
 use opentelemetry::propagation::Extractor;
+use std::task::{Context, Poll};
 use tonic::{Request, Status};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 pub fn otel_tracing<T>(req: Request<T>) -> Result<Request<T>, Status> {
-    let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
+    let parent_ctx =
+        global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
     tracing::Span::current().set_parent(parent_ctx);
     Ok(req)
 }

@@ -1,11 +1,12 @@
 use opentelemetry::global;
 use opentelemetry::runtime::Tokio;
+use opentelemetry::sdk::propagation::TraceContextPropagator;
 use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
-use opentelemetry::sdk::propagation::TraceContextPropagator;
 
+use quote_server_adaptor::otel::otel_tracing;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
 use tokio::io::BufReader;
@@ -17,13 +18,12 @@ use tokio::select;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender;
 use tokio::sync::{mpsc, oneshot};
+use tonic::service::interceptor;
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
-use tonic::service::interceptor;
 use tracing::{info, instrument};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use quote_server_adaptor::otel::otel_tracing;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -119,9 +119,9 @@ async fn get_response<W, R>(
     reader: &mut R,
     message: String,
 ) -> Result<String, &'static str>
-    where
-        W: AsyncWrite + Unpin + Debug,
-        R: AsyncBufRead + Unpin + Debug,
+where
+    W: AsyncWrite + Unpin + Debug,
+    R: AsyncBufRead + Unpin + Debug,
 {
     if (writer.write_all(message.as_bytes()).await).is_err() {
         return Err("Failed to write to socket.");
@@ -242,12 +242,12 @@ mod tests {
         let response = Quoter {
             tcp_handler_send: send,
         }
-            .quote(Request::new(QuoteRequest {
-                user_id: "marcus".to_string(),
-                stock_symbol: "TSLA".to_string(),
-            }))
-            .await
-            .unwrap();
+        .quote(Request::new(QuoteRequest {
+            user_id: "marcus".to_string(),
+            stock_symbol: "TSLA".to_string(),
+        }))
+        .await
+        .unwrap();
 
         assert_eq!(
             QuoteResponse {
