@@ -1,6 +1,5 @@
 use opentelemetry::global;
 use opentelemetry::propagation::Extractor;
-use std::task::{Context, Poll};
 use tonic::{Request, Status};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
