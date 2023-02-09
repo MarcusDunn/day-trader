@@ -9,10 +9,9 @@ use std::mem::size_of;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 use quote_server_adaptor::tower_otel::OtelLayer;
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
-use tokio::io::BufReader;
 use tokio::io::{AsyncBufRead, AsyncWriteExt};
 use tokio::io::{AsyncBufReadExt, AsyncWrite};
-use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
+use tokio::io::{AsyncRead, BufReader};
 use tokio::net::TcpStream;
 use tokio::select;
 use tokio::sync::mpsc::Receiver;
@@ -23,6 +22,7 @@ use tonic::{Request, Response, Status};
 use tracing::{info, instrument};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use quote_server_adaptor::fake::FakeQuoteServer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -47,16 +47,26 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let socket_handler = tokio::spawn(async move {
         let quote_server_addr = env::var("QUOTE_SERVER_URI")
             .expect("QUOTE_SERVER_URI environment variable should be set.");
-        let (reader, mut writer) = TcpStream::connect(&quote_server_addr)
-            .await
-            .unwrap_or_else(|_| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to."))
-            .into_split();
-        println!("connected to {quote_server_addr}");
+        if quote_server_addr == "FAKE" {
+            let mut quote_server = FakeQuoteServer::default();
+            let mut writer = quote_server.clone();
+            let mut reader = BufReader::new(&mut quote_server);
+            println!("running a fake quote server");
+            loop {
+                handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await
+            }
+        } else {
+            let (reader, mut writer) = TcpStream::connect(&quote_server_addr)
+                .await
+                .unwrap_or_else(|_| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to."))
+                .into_split();
+            println!("connected to {quote_server_addr}");
 
-        let mut reader = BufReader::new(reader);
+            let mut reader = BufReader::new(reader);
 
-        loop {
-            handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await;
+            loop {
+                handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await;
+            }
         }
     });
 
@@ -94,11 +104,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 #[instrument]
-async fn handle_socket(
+async fn handle_socket<T, G>(
     tcp_handler_recv: &mut Receiver<(String, Sender<Result<String, &str>>)>,
-    mut writer: &mut OwnedWriteHalf,
-    mut reader: &mut BufReader<OwnedReadHalf>,
-) {
+    mut writer: &mut T,
+    mut reader: &mut BufReader<G>,
+) where
+    T: AsyncWrite + Debug + Unpin,
+    G: AsyncRead + Debug + Unpin {
     let (send, respond) = tcp_handler_recv
         .recv()
         .await

@@ -6,7 +6,7 @@ This serves as a gRPC wrapper around the UVic quote server. It has the goal of b
 
 It requires a two environment variables:
 
-- `QUOTE_SERVER_URI`: The URI of the UVic quote server.
+- `QUOTE_SERVER_URI`: The URI of the UVic quote server. You can set this to `FAKE` to simulate the UVic quote server.
     - e.g. `quoteserver.seng.uvic.ca:4000`.
 - `OTEL_EXPORTER_URI`: The URI of the Jaeger collector.
   - e.g. `localhost:14268`
