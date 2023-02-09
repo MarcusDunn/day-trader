@@ -17,3 +17,5 @@ services:
     environment:
       QUOTE_SERVER_URI: quote-server-adaptor:5000
       OTEL_EXPORTER_URI: jaeger:14268
+    ports:
+      - "80:80"
