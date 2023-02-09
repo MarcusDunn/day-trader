@@ -8,7 +8,7 @@ It requires a two environment variables:
 
 - `QUOTE_SERVER_URI`: The URI of the UVic quote server.
     - e.g. `quoteserver.seng.uvic.ca:4000`.
-- `JAEGER_COLLECTOR_URI`: The URI of the Jaeger collector.
+- `OTEL_COLLECTOR_URI`: The URI of the Open Telemetry collector.
   - e.g. `localhost:14268`
 
 It will serve requests from port 5000.

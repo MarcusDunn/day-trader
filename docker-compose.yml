@@ -11,9 +11,11 @@ services:
     image: ghcr.io/marcusdunn/day-trader/quote-server-adaptor:latest
     environment:
       QUOTE_SERVER_URI: quoteserver.seng.uvic.ca:4000
-      JAEGER_COLLECTOR_URI: jaeger:14268
+      OTEL_COLLECTOR_URI: jaeger:14268
   distribution-server:
     image: ghcr.io/marcusdunn/day-trader/distribution-server:latest
     environment:
       QUOTE_SERVER_URI: quote-server-adaptor:5000
       OTEL_EXPORTER_URI: jaeger:14268
+    ports:
+      - "80:80"
