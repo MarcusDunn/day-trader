@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use opentelemetry::global;
 use opentelemetry::runtime::Tokio;
 use opentelemetry::sdk::propagation::TraceContextPropagator;
@@ -6,7 +7,6 @@ use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
 
-use quote_server_adaptor::otel::otel_tracing;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
 use tokio::io::BufReader;
@@ -18,12 +18,13 @@ use tokio::select;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender;
 use tokio::sync::{mpsc, oneshot};
-use tonic::service::interceptor;
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
 use tracing::{info, instrument};
+use tracing_subscriber::fmt::format;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use quote_server_adaptor::tower_otel::OtelLayer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -32,12 +33,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let tracer = opentelemetry_jaeger::new_collector_pipeline()
         .with_reqwest()
         .with_service_name("quote-server-adaptor")
-        .with_endpoint(env::var("JAEGER_URI").expect("JAEGER_URI should be set"))
+        .with_endpoint(env::var("OTEL_EXPORTER_URI").expect("OTEL_EXPORTER_URI should be set"))
         .install_batch(Tokio)?;
 
     tracing_subscriber::registry()
         .with(tracing::level_filters::LevelFilter::INFO)
-        .with(tracing_opentelemetry::layer().with_tracer(tracer))
+        .with(tracing_opentelemetry::layer().with_tracer(tracer.clone()))
         .try_init()?;
 
     info!("starting");
@@ -50,7 +51,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .expect("QUOTE_SERVER_URI environment variable should be set.");
         let (reader, mut writer) = TcpStream::connect(&quote_server_addr)
             .await
-            .expect("The passed in quote server URI should be possible to connect to.")
+            .unwrap_or_else(|_| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to."))
             .into_split();
         println!("connected to {quote_server_addr}");
 
@@ -62,7 +63,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     });
 
     let server = Server::builder()
-        .layer(interceptor(otel_tracing))
+        .layer(OtelLayer::new(tracer))
         .add_service(QuoteServer::new(Quoter { tcp_handler_send }))
         .serve(([127, 0, 0, 1], 5000).into());
 
@@ -185,34 +186,40 @@ fn make_socket_message(mut user_id: String, stock_symbol: &str) -> String {
     user_id
 }
 
-fn response_from_quote_server_string(line: &str) -> Result<QuoteResponse, &'static str> {
+fn response_from_quote_server_string(line: &str) -> Result<QuoteResponse, String> {
     let mut returned = line.split(',');
 
-    let response = QuoteResponse {
-        quote: returned
-            .next()
-            .ok_or("Invalid response from quote server. (Missing quote)")?
-            .parse()
-            .map_err(|_| "Invalid response from quote server. (Invalid quote)")?,
-        sym: returned
-            .next()
-            .ok_or("Invalid response from quote server. (Missing sym)")?
-            .to_string(),
-        user_id: returned
-            .next()
-            .ok_or("Invalid response from quote server. (Missing user_id)")?
-            .to_string(),
-        timestamp: returned
-            .next()
-            .ok_or("Invalid response from quote server. (Missing timestamp)")?
-            .parse()
-            .map_err(|_| "Invalid response from quote server. (Invalid timestamp)")?,
-        crypto_key: returned
-            .next()
-            .ok_or("Invalid response from quote server. (Missing crypto_key)")?
-            .to_string(),
-    };
-    Ok(response)
+    let quote_str = returned
+        .next()
+        .ok_or_else(|| format!("Invalid response from quote server. (Missing quote in \"{line}\")"))?;
+    let quote = quote_str
+        .parse()
+        .map_err(|err| format!("Invalid response from quote server. (Invalid quote [{quote_str}]: {err} in \"{line}\")"))?;
+    let sym = returned
+        .next()
+        .ok_or_else(|| format!("Invalid response from quote server. (Missing sym in \"{line}\")"))?
+        .to_string();
+    let user_id = returned
+        .next()
+        .ok_or_else(|| format!("Invalid response from quote server. (Missing user_id in \"{line}\")"))?
+        .to_string();
+    let timestamp_str = returned
+        .next()
+        .ok_or_else(|| format!("Invalid response from quote server. (Missing timestamp in \"{line}\")"))?;
+    let timestamp = timestamp_str
+        .parse()
+        .map_err(|err| format!("Invalid response from quote server. (Invalid timestamp \"{timestamp_str}\" due to {err} in \"{line}\")"))?;
+    let crypto_key = returned
+        .next()
+        .ok_or_else(|| format!("Invalid response from quote server. (Missing crypto_key in \"{line}\")"))?
+        .to_string();
+    Ok(QuoteResponse {
+        quote,
+        sym,
+        user_id,
+        timestamp,
+        crypto_key,
+    })
 }
 
 #[cfg(test)]

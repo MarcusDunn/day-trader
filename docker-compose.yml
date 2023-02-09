@@ -6,12 +6,12 @@ services:
       - "16686:16686"
       - "14268:14268"
     environment:
-      - COLLECTOR_OTLP_ENABLED=true
+      COLLECTOR_OTLP_ENABLED: true
   quote-server-adaptor:
     image: ghcr.io/marcusdunn/day-trader/quote-server-adaptor:latest
     environment:
-      QUOTE_SERVER_URI: quoteserver.seng.uvic.ca:4000
-      JAEGER_COLLECTOR_URI: jaeger:14268
+      QUOTE_SERVER_URI: quoteserver.seng.uvic.ca:4444
+      OTEL_EXPORTER_URI: jaeger:14268
   distribution-server:
     image: ghcr.io/marcusdunn/day-trader/distribution-server:latest
     environment:
