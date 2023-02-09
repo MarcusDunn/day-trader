@@ -10,8 +10,10 @@ services:
   quote-server-adaptor:
     image: ghcr.io/marcusdunn/day-trader/quote-server-adaptor:latest
     environment:
-      QUOTE_SERVER_URI: quoteserver.seng.uvic.ca:4444
-      OTEL_EXPORTER_URI: jaeger:14268
+      QUOTE_SERVER_URI: FAKE
+      OTEL_EXPORTER_URI: jaeger:14268/api/traces
+    ports:
+      - "5000:5000"
   distribution-server:
     image: ghcr.io/marcusdunn/day-trader/distribution-server:latest
     environment:

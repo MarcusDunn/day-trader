@@ -5,6 +5,7 @@ use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
+use std::str::FromStr;
 
 use quote_server_adaptor::fake::FakeQuoteServer;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
@@ -20,23 +21,37 @@ use tokio::sync::oneshot::Sender;
 use tokio::sync::{mpsc, oneshot};
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
-use tracing::{info, instrument};
+use tracing::{info, instrument, Level};
+use tracing_subscriber::filter::{Directive, LevelFilter};
+use tracing_subscriber::fmt::writer::MakeWriterExt;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{EnvFilter, Layer};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
-    let tracer = opentelemetry_jaeger::new_collector_pipeline()
+    let open_telemetry_tracer = opentelemetry_jaeger::new_collector_pipeline()
         .with_reqwest()
         .with_service_name("quote-server-adaptor")
         .with_endpoint(env::var("OTEL_EXPORTER_URI").expect("OTEL_EXPORTER_URI should be set"))
         .install_batch(Tokio)?;
 
     tracing_subscriber::registry()
-        .with(tracing::level_filters::LevelFilter::INFO)
-        .with(tracing_opentelemetry::layer().with_tracer(tracer.clone()))
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_ansi(true)
+                .with_filter(EnvFilter::builder()
+                    .with_default_directive(Directive::from(LevelFilter::DEBUG))
+                    .from_env_lossy()
+                )
+        )
+        .with(
+            tracing_opentelemetry::layer()
+                .with_tracer(open_telemetry_tracer.clone())
+                .with_filter(LevelFilter::from_level(Level::INFO)),
+        )
         .try_init()?;
 
     info!("starting");
@@ -71,7 +86,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     });
 
     let server = Server::builder()
-        .layer(OtelLayer::new(tracer))
+        .layer(OtelLayer::new(open_telemetry_tracer))
         .add_service(QuoteServer::new(Quoter {
             tcp_handler_send: tcp_handler_send.clone(),
         }))
