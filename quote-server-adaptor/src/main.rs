@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use opentelemetry::global;
 use opentelemetry::runtime::Tokio;
 use opentelemetry::sdk::propagation::TraceContextPropagator;
@@ -8,6 +7,7 @@ use std::fmt::Debug;
 use std::mem::size_of;
 
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
+use quote_server_adaptor::tower_otel::OtelLayer;
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
 use tokio::io::BufReader;
 use tokio::io::{AsyncBufRead, AsyncWriteExt};
@@ -21,10 +21,8 @@ use tokio::sync::{mpsc, oneshot};
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
 use tracing::{info, instrument};
-use tracing_subscriber::fmt::format;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use quote_server_adaptor::tower_otel::OtelLayer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -189,9 +187,9 @@ fn make_socket_message(mut user_id: String, stock_symbol: &str) -> String {
 fn response_from_quote_server_string(line: &str) -> Result<QuoteResponse, String> {
     let mut returned = line.split(',');
 
-    let quote_str = returned
-        .next()
-        .ok_or_else(|| format!("Invalid response from quote server. (Missing quote in \"{line}\")"))?;
+    let quote_str = returned.next().ok_or_else(|| {
+        format!("Invalid response from quote server. (Missing quote in \"{line}\")")
+    })?;
     let quote = quote_str
         .parse()
         .map_err(|err| format!("Invalid response from quote server. (Invalid quote [{quote_str}]: {err} in \"{line}\")"))?;
@@ -201,17 +199,21 @@ fn response_from_quote_server_string(line: &str) -> Result<QuoteResponse, String
         .to_string();
     let user_id = returned
         .next()
-        .ok_or_else(|| format!("Invalid response from quote server. (Missing user_id in \"{line}\")"))?
+        .ok_or_else(|| {
+            format!("Invalid response from quote server. (Missing user_id in \"{line}\")")
+        })?
         .to_string();
-    let timestamp_str = returned
-        .next()
-        .ok_or_else(|| format!("Invalid response from quote server. (Missing timestamp in \"{line}\")"))?;
+    let timestamp_str = returned.next().ok_or_else(|| {
+        format!("Invalid response from quote server. (Missing timestamp in \"{line}\")")
+    })?;
     let timestamp = timestamp_str
         .parse()
         .map_err(|err| format!("Invalid response from quote server. (Invalid timestamp \"{timestamp_str}\" due to {err} in \"{line}\")"))?;
     let crypto_key = returned
         .next()
-        .ok_or_else(|| format!("Invalid response from quote server. (Missing crypto_key in \"{line}\")"))?
+        .ok_or_else(|| {
+            format!("Invalid response from quote server. (Missing crypto_key in \"{line}\")")
+        })?
         .to_string();
     Ok(QuoteResponse {
         quote,
