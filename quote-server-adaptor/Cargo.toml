@@ -13,6 +13,9 @@ tracing-opentelemetry = "0.18.0"
 opentelemetry = { version = "0.18.0", features = ["rt-tokio", "trace"] }
 opentelemetry-jaeger = { version = "0.17.0", features = ["rt-tokio", "reqwest_collector_client"] }
 tower = "0.4.13"
+hyper = "1.0.0-rc.2"
+futures = "0.3.26"
+futures-util = "0.3.26"
 
 [build-dependencies]
 tonic-build = "0.8.4"
