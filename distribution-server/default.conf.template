@@ -1,5 +1,5 @@
 server {
-    listen       80;
+    listen 80 http2;
     location /day_trader.Quote {
         grpc_pass ${QUOTE_SERVER_URI};
     }
