@@ -5,7 +5,6 @@ use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
-use std::str::FromStr;
 
 use quote_server_adaptor::fake::FakeQuoteServer;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
@@ -23,7 +22,6 @@ use tonic::transport::Server;
 use tonic::{Request, Response, Status};
 use tracing::{info, instrument, Level};
 use tracing_subscriber::filter::{Directive, LevelFilter};
-use tracing_subscriber::fmt::writer::MakeWriterExt;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{EnvFilter, Layer};
@@ -42,10 +40,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with(
             tracing_subscriber::fmt::layer()
                 .with_ansi(true)
-                .with_filter(EnvFilter::builder()
-                    .with_default_directive(Directive::from(LevelFilter::DEBUG))
-                    .from_env_lossy()
-                )
+                .with_filter(
+                    EnvFilter::builder()
+                        .with_default_directive(Directive::from(LevelFilter::DEBUG))
+                        .from_env_lossy(),
+                ),
         )
         .with(
             tracing_opentelemetry::layer()
