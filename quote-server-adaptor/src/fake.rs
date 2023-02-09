@@ -14,11 +14,12 @@ impl AsyncWrite for FakeQuoteServer {
         _: &mut Context<'_>,
         buf: &[u8],
     ) -> Poll<Result<usize, std::io::Error>> {
-        match self.sent.replace(Some(String::from_utf8(buf.to_vec()).expect("valid utf8"))) {
+        match self
+            .sent
+            .replace(Some(String::from_utf8(buf.to_vec()).expect("valid utf8")))
+        {
             Some(last) => panic!("wrote twice before getting response! ({last}, {buf:?})"),
-            None => {
-                Poll::Ready(Ok(buf.len()))
-            }
+            None => Poll::Ready(Ok(buf.len())),
         }
     }
 

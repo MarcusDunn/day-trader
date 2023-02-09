@@ -6,6 +6,7 @@ use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
 
+use quote_server_adaptor::fake::FakeQuoteServer;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 use quote_server_adaptor::tower_otel::OtelLayer;
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
@@ -22,7 +23,6 @@ use tonic::{Request, Response, Status};
 use tracing::{info, instrument};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use quote_server_adaptor::fake::FakeQuoteServer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -110,7 +110,8 @@ async fn handle_socket<T, G>(
     mut reader: &mut BufReader<G>,
 ) where
     T: AsyncWrite + Debug + Unpin,
-    G: AsyncRead + Debug + Unpin {
+    G: AsyncRead + Debug + Unpin,
+{
     let (send, respond) = tcp_handler_recv
         .recv()
         .await
