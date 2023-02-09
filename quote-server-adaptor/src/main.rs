@@ -72,7 +72,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let server = Server::builder()
         .layer(OtelLayer::new(tracer))
-        .add_service(QuoteServer::new(Quoter { tcp_handler_send }))
+        .add_service(QuoteServer::new(Quoter { tcp_handler_send: tcp_handler_send.clone() }))
         .serve(([127, 0, 0, 1], 5000).into());
 
     let exit_result = select! {
@@ -205,7 +205,7 @@ fn response_from_quote_server_string(line: &str) -> Result<QuoteResponse, String
     })?;
     let quote = quote_str
         .parse()
-        .map_err(|err| format!("Invalid response from quote server. (Invalid quote [{quote_str}]: {err} in \"{line}\")"))?;
+        .map_err(|err| format!("Invalid response from quote server. (Invalid quote \"{quote_str}\": {err} in \"{line}\")"))?;
     let sym = returned
         .next()
         .ok_or_else(|| format!("Invalid response from quote server. (Missing sym in \"{line}\")"))?
