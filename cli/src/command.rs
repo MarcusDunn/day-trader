@@ -56,94 +56,60 @@ pub enum LoadTestCommand {
 impl LoadTestCommand {
     pub async fn execute(self, client: &mut DayTraderServicesStack) -> Result<(), Status> {
         match self {
-            LoadTestCommand::Add(add) => client.transaction.add(add).await.map(|ok| {
-                println!("{ok:?}");
-            }),
-            LoadTestCommand::Quote(quote) => client.quote.quote(quote).await.map(|ok| {
-                println!("{ok:?}");
-            }),
-            LoadTestCommand::Buy(buy) => client.transaction.buy(buy).await.map(|ok| {
-                println!("{ok:?}");
-            }),
+            LoadTestCommand::Add(add) => client.transaction.add(add).await.map(|ok| {}),
+            LoadTestCommand::Quote(quote) => client.quote.quote(quote).await.map(|ok| {}),
+            LoadTestCommand::Buy(buy) => client.transaction.buy(buy).await.map(|ok| {}),
             LoadTestCommand::CommitBuy(commit_buy) => {
-                client.transaction.commit_buy(commit_buy).await.map(|ok| {
-                    println!("{ok:?}");
-                })
+                client.transaction.commit_buy(commit_buy).await.map(|ok| {})
             }
             LoadTestCommand::CommitSell(commit_sell) => {
-                client.transaction.commit_sell(commit_sell).await.map(|ok| {
-                    println!("{ok:?}");
-                })
+                client.transaction.commit_sell(commit_sell).await.map(|ok| {})
             }
             LoadTestCommand::CancelSell(cancel_sell) => {
-                client.transaction.cancel_sell(cancel_sell).await.map(|ok| {
-                    println!("{ok:?}");
-                })
+                client.transaction.cancel_sell(cancel_sell).await.map(|ok| {})
             }
             LoadTestCommand::DisplaySummary(display_summary) => {
-                client.log.display_summary(display_summary).await.map(|ok| {
-                    println!("{ok:?}");
-                })
+                client.log.display_summary(display_summary).await.map(|ok| {})
             }
             LoadTestCommand::CancelBuy(cancel_buy) => {
-                client.transaction.cancel_buy(cancel_buy).await.map(|ok| {
-                    println!("{ok:?}");
-                })
+                client.transaction.cancel_buy(cancel_buy).await.map(|ok| {})
             }
             LoadTestCommand::CancelSetBuy(cancel_set_buy) => client
                 .trigger
                 .cancel_set_buy(cancel_set_buy)
                 .await
-                .map(|ok| {
-                    println!("{ok:?}");
-                }),
+                .map(|ok| {}),
             LoadTestCommand::SetBuyAmount(set_buy_amount) => client
                 .trigger
                 .set_buy_amount(set_buy_amount)
                 .await
-                .map(|ok| {
-                    println!("{ok:?}");
-                }),
-            LoadTestCommand::Sell(sell) => client.transaction.sell(sell).await.map(|ok| {
-                println!("{ok:?}");
-            }),
+                .map(|ok| {}),
+            LoadTestCommand::Sell(sell) => client.transaction.sell(sell).await.map(|ok| {}),
             LoadTestCommand::CancelSetSell(cancel_set_sell) => client
                 .trigger
                 .cancel_set_sell(cancel_set_sell)
                 .await
-                .map(|ok| {
-                    println!("{ok:?}");
-                }),
+                .map(|ok| {}),
             LoadTestCommand::SetSellTrigger(set_sell_trigger) => client
                 .trigger
                 .set_sell_trigger(set_sell_trigger)
                 .await
-                .map(|ok| {
-                    println!("{ok:?}");
-                }),
+                .map(|ok| {}),
             LoadTestCommand::SetSellAmount(set_sell_amount) => client
                 .trigger
                 .set_sell_amount(set_sell_amount)
                 .await
-                .map(|ok| {
-                    println!("{ok:?}");
-                }),
+                .map(|ok| {}),
             LoadTestCommand::DumpLogFileName(dump_log) => {
-                client.log.dump_log(dump_log).await.map(|ok| {
-                    println!("{ok:?}");
-                })
+                client.log.dump_log(dump_log).await.map(|ok| {})
             }
             LoadTestCommand::SetBuyTrigger(set_buy_trigger) => client
                 .trigger
                 .set_buy_trigger(set_buy_trigger)
                 .await
-                .map(|ok| {
-                    println!("{ok:?}");
-                }),
+                .map(|ok| {}),
             LoadTestCommand::DumpLogUser(dump_log_user) => {
-                client.log.dump_log_user(dump_log_user).await.map(|ok| {
-                    println!("{ok:?}");
-                })
+                client.log.dump_log_user(dump_log_user).await.map(|ok| {})
             }
         }
     }
