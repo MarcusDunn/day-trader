@@ -61,14 +61,17 @@ impl AsyncRead for FakeQuoteServer {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use std::ops::Deref;
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-    use super::*;
 
     #[tokio::test]
     async fn check_fake_quote_server_can_respond() {
         let mut server = FakeQuoteServer::default();
-        server.write_all(b"marcus,TSLA").await.expect("write should succeed");
+        server
+            .write_all(b"marcus,TSLA")
+            .await
+            .expect("write should succeed");
         let mut reader = BufReader::new(server.clone());
         let mut str = String::new();
         reader.read_line(&mut str).await.expect("read should work");
