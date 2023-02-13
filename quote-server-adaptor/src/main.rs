@@ -5,6 +5,7 @@ use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
+use std::net::{Ipv4Addr, SocketAddrV4};
 
 use quote_server_adaptor::fake::FakeQuoteServer;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
@@ -65,7 +66,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let mut quote_server = FakeQuoteServer::default();
             let mut writer = quote_server.clone();
             let mut reader = BufReader::new(&mut quote_server);
-            println!("running a fake quote server");
+            info!("running a fake quote server");
             loop {
                 handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await
             }
@@ -74,7 +75,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .await
                 .unwrap_or_else(|_| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to."))
                 .into_split();
-            println!("connected to {quote_server_addr}");
+            info!("connected to {quote_server_addr}");
 
             let mut reader = BufReader::new(reader);
 
@@ -84,12 +85,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     });
 
+    let addr = env::var("SERVER_ADDR")
+        .unwrap_or(String::from("0.0.0.0:50051"))
+        .parse()?;
     let server = Server::builder()
         .layer(OtelLayer::new(open_telemetry_tracer))
         .add_service(QuoteServer::new(Quoter {
             tcp_handler_send: tcp_handler_send.clone(),
         }))
-        .serve(([127, 0, 0, 1], 5000).into());
+        .serve(addr);
+    info!("listening on {addr}");
 
     let exit_result = select! {
         socket_handler_result = socket_handler => {

@@ -11,7 +11,9 @@ It requires a two environment variables:
 - `OTEL_EXPORTER_URI`: The URI of the Jaeger collector.
   - e.g. `localhost:14268`
 
-It will serve requests from port 5000.
+And one optional one:
+- `SERVER_ADDR`: the uri to serve from. 
+  - defaults to `0.0.0.0:50051`.
 
 ## Overview
 
