@@ -85,13 +85,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     });
 
-    let addr = env::var("SERVER_ADDR").unwrap_or(String::from("0.0.0.0:50051")).parse()?;
+    let addr = env::var("SERVER_ADDR")
+        .unwrap_or(String::from("0.0.0.0:50051"))
+        .parse()?;
     let server = Server::builder()
         .layer(OtelLayer::new(open_telemetry_tracer))
         .add_service(QuoteServer::new(Quoter {
             tcp_handler_send: tcp_handler_send.clone(),
         }))
-            .serve(addr);
+        .serve(addr);
     info!("listening on {addr}");
 
     let exit_result = select! {
