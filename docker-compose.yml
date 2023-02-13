@@ -11,13 +11,14 @@ services:
     image: ghcr.io/marcusdunn/day-trader/quote-server-adaptor:latest
     environment:
       QUOTE_SERVER_URI: FAKE
-      OTEL_EXPORTER_URI: jaeger:14268/api/traces
+      OTEL_EXPORTER_URI: http://jaeger:14268/api/traces
+      SERVER_ADDR: 0.0.0.0:50051
     ports:
-      - "5000:5000"
+      - "50051:50051"
   distribution-server:
     image: ghcr.io/marcusdunn/day-trader/distribution-server:latest
     environment:
-      QUOTE_SERVER_URI: quote-server-adaptor:5000
+      QUOTE_SERVER_URI: quote-server-adaptor:50051
       OTEL_EXPORTER_URI: jaeger:14268
     ports:
       - "80:80"
