@@ -7,16 +7,13 @@ services:
     environment:
       COLLECTOR_OTLP_ENABLED: true
   quote-server-adaptor:
-    build:
-      context: .
-      dockerfile: quote-server-adaptor.Dockerfile
+    image: ghcr.io/marcusdunn/day-trader/quote-server-adaptor:latest
     environment:
       QUOTE_SERVER_URI: FAKE
       OTEL_EXPORTER_URI: http://jaeger:4317
       SERVER_ADDR: 0.0.0.0:50051
   distribution-server:
-    build:
-      context: distribution-server
+    image: ghcr.io/marcusdunn/day-trader/distribution-server:latest
     environment:
       QUOTE_SERVER_URI: quote-server-adaptor:50051
       OTEL_EXPORTER_URI: jaeger:4317
