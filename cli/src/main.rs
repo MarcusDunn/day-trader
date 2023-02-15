@@ -31,7 +31,7 @@ async fn main() -> Result<(), anyhow::Error> {
 #[command(author, version, about, long_about = None)]
 struct CliArgs {
     /// The uri of the gRPC services.
-    #[arg(default_value_t = String::from("http://localhost:5000"))]
+    #[arg(default_value_t = String::from("http://localhost:80"))]
     services_uri: String,
     #[command(subcommand)]
     command: CliCommand,

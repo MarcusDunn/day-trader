@@ -1,11 +1,12 @@
-use opentelemetry::global;
 use opentelemetry::runtime::Tokio;
 use opentelemetry::sdk::propagation::TraceContextPropagator;
+use opentelemetry::sdk::{trace, Resource};
+use opentelemetry::{global, KeyValue};
+use opentelemetry_otlp::WithExportConfig;
 use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
-use std::net::{Ipv4Addr, SocketAddrV4};
 
 use quote_server_adaptor::fake::FakeQuoteServer;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
@@ -31,10 +32,23 @@ use tracing_subscriber::{EnvFilter, Layer};
 async fn main() -> Result<(), Box<dyn Error>> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
-    let open_telemetry_tracer = opentelemetry_jaeger::new_collector_pipeline()
-        .with_reqwest()
-        .with_service_name("quote-server-adaptor")
-        .with_endpoint(env::var("OTEL_EXPORTER_URI").expect("OTEL_EXPORTER_URI should be set"))
+    let exporter_uri = env::var("OTEL_EXPORTER_URI")?;
+
+    info!("sending traces to {exporter_uri}");
+
+    let open_telemetry_tracer = opentelemetry_otlp::new_pipeline()
+        .tracing()
+        .with_exporter(
+            opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_endpoint(exporter_uri),
+        )
+        .with_trace_config(
+            trace::config().with_resource(Resource::new(vec![KeyValue::new(
+                "service.name",
+                "quote-server-adaptor",
+            )])),
+        )
         .install_batch(Tokio)?;
 
     tracing_subscriber::registry()
@@ -93,7 +107,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .add_service(QuoteServer::new(Quoter {
             tcp_handler_send: tcp_handler_send.clone(),
         }))
-        .serve(addr);
+        .serve_with_shutdown(addr, async {
+            tokio::signal::ctrl_c().await.unwrap();
+        });
     info!("listening on {addr}");
 
     let exit_result = select! {
