@@ -7,7 +7,6 @@ use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
-use std::net::{Ipv4Addr, SocketAddrV4};
 
 use quote_server_adaptor::fake::FakeQuoteServer;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
@@ -34,6 +33,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     global::set_text_map_propagator(TraceContextPropagator::new());
 
     let exporter_uri = env::var("OTEL_EXPORTER_URI")?;
+
+    info!("sending traces to {exporter_uri}");
 
     let open_telemetry_tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
@@ -106,7 +107,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .add_service(QuoteServer::new(Quoter {
             tcp_handler_send: tcp_handler_send.clone(),
         }))
-        .serve(addr);
+        .serve_with_shutdown(addr, async {
+            tokio::signal::ctrl_c().await.unwrap();
+        });
     info!("listening on {addr}");
 
     let exit_result = select! {

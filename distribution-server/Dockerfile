@@ -1,11 +1,9 @@
 FROM nginx:1.18
 RUN apt-get update ; apt-get install unzip
 ADD https://github.com/open-telemetry/opentelemetry-cpp-contrib/releases/download/webserver%2Fv1.0.0/opentelemetry-webserver-sdk-x64-linux.tgz.zip /opt
-ADD https://github.com/fullstorydev/grpcurl/releases/download/v1.8.7/grpcurl_1.8.7_linux_x86_64.tar.gz /bin
-RUN tar -xzf bin/grpcurl_1.8.7_linux_x86_64.tar.gz
 RUN cd /opt ; unzip opentelemetry-webserver-sdk-x64-linux.tgz.zip; tar xvfz opentelemetry-webserver-sdk-x64-linux.tgz
 RUN cd /opt/opentelemetry-webserver-sdk; ./install.sh
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/opentelemetry-webserver-sdk/sdk_lib/lib
 RUN echo "load_module /opt/opentelemetry-webserver-sdk/WebServerModule/Nginx/ngx_http_opentelemetry_module.so;\n$(cat /etc/nginx/nginx.conf)" > /etc/nginx/nginx.conf
 COPY default.conf.template /etc/nginx/templates/default.conf.template
-COPY opentelemetry_module.conf.template /etc/nginx/templates/conf.d.template
+COPY opentelemetry_module.conf.template /etc/nginx/templates/opentelemetry_module.conf.template
