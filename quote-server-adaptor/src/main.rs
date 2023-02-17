@@ -22,7 +22,7 @@ use tokio::sync::oneshot::Sender;
 use tokio::sync::{mpsc, oneshot};
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
-use tracing::{info, instrument, Level, span};
+use tracing::{info, instrument, Level};
 use tracing_subscriber::filter::{Directive, LevelFilter};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
