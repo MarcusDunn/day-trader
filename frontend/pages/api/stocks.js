@@ -35,8 +35,8 @@ export default async function getStocks(req, res){
                 percentChange: -0.41
             },
             {
-                name: "QUE",
-                price: 4512.54,
+                name: "DFQ",
+                price: 6458.34,
                 change: 12.30,
                 percentChange: 0.27
             },
