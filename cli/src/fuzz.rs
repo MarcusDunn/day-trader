@@ -76,21 +76,38 @@ impl Arbitrary for LoadTestCommand {
 
 #[derive(clap::ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum LoadTestCommandType {
+    /// Add the given amount of money to the user's account
     Add,
+    /// Get the current quote for the stock for the specified user
     Quote,
+    /// Buy the dollar amount of the stock for the specified user at the current price.
     Buy,
+    /// Commits the most recently executed BUY command
     CommitBuy,
+    /// Cancels the most recently executed BUY Command
     CancelBuy,
+    /// Sell the specified dollar mount of the stock currently held by the specified user at the current price.
     Sell,
+    /// Commits the most recently executed SELL command
     CommitSell,
+    /// Cancels the most recently executed SELL Command
     CancelSell,
+    /// Sets a defined amount of the given stock to buy when the current stock price is less than or equal to the BUY_TRIGGER
     SetBuyAmount,
+    /// Cancels a SET_BUY command issued for the given stock
     CancelSetBuy,
+    /// Sets the trigger point base on the current stock price when any SET_BUY will execute.
     SetBuyTrigger,
+    /// Sets a defined amount of the specified stock to sell when the current stock price is equal or greater than the sell trigger point
     SetSellAmount,
+    /// Sets the stock price trigger point for executing any SET_SELL triggers associated with the given stock and user
     SetSellTrigger,
+    /// Cancels the SET_SELL associated with the given stock and user
     CancelSetSell,
+    /// Provides a summary to the client of the given user's transaction history and the current status of their accounts as well as any set buy or sell triggers and their parameters
     DisplaySummary,
+    /// Print out to the specified file the complete set of transactions that have occurred in the system.
     DumpLogFileName,
+    /// Print out the history of the users transactions to the user specified file
     DumpLogUser,
 }

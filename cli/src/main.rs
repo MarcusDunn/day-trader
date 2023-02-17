@@ -91,7 +91,9 @@ enum CliCommand {
 
 #[derive(clap::Subcommand, Clone, Debug, PartialEq, Eq)]
 enum FuzzCommand {
+    /// Fuzz with every possible command
     All,
+    /// Fuzz with a subset of commands
     Some(FuzzMany),
 }
 
