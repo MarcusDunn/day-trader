@@ -85,22 +85,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await
             }
         } else {
-            let (reader, mut writer) = TcpStream::connect(&quote_server_addr)
-                .await
-                .unwrap_or_else(|_| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to."))
-                .into_split();
-            info!("connected to {quote_server_addr}");
-
-            let mut reader = BufReader::new(reader);
-
             loop {
+                let mut stream = TcpStream::connect(&quote_server_addr)
+                    .await
+                    .unwrap_or_else(|err| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to: {err}"));
+                let (reader, mut writer) = stream.split();
+
+                let mut reader = BufReader::new(reader);
+
                 handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await;
             }
         }
     });
 
     let addr = env::var("SERVER_ADDR")
-        .unwrap_or(String::from("0.0.0.0:50051"))
+        .unwrap_or_else(|_| String::from("0.0.0.0:50051"))
         .parse()?;
     let server = Server::builder()
         .layer(OtelLayer::new(open_telemetry_tracer))
