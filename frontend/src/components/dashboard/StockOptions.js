@@ -209,7 +209,7 @@ export default function StockOptions() {
                         ${row.price.toFixed(2)}
                       </TableCell>
                       <TableCell align="right">
-                        <Button variant="outlined">View</Button>
+                        <Button variant="outlined" href={"/stocks/".concat(row.name)}>View</Button>
                       </TableCell>
                     </TableRow>
                   );
