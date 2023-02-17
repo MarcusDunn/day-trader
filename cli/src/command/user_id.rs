@@ -3,10 +3,11 @@ use crate::protos::{
 };
 use crate::split_ext::CommandParseIterExt;
 use crate::CommandParseFailure;
+use proptest_derive::Arbitrary;
 use std::str::Split;
 use tonic::{IntoRequest, Request};
 
-#[derive(Debug, PartialEq, clap::Args, Clone)]
+#[derive(Debug, PartialEq, clap::Args, Clone, Arbitrary)]
 pub struct LoadTestUserIdCommand {
     pub user_id: String,
 }
