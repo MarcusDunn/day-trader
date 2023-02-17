@@ -15,15 +15,22 @@ function StockHeader({stock}) {
             }}
         >
             <div className="text-center pt-20">
-                <Typography variant="h3">
-                    {stock.name} 
-                </Typography>
-                <Typography
-                  variant="h5"
-                  className={ stock.percentChange > 0 ? "text-green-500" : "text-red-500"}
-                >
-                  {stock.percentChange > 0 ? "+" : null}{stock.percentChange}%
-                </Typography>
+            <Typography
+                variant="h2"
+            >
+                {stock.name}
+            </Typography>
+            <Typography
+                variant="h6"
+                className={stock.change > 0 ? "text-green-500" : "text-red-500"}
+            >
+                ${stock.change.toFixed(2)} ~ {stock.change > 0 ? "+" : "-"}{stock.percentChange.toFixed(2)}%
+            </Typography>
+            <Typography
+                variant="h5"
+            >
+                ${stock.price}
+            </Typography>
             </div>
         </Box>
     )

@@ -1,13 +1,14 @@
-import { Container } from '@mui/material'
+import { Container, Typography } from '@mui/material'
 import React from 'react'
 import StockHeader from '../../src/components/stocks/StockHeader'
+import SingleStockBody from '../../src/components/stocks/SingleStockBody'
 
 function stock({ stock }) {
     return (
         <main>
             <StockHeader stock={stock} />
             <Container maxWidth="md" className="my-20">
-                
+                <SingleStockBody stock={stock} />
             </Container>
         </main>
     )
