@@ -7,6 +7,7 @@ function stock({ stock }) {
         <main>
             <StockHeader stock={stock} />
             <Container maxWidth="md" className="my-20">
+                
             </Container>
         </main>
     )
