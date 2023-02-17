@@ -89,18 +89,27 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .await
                 .unwrap_or_else(|_| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to."))
                 .into_split();
+
             info!("connected to {quote_server_addr}");
 
             let mut reader = BufReader::new(reader);
 
             loop {
                 handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await;
+
+                let pair = TcpStream::connect(&quote_server_addr)
+                    .await
+                    .unwrap_or_else(|_| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to."))
+                    .into_split();
+
+                reader = BufReader::new(pair.0);
+                writer = pair.1;
             }
         }
     });
 
     let addr = env::var("SERVER_ADDR")
-        .unwrap_or(String::from("0.0.0.0:50051"))
+        .unwrap_or_else(|_| String::from("0.0.0.0:50051"))
         .parse()?;
     let server = Server::builder()
         .layer(OtelLayer::new(open_telemetry_tracer))
