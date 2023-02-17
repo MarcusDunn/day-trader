@@ -85,25 +85,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await
             }
         } else {
-            let (reader, mut writer) = TcpStream::connect(&quote_server_addr)
-                .await
-                .unwrap_or_else(|_| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to."))
-                .into_split();
-
-            info!("connected to {quote_server_addr}");
-
-            let mut reader = BufReader::new(reader);
-
             loop {
-                handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await;
-
-                let pair = TcpStream::connect(&quote_server_addr)
+                let mut stream = TcpStream::connect(&quote_server_addr)
                     .await
-                    .unwrap_or_else(|_| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to."))
-                    .into_split();
+                    .unwrap_or_else(|err| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to: {err}"));
+                let (reader, mut writer) = stream.split();
 
-                reader = BufReader::new(pair.0);
-                writer = pair.1;
+                let mut reader = BufReader::new(reader);
+
+                handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await;
             }
         }
     });
