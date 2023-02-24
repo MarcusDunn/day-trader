@@ -1,12 +1,17 @@
 use clap::Parser;
+use proptest::prelude::{any_with, TestCaseError};
+use proptest::strategy::SBoxedStrategy;
+use proptest::test_runner::{Config, TestCaseResult, TestRunner};
 use std::fs::{metadata, File};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use tokio::task::JoinSet;
 use tonic::transport::{Channel, Uri};
+use tracing::{error, info};
 
 use cli::command::LoadTestCommand;
+use cli::fuzz::LoadTestCommandType;
 use cli::services::DayTraderServicesStack;
 
 #[tokio::main]
@@ -21,14 +26,51 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let stack = DayTraderServicesStack::new(&channel);
 
-    let join_set = spawn_commands(commands, stack)?;
-    join_all(join_set).await?;
+    match commands {
+        CommandList::Fuzz(cases, strat) => {
+            let (send, mut recv) = tokio::sync::mpsc::channel::<(
+                LoadTestCommand,
+                tokio::sync::oneshot::Sender<TestCaseResult>,
+            )>(32);
+
+            tokio::task::spawn(async move {
+                loop {
+                    while let Some((command, send)) = recv.recv().await {
+                        let mut services_stack = stack.clone();
+                        let result = command
+                            .execute(&mut services_stack)
+                            .await
+                            .map_err(|err| TestCaseError::fail(err.to_string()));
+                        send.send(result).unwrap_or_else(|err| {
+                            panic!("failed to send result via oneshot from worker: {err:?}")
+                        })
+                    }
+                }
+            });
+
+            tokio::task::spawn_blocking(move || {
+                let mut runner = TestRunner::new(Config::with_cases(cases));
+                runner.run(&strat, |command| {
+                    let (oneshot_send, oneshot_recv) = tokio::sync::oneshot::channel();
+                    send.blocking_send((command, oneshot_send))
+                        .expect("failed to send");
+                    oneshot_recv.blocking_recv().expect("failed to revc")
+                })
+            })
+            .await??;
+        }
+        CommandList::List(commands) => {
+            let join_set = spawn_commands(commands, stack)?;
+            join_all(join_set).await?;
+        }
+    }
 
     Ok(())
 }
 
 #[derive(clap::Parser, Debug, PartialEq)]
 #[command(author, version, about, long_about = None)]
+
 struct CliArgs {
     /// The uri of the gRPC services.
     #[arg(default_value_t = String::from("http://localhost:80"))]
@@ -43,6 +85,51 @@ enum CliCommand {
     Single(LoadTestCommand),
     /// Run a load test file.
     File { file: PathBuf },
+    /// Fuzz the API
+    Fuzz(Fuzz),
+}
+
+#[derive(clap::Subcommand, Clone, Debug, PartialEq, Eq)]
+enum FuzzCommand {
+    /// Fuzz with every possible command
+    All,
+    /// Fuzz with a subset of commands
+    Some(FuzzMany),
+}
+
+impl FuzzCommand {
+    const ALL: [LoadTestCommandType; 17] = [
+        LoadTestCommandType::Add,
+        LoadTestCommandType::Quote,
+        LoadTestCommandType::Buy,
+        LoadTestCommandType::CommitBuy,
+        LoadTestCommandType::CancelBuy,
+        LoadTestCommandType::Sell,
+        LoadTestCommandType::CommitSell,
+        LoadTestCommandType::CancelSell,
+        LoadTestCommandType::SetBuyAmount,
+        LoadTestCommandType::CancelSetBuy,
+        LoadTestCommandType::SetBuyTrigger,
+        LoadTestCommandType::SetSellAmount,
+        LoadTestCommandType::SetSellTrigger,
+        LoadTestCommandType::CancelSetSell,
+        LoadTestCommandType::DisplaySummary,
+        LoadTestCommandType::DumpLogFileName,
+        LoadTestCommandType::DumpLogUser,
+    ];
+}
+
+#[derive(clap::Args, Clone, Debug, PartialEq, Eq)]
+struct Fuzz {
+    #[arg(default_value_t = 1000)]
+    number: u32,
+    #[command(subcommand)]
+    command: FuzzCommand,
+}
+
+#[derive(clap::Args, Clone, Debug, PartialEq, Eq)]
+struct FuzzMany {
+    pub commands: Vec<LoadTestCommandType>,
 }
 
 async fn join_all(mut join_set: JoinSet<()>) -> Result<(), anyhow::Error> {
@@ -51,13 +138,13 @@ async fn join_all(mut join_set: JoinSet<()>) -> Result<(), anyhow::Error> {
     while let Some(result) = join_set.join_next().await {
         count += 1;
         if let Err(err) = result {
-            println!("Error joining task: {err}");
+            error!("Error joining task: {err}");
         }
     }
     let elapsed_millis = start.elapsed()?.as_millis();
     let requests_per_milli = count as f64 / elapsed_millis as f64;
     let requests_per_second = requests_per_milli * 1000.0;
-    println!("Received {count} commands in {elapsed_millis}ms ({requests_per_second}rps)");
+    info!("Received {count} commands in {elapsed_millis}ms ({requests_per_second}rps)");
     Ok(())
 }
 
@@ -72,23 +159,33 @@ fn spawn_commands(
         let mut stack = stack.clone();
         join_set.spawn(async move {
             if let Err(err) = command.execute(&mut stack).await {
-                println!("Error executing command: {err}");
+                error!("Error executing command: {err}");
             }
         });
     }
     let elapsed_millis = start.elapsed()?.as_millis();
     let requests_per_milli = len as f64 / elapsed_millis as f64;
     let requests_per_second = requests_per_milli * 1000.0;
-    println!("Sent {len} commands in {elapsed_millis}ms, ({requests_per_second}rps)");
+    info!("Sent {len} commands in {elapsed_millis}ms, ({requests_per_second}rps)");
     Ok(join_set)
 }
 
-fn command_list_from_cli_command(
-    command: &CliCommand,
-) -> Result<Vec<LoadTestCommand>, anyhow::Error> {
+enum CommandList {
+    Fuzz(u32, SBoxedStrategy<LoadTestCommand>),
+    List(Vec<LoadTestCommand>),
+}
+
+fn command_list_from_cli_command(command: &CliCommand) -> Result<CommandList, anyhow::Error> {
     Ok(match command {
-        CliCommand::File { file } => parse_commands_from_file(file)?,
-        CliCommand::Single(single) => vec![single.clone()],
+        CliCommand::File { file } => CommandList::List(parse_commands_from_file(file)?),
+        CliCommand::Single(single) => CommandList::List(vec![single.clone()]),
+        CliCommand::Fuzz(Fuzz { number, command }) => {
+            let types = match command {
+                FuzzCommand::All => FuzzCommand::ALL.to_vec(),
+                FuzzCommand::Some(FuzzMany { commands }) => commands.to_vec(),
+            };
+            CommandList::Fuzz(number.to_owned(), any_with::<LoadTestCommand>(types))
+        }
     })
 }
 

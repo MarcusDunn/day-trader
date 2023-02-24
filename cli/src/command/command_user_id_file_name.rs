@@ -1,7 +1,8 @@
 use crate::protos::{DumpLogRequest, DumpLogUserRequest};
+use proptest_derive::Arbitrary;
 use tonic::{IntoRequest, Request};
 
-#[derive(Clone, Debug, clap::Args, PartialEq)]
+#[derive(Clone, Debug, clap::Args, PartialEq, Arbitrary)]
 pub struct LoadTestDumpLogUserIdFileName {
     pub user_id: String,
     pub file_name: String,

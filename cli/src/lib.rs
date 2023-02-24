@@ -4,6 +4,7 @@ mod protos {
     tonic::include_proto!("day_trader");
 }
 pub mod command;
+pub mod fuzz;
 pub mod services;
 mod split_ext;
 
