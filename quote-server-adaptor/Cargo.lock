@@ -397,9 +397,9 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "289cfdbf735dea222b0ec6a10224b4d9552c7662bb451d4589cbfda3d407d1a3"
+checksum = "7b75264b2003a3913f118d35c586e535293b3e22e41f074930762929d071e092"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -815,7 +815,7 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "futures-util",
- "hyper 1.0.0-rc.2",
+ "hyper 1.0.0-rc.3",
  "opentelemetry",
  "opentelemetry-otlp",
  "prost",
