@@ -1,10 +1,11 @@
 use crate::protos::AddRequest;
 use crate::split_ext::CommandParseIterExt;
 use crate::CommandParseFailure;
+use proptest_derive::Arbitrary;
 use std::str::Split;
 use tonic::{IntoRequest, Request};
 
-#[derive(PartialEq, Debug, clap::Args, Clone)]
+#[derive(PartialEq, Debug, clap::Args, Clone, Arbitrary)]
 pub struct LoadTestAdd {
     pub user_id: String,
     pub amount: f32,

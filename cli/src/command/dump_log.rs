@@ -2,6 +2,7 @@ use crate::command::command_user_id_file_name::LoadTestDumpLogUserIdFileName;
 use crate::protos::DumpLogRequest;
 use crate::split_ext::CommandParseIterExt;
 use crate::CommandParseFailure;
+use proptest_derive::Arbitrary;
 use std::str::Split;
 use tonic::{IntoRequest, Request};
 
@@ -31,7 +32,7 @@ impl TryFrom<Split<'_, char>> for DumpLog {
     }
 }
 
-#[derive(Clone, Debug, clap::Args, PartialEq)]
+#[derive(Clone, Debug, clap::Args, PartialEq, Arbitrary)]
 pub struct LoadTestDumpLogFileName {
     pub file_name: String,
 }

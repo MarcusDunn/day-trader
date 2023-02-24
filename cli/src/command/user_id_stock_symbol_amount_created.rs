@@ -4,10 +4,11 @@ use crate::protos::{
 };
 use crate::split_ext::CommandParseIterExt;
 use crate::CommandParseFailure;
+use proptest_derive::Arbitrary;
 use std::str::Split;
 use tonic::{IntoRequest, Request};
 
-#[derive(PartialEq, Debug, clap::Args, Clone)]
+#[derive(PartialEq, Debug, clap::Args, Clone, Arbitrary)]
 pub struct LoadTestUserIdStockSymbolAmountCommand {
     pub user_id: String,
     pub stock_symbol: String,
