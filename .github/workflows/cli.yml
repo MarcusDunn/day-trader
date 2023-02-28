@@ -52,6 +52,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
+          args: --manifest-path cli/Cargo.toml -- -D warnings
       - name: Run clippy
         with:
           command: clippy
