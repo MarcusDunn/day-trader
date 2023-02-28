@@ -176,7 +176,7 @@ async fn handle_socket<T, G>(
     };
 }
 
-#[instrument(skip(writer,reader))]
+#[instrument(skip(writer, reader))]
 async fn get_response<W, R>(
     writer: &mut W,
     reader: &mut R,
