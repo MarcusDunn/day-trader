@@ -43,17 +43,22 @@ jobs:
           toolchain: stable
           override: true
           components: rustfmt, clippy
-      - name: Run cargo fmt
+      - name: Run fmt
         uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --manifest-path cli/Cargo.toml --all -- --check
-      - name: Run cargo clippy
+      - name: Build
         uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --manifest-path cli/Cargo.toml
+      - name: Run clippy
         with:
           command: clippy
           args: --manifest-path cli/Cargo.toml -- -D warnings
-      - uses: actions-rs/cargo@v1
+      - name: Run test
+        uses: actions-rs/cargo@v1
         with:
           command: test
           args: --manifest-path cli/Cargo.toml

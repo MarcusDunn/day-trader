@@ -93,6 +93,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }))
         .serve_with_shutdown(addr, async {
             tokio::signal::ctrl_c().await.unwrap();
+            info!("received shutdown signal")
         });
     info!("listening on {addr}");
 
@@ -153,7 +154,7 @@ async fn run_fake_quote_server(
     }
 }
 
-#[instrument]
+#[instrument(skip_all)]
 async fn handle_socket<T, G>(
     tcp_handler_recv: &mut Receiver<(String, Sender<Result<String, &str>>)>,
     mut writer: &mut T,
@@ -175,7 +176,7 @@ async fn handle_socket<T, G>(
     };
 }
 
-#[instrument]
+#[instrument(skip(writer, reader))]
 async fn get_response<W, R>(
     writer: &mut W,
     reader: &mut R,
@@ -203,7 +204,7 @@ struct Quoter {
 
 #[tonic::async_trait]
 impl Quote for Quoter {
-    #[instrument]
+    #[instrument(skip(self))]
     async fn quote(
         &self,
         request: Request<QuoteRequest>,
