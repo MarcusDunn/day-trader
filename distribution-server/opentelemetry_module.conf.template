@@ -5,4 +5,3 @@ NginxModuleServiceName DistributionServer;
 NginxModuleServiceNamespace DistributionServerNameSpace;
 NginxModuleServiceInstanceId DistributionServerId;
 NginxModuleResolveBackends ON;
-NginxModuleTraceAsError ON;
