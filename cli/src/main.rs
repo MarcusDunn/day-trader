@@ -153,7 +153,12 @@ async fn join_all(mut join_set: JoinSet<()>) -> Result<(), anyhow::Error> {
     let elapsed_millis = start.elapsed()?.as_millis();
     let requests_per_milli = count as f64 / elapsed_millis as f64;
     let requests_per_second = requests_per_milli * 1000.0;
-    info!("Received {count} commands in {elapsed_millis}ms ({requests_per_second}rps)");
+    if requests_per_second.is_normal() {
+        info!("Received {count} commands in {elapsed_millis}ms ({requests_per_second}rps)");
+    } else {
+        info!("Received {count} commands in {elapsed_millis}ms");
+    }
+
     Ok(())
 }
 
@@ -175,7 +180,12 @@ fn spawn_commands(
     let elapsed_millis = start.elapsed()?.as_millis();
     let requests_per_milli = len as f64 / elapsed_millis as f64;
     let requests_per_second = requests_per_milli * 1000.0;
-    info!("Sent {len} commands in {elapsed_millis}ms, ({requests_per_second}rps)");
+    if requests_per_second.is_normal() {
+        info!("Sent {len} commands in {elapsed_millis}ms, ({requests_per_second}rps)");
+    } else {
+        info!("Sent {len} commands in {elapsed_millis}ms");
+    }
+
     Ok(join_set)
 }
 
