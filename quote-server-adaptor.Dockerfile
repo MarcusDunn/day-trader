@@ -8,4 +8,4 @@ RUN cargo install --path quote-server-adaptor
 
 FROM debian:bullseye-slim
 COPY --from=build /usr/local/cargo/bin/quote-server-adaptor /usr/local/bin/quote-server-adaptor
-CMD ["quote-server-adaptor"]
+ENTRYPOINT ["quote-server-adaptor"]
