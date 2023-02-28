@@ -28,10 +28,11 @@ Commands:
   dump-log-file-name  Print out to the specified file the complete set of transactions that have occurred in the system
   dump-log-user       Print out the history of the users transactions to the user specified file
   file                Run a load test file
+  fuzz                Fuzz the API
   help                Print this message or the help of the given subcommand(s)
 
 Arguments:
-  [SERVICES_URI]  The uri of the gRPC services [default: http://localhost:5000]
+  [SERVICES_URI]  The uri of the gRPC services [default: http://localhost:80]
 
 Options:
   -h, --help     Print help
