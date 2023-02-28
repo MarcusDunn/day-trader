@@ -8,7 +8,8 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use tokio::task::JoinSet;
 use tonic::transport::{Channel, Uri};
-use tracing::{error, info};
+use tracing::{debug, error, info};
+use tracing_subscriber::EnvFilter;
 
 use cli::command::LoadTestCommand;
 use cli::fuzz::LoadTestCommandType;
@@ -16,7 +17,14 @@ use cli::services::DayTraderServicesStack;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
+    tracing_subscriber::fmt()
+        .with_ansi(true)
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+
     let args = CliArgs::parse();
+
+    debug!("{args:?}");
 
     let commands = command_list_from_cli_command(&args.command)?;
 
@@ -51,6 +59,7 @@ async fn main() -> Result<(), anyhow::Error> {
             tokio::task::spawn_blocking(move || {
                 let mut runner = TestRunner::new(Config::with_cases(cases));
                 runner.run(&strat, |command| {
+                    info!("testing {command:?}");
                     let (oneshot_send, oneshot_recv) = tokio::sync::oneshot::channel();
                     send.blocking_send((command, oneshot_send))
                         .expect("failed to send");

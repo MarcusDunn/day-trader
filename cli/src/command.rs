@@ -7,6 +7,7 @@ use crate::command::user_id_stock_symbol_amount_created::LoadTestUserIdStockSymb
 use crate::services::DayTraderServicesStack;
 use crate::ParseLoadTestCommandError;
 use tonic::Status;
+use tracing::debug;
 
 pub mod add;
 pub mod command_user_id_file_name;
@@ -56,67 +57,91 @@ pub enum LoadTestCommand {
 impl LoadTestCommand {
     pub async fn execute(self, client: &mut DayTraderServicesStack) -> Result<(), Status> {
         match self {
-            LoadTestCommand::Add(add) => client.transaction.add(add).await.map(|_| {}),
-            LoadTestCommand::Quote(quote) => client.quote.quote(quote).await.map(|_| {}),
-            LoadTestCommand::Buy(buy) => client.transaction.buy(buy).await.map(|_| {}),
-            LoadTestCommand::CommitBuy(commit_buy) => {
-                client.transaction.commit_buy(commit_buy).await.map(|_| {})
-            }
+            LoadTestCommand::Add(add) => client
+                .transaction
+                .add(add)
+                .await
+                .map(|resp| debug!("{resp:?}")),
+            LoadTestCommand::Quote(quote) => client
+                .quote
+                .quote(quote)
+                .await
+                .map(|resp| debug!("{resp:?}")),
+            LoadTestCommand::Buy(buy) => client
+                .transaction
+                .buy(buy)
+                .await
+                .map(|resp| debug!("{resp:?}")),
+            LoadTestCommand::CommitBuy(commit_buy) => client
+                .transaction
+                .commit_buy(commit_buy)
+                .await
+                .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::CommitSell(commit_sell) => client
                 .transaction
                 .commit_sell(commit_sell)
                 .await
-                .map(|_| {}),
+                .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::CancelSell(cancel_sell) => client
                 .transaction
                 .cancel_sell(cancel_sell)
                 .await
-                .map(|_| {}),
+                .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::DisplaySummary(display_summary) => client
                 .log
                 .display_summary(display_summary)
                 .await
-                .map(|_| {}),
-            LoadTestCommand::CancelBuy(cancel_buy) => {
-                client.transaction.cancel_buy(cancel_buy).await.map(|_| {})
-            }
+                .map(|resp| debug!("{resp:?}")),
+            LoadTestCommand::CancelBuy(cancel_buy) => client
+                .transaction
+                .cancel_buy(cancel_buy)
+                .await
+                .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::CancelSetBuy(cancel_set_buy) => client
                 .trigger
                 .cancel_set_buy(cancel_set_buy)
                 .await
-                .map(|_| {}),
+                .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::SetBuyAmount(set_buy_amount) => client
                 .trigger
                 .set_buy_amount(set_buy_amount)
                 .await
-                .map(|_| {}),
-            LoadTestCommand::Sell(sell) => client.transaction.sell(sell).await.map(|_| {}),
+                .map(|resp| debug!("{resp:?}")),
+            LoadTestCommand::Sell(sell) => client
+                .transaction
+                .sell(sell)
+                .await
+                .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::CancelSetSell(cancel_set_sell) => client
                 .trigger
                 .cancel_set_sell(cancel_set_sell)
                 .await
-                .map(|_| {}),
+                .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::SetSellTrigger(set_sell_trigger) => client
                 .trigger
                 .set_sell_trigger(set_sell_trigger)
                 .await
-                .map(|_| {}),
+                .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::SetSellAmount(set_sell_amount) => client
                 .trigger
                 .set_sell_amount(set_sell_amount)
                 .await
-                .map(|_| {}),
-            LoadTestCommand::DumpLogFileName(dump_log) => {
-                client.log.dump_log(dump_log).await.map(|_| {})
-            }
+                .map(|resp| debug!("{resp:?}")),
+            LoadTestCommand::DumpLogFileName(dump_log) => client
+                .log
+                .dump_log(dump_log)
+                .await
+                .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::SetBuyTrigger(set_buy_trigger) => client
                 .trigger
                 .set_buy_trigger(set_buy_trigger)
                 .await
-                .map(|_| {}),
-            LoadTestCommand::DumpLogUser(dump_log_user) => {
-                client.log.dump_log_user(dump_log_user).await.map(|_| {})
-            }
+                .map(|resp| debug!("{resp:?}")),
+            LoadTestCommand::DumpLogUser(dump_log_user) => client
+                .log
+                .dump_log_user(dump_log_user)
+                .await
+                .map(|resp| debug!("{resp:?}")),
         }
     }
 }

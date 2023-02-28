@@ -819,6 +819,7 @@ dependencies = [
  "opentelemetry",
  "opentelemetry-otlp",
  "prost",
+ "rand",
  "tokio",
  "tonic",
  "tonic-build",

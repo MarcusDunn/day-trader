@@ -77,24 +77,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let quote_server_addr = env::var("QUOTE_SERVER_URI")
             .expect("QUOTE_SERVER_URI environment variable should be set.");
         if quote_server_addr == "FAKE" {
-            let mut quote_server = FakeQuoteServer::default();
-            let mut writer = quote_server.clone();
-            let mut reader = BufReader::new(&mut quote_server);
-            info!("running a fake quote server");
-            loop {
-                handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await
-            }
+            run_fake_quote_server(&mut tcp_handler_recv).await;
         } else {
-            loop {
-                let mut stream = TcpStream::connect(&quote_server_addr)
-                    .await
-                    .unwrap_or_else(|err| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to: {err}"));
-                let (reader, mut writer) = stream.split();
-
-                let mut reader = BufReader::new(reader);
-
-                handle_socket(&mut tcp_handler_recv, &mut writer, &mut reader).await;
-            }
+            run_quote_server(&mut tcp_handler_recv, &quote_server_addr).await;
         }
     });
 
@@ -137,6 +122,35 @@ async fn main() -> Result<(), Box<dyn Error>> {
     global::shutdown_tracer_provider();
 
     exit_result
+}
+
+async fn run_quote_server(
+    tcp_handler_recv: &mut Receiver<(String, Sender<Result<String, &str>>)>,
+    quote_server_addr: &String,
+) -> ! {
+    loop {
+        let mut stream = TcpStream::connect(&quote_server_addr)
+            .await
+            .unwrap_or_else(|err| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to: {err}"));
+
+        let (reader, mut writer) = stream.split();
+
+        let mut reader = BufReader::new(reader);
+
+        handle_socket(tcp_handler_recv, &mut writer, &mut reader).await;
+    }
+}
+
+async fn run_fake_quote_server(
+    tcp_handler_recv: &mut Receiver<(String, Sender<Result<String, &str>>)>,
+) -> ! {
+    let mut quote_server = FakeQuoteServer::default();
+    let mut writer = quote_server.clone();
+    let mut reader = BufReader::new(&mut quote_server);
+    info!("running a fake quote server");
+    loop {
+        handle_socket(tcp_handler_recv, &mut writer, &mut reader).await
+    }
 }
 
 #[instrument]
