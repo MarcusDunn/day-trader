@@ -16,6 +16,7 @@ services:
   transactionserver:
     image: transactionserver
     container_name: transactionService
+    build: "./"
     ports:
       - 50051:50051
     links:
@@ -24,4 +25,4 @@ services:
       - postgres
     restart: unless-stopped
 volumes:
-  logDB-data:
+  transactionDB-data:
