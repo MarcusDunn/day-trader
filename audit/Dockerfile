@@ -4,12 +4,13 @@ RUN apk add --no-cache openssl libssl1.1
 
 WORKDIR /app
 
-COPY . .
+COPY package*.json ./
 
 RUN npm install
-RUN npx prisma generate
-RUN npm run build
 
+COPY . .
+
+RUN npx prisma generate
 
 EXPOSE 50051
 

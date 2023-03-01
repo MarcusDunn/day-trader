@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://admin:postgrespw@localhost:5432/devdb?schema=public"
+  url      = "postgresql://admin:postgrespw@postgres:5432/devdb?schema=public"
 }
 
 model UserCommand {
@@ -16,6 +16,7 @@ model UserCommand {
   server         String
   command        String //"ADD", "BUY", "SELL", etc
   username       String
+  stockSymbol String?
   funds          Int //funds of the user
 }
 
@@ -46,7 +47,7 @@ model quoteServer {
   username        String
   stockSymbol     String
   price           Int
-  cryptoKey       String
+  cryptokey       String
 }
 
 model errorEvent {

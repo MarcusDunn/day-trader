@@ -1,4 +1,12 @@
+echo "******************";
+echo "npx prisma db push";
 npx prisma db push;
+echo "******************";
+echo "npx prisma run seed";
+npx prisma run seed;
+echo "******************";
+echo "npx prisma migrate deploy";
 npx prisma migrate deploy;
-npx prisma db seed;
-npm start;
+echo "******************";
+echo "ts-node src/index.ts";
+ts-node src/index.ts;
