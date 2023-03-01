@@ -21,3 +21,15 @@ services:
       OTEL_EXPORTER_URI: jaeger:4317
     ports:
       - "80:80"
+  transaction:
+    image: ghcr.io/marcusdunn/day-trader/transaction:latest
+  transaction-db:
+    image: postgres
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "postgrespw"
+      POSTGRES_DB: "devdb"
+    volumes:
+      - transactionDB-data:/var/lib/postgresql/data
+volumes:
+  transactionDB-data:
