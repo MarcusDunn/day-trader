@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "post-update": "echo \"codesandbox preview only, need an update\" && yarn upgrade --latest"
+    "post-update": "echo \"codesandbox preview only, need an update\" && yarn upgrade --latest",
+    "gen-grpc-types": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=proto/ ../protos/day-trader.proto"
   },
   "dependencies": {
     "@emotion/cache": "latest",
@@ -20,7 +21,9 @@
     "prop-types": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "react-material-ui-carousel": "^3.4.2"
+    "react-material-ui-carousel": "^3.4.2",
+    "@grpc/grpc-js": "latest",
+    "@grpc/proto-loader": "latest"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.8",

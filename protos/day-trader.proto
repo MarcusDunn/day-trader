@@ -48,14 +48,14 @@ service Trigger {
 }
 
 message AddRequest {
-  string user_id = 1;;
+  string user_id = 1;
   float amount = 2;
 }
 
 message AddResponse {}
 
 message QuoteRequest {
-  string user_id = 1;;
+  string user_id = 1;
   string stock_symbol = 2;
 }
 
@@ -68,7 +68,7 @@ message QuoteResponse {
 }
 
 message BuyRequest {
-  string user_id = 1;;
+  string user_id = 1;
   string stock_symbol = 2;
   float amount = 3;
 }
@@ -76,7 +76,7 @@ message BuyRequest {
 message BuyResponse {}
 
 message CommitBuyRequest{
-  string user_id = 1;;
+  string user_id = 1;
 }
 
 message CommitBuyResponse {}
@@ -85,7 +85,7 @@ message CancelBuyRequest {string user_id = 1;}
 message  CancelBuyResponse {}
 
 message SellRequest {
-  string user_id = 1;;
+  string user_id = 1;
   string stock_symbol = 2;
   float amount = 3;
 }
