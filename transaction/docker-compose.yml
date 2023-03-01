@@ -11,6 +11,8 @@ services:
       POSTGRES_PASSWORD: "postgrespw"
       POSTGRES_DB: "devdb"
     restart: unless-stopped
+    volumes:
+      - transactionDB-data:/var/lib/postgresql/data
   transactionserver:
     image: transactionserver
     container_name: transactionService
@@ -21,3 +23,5 @@ services:
     depends_on:
       - postgres
     restart: unless-stopped
+volumes:
+  logDB-data:

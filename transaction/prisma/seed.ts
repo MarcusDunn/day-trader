@@ -6,7 +6,12 @@ import { BuySellTriggers } from './dummy_data/BuySellTriggers';
 const prisma = new PrismaClient();
 
 async function main(){ 
-  
+
+    const check = prisma.user.findMany();
+    if(check.length !== 0){
+      console.log("DB Already Seeded");
+      return;
+    }
     console.log("Beginning Seeding");
 
     console.log("Seeding Users...");
@@ -42,5 +47,4 @@ main()
   .catch(async (e) => {
     console.error(e);
     await prisma.$disconnect();
-    process.exit(1);
   });
