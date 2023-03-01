@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function main(){ 
   
-    const check = prisma.log.findMany();
+    const check = await prisma.log.findMany();
     if(check.length !== 0){
       console.log("DB Already Seeded");
       return;
