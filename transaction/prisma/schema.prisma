@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://admin:postgrespw@postgres:5432/devdb?schema=public"
+}
+
+model User {
+  username        String            @id
+  balance         Float             @default(0.0)
+  BuySellTrigger BuySellTrigger[]
+  OwnedStock     OwnedStock[]
+}
+
+model OwnedStock {
+  id       Int    @id @default(autoincrement())
+  user     User   @relation(fields: [username], references: [username])
+  username String
+  stock    String
+  shares   Int
+}
+
+model BuySellTrigger {
+  id       Int         @id @default(autoincrement())
+  user     User        @relation(fields: [username], references: [username])
+  username String
+  stock    String
+  type     TriggerType
+  amount   Float
+}
+
+enum TriggerType {
+  SELL
+  BUY
+}
