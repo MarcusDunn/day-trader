@@ -13,6 +13,16 @@ services:
     volumes:
       - logDB-data:/var/lib/postgresql/data
     restart: unless-stopped
+  transactionserver:
+    image: transactionserver
+    container_name: transactionService
+    ports:
+      - 50051:50051
+    links:
+      - postgres
+    depends_on:
+      - postgres
+    restart: unless-stopped
 
 volumes:
   logDB-data:

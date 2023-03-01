@@ -11,7 +11,8 @@ datasource db {
 }
 
 model Log {
-  id            Int    @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
+  datetime      DateTime @default(now())
   action        String
   user          String
   stock         String
