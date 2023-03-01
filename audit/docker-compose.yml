@@ -1,0 +1,29 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:latest
+    container_name: logDB
+    hostname: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "postgrespw"
+      POSTGRES_DB: "devdb"
+    volumes:
+      - logDB-data:/var/lib/postgresql/data
+    restart: unless-stopped
+  transactionserver:
+    image: transactionserver
+    container_name: transactionService
+    build: "./"
+    ports:
+      - 50051:50051
+    links:
+      - postgres
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  logDB-data:
