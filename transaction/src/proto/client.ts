@@ -34,7 +34,7 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
 
     // ensure call.request arguments are present for ts
     if(!call.request.amount || !call.request.userId){
-        return callback({ code: 400, details: "Missing amount in request" }, {});
+        return callback({ code: 400, details: "Missing amount or userId in request" }, {});
     }
 
     // ensure user has enough funds
