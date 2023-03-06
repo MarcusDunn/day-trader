@@ -10,8 +10,8 @@ services:
       POSTGRES_USER: "admin"
       POSTGRES_PASSWORD: "postgrespw"
       POSTGRES_DB: "devdb"
-    volumes:
-      - logDB-data:/var/lib/postgresql/data
+    # volumes:
+    #   - logDB-data:/var/lib/postgresql/data
     restart: unless-stopped
   transactionserver:
     image: transactionserver
@@ -25,5 +25,5 @@ services:
       - postgres
     restart: unless-stopped
 
-volumes:
-  logDB-data:
+# volumes:
+#   logDB-data:

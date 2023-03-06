@@ -7,16 +7,56 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://admin:postgrespw@localhost:5432/devdb?schema=public"
+  url      = "postgresql://admin:postgrespw@postgres:5432/devdb?schema=public"
 }
 
-model Log {
-  id            Int      @id @default(autoincrement())
-  datetime      DateTime @default(now())
-  action        String
-  user          String
-  stock         String
-  amount        Float?
-  shareprice    Float?
-  shares_bought Int?
+model UserCommand {
+  transactionNum Int    @id @default(autoincrement())
+  timestamp      BigInt //All timestamps will need to be stored as Unix timestamp format in milliseconds
+  server         String
+  command        String //"ADD", "BUY", "SELL", etc
+  username       String
+  stockSymbol String?
+  funds          Int //funds of the user
+}
+
+model accountTransaction {
+  transactionNum Int    @id @default(autoincrement())
+  timestamp      BigInt 
+  server         String
+  action         String //"add", "remove", etc
+  username       String
+  funds          Int
+}
+
+model systemEvent {
+  transactionNum Int    @id @default(autoincrement())
+  timestamp      BigInt
+  server         String
+  command        String
+  username       String
+  stockSymbol    String
+  funds          Int
+}
+
+model quoteServer {
+  transactionNum  Int    @id @default(autoincrement())
+  timestamp       BigInt
+  server          String
+  quoteServerTime BigInt
+  username        String
+  stockSymbol     String
+  price           Int
+  cryptokey       String
+}
+
+model errorEvent {
+  transactionNum  Int    @id @default(autoincrement())
+  timestamp       BigInt
+  server          String
+  command         String
+  username        String
+  stockSymbol     String
+  funds           Int
+  errorMessage    String
 }
