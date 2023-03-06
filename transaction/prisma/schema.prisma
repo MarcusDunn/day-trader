@@ -12,6 +12,7 @@ datasource db {
 
 model User {
   username       String           @id
+  role           String           @default("user")
   balance        Float            @default(0.0)
   BuySellTrigger BuySellTrigger[]
   OwnedStock     OwnedStock[]
