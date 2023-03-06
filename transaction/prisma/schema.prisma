@@ -11,10 +11,13 @@ datasource db {
 }
 
 model User {
-  username        String            @id
-  balance         Float             @default(0.0)
+  username       String           @id
+  role           String           @default("user")
+  balance        Float            @default(0.0)
   BuySellTrigger BuySellTrigger[]
   OwnedStock     OwnedStock[]
+  UncommitedBuy  UncommitedBuy[]
+  UncommitedSell UncommitedSell[]
 }
 
 model OwnedStock {
@@ -22,7 +25,27 @@ model OwnedStock {
   user     User   @relation(fields: [username], references: [username])
   username String
   stock    String
-  shares   Int
+  shares   Float
+
+  @@unique([username, stock])
+}
+
+model UncommitedBuy {
+  user      User     @relation(fields: [username], references: [username])
+  username  String   @id
+  stock     String
+  amount    Float
+  shares    Float
+  expiresAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP + interval '61' second"))
+}
+
+model UncommitedSell {
+  user      User     @relation(fields: [username], references: [username])
+  username  String   @id
+  stock     String
+  amount    Float
+  shares    Float
+  expiresAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP + interval '61' second"))
 }
 
 model BuySellTrigger {
