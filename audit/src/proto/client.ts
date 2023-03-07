@@ -15,54 +15,6 @@ const definitions = loadPackageDefinition(def) as unknown as ProtoGrpcType
 // const quoteClient = new definitions.day_trader.Quote("localhost:80", credentials.createInsecure())
 
 const server = new Server();
-
-function convertTimeStampDump(allUserCommands: UserCommand[], allAccountTransactions: accountTransaction[], allSystemEvents: systemEvent[], 
-    allQuoteServers: quoteServer[], allErrorEvents: errorEvent[]) {
-    allUserCommands.forEach(element => {
-        const unixTime = Date.parse((element.timestamp).toISOString());
-        element.timestamp = new Date(unixTime);
-    });
-    allAccountTransactions.forEach(element => {
-        const unixTime = Date.parse((element.timestamp).toISOString());
-        element.timestamp = new Date(unixTime);
-    });
-    allSystemEvents.forEach(element => {
-        const unixTime = Date.parse((element.timestamp).toISOString());
-        element.timestamp = new Date(unixTime);
-    });
-    allQuoteServers.forEach(element => {
-        const unixTime = Date.parse((element.timestamp).toISOString());
-        element.timestamp = new Date(unixTime);
-    });
-    allErrorEvents.forEach(element => {
-        const unixTime = Date.parse((element.timestamp).toISOString());
-        element.timestamp = new Date(unixTime);
-    });
-}
-
-function convertTimeStampDumpUser(usersUserCommands: UserCommand[], usersAccountTransactions: accountTransaction[], usersSystemEvents: systemEvent[], 
-    usersQuoteServers: quoteServer[], usersErrorEvents: errorEvent[]) {
-    usersUserCommands.forEach(element => {
-        const unixTime = Date.parse((element.timestamp).toISOString());
-        element.timestamp = new Date(unixTime);
-    });
-    usersAccountTransactions.forEach(element => {
-        const unixTime = Date.parse((element.timestamp).toISOString());
-        element.timestamp = new Date(unixTime);
-    });
-    usersSystemEvents.forEach(element => {
-        const unixTime = Date.parse((element.timestamp).toISOString());
-        element.timestamp = new Date(unixTime);
-    });
-    usersQuoteServers.forEach(element => {
-        const unixTime = Date.parse((element.timestamp).toISOString());
-        element.timestamp = new Date(unixTime);
-    });
-    usersErrorEvents.forEach(element => {
-        const unixTime = Date.parse((element.timestamp).toISOString());
-        element.timestamp = new Date(unixTime);
-    });
-}
   
 
 const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => {
@@ -99,10 +51,7 @@ const DumpLog: LogHandlers['DumpLog'] = async (call, callback) => {
     const allAccountTransactions = await prisma.accountTransaction.findMany({ orderBy: { timestamp: 'asc' } });
     const allSystemEvents = await prisma.systemEvent.findMany({ orderBy: { timestamp: 'asc' } });
     const allQuoteServers = await prisma.quoteServer.findMany({ orderBy: { timestamp: 'asc' } });
-    const allErrorEvents = await prisma.errorEvent.findMany({ orderBy: { timestamp: 'asc' } });
-
-    convertTimeStampDump(allUserCommands, allAccountTransactions, allSystemEvents, allQuoteServers, allErrorEvents);
-    
+    const allErrorEvents = await prisma.errorEvent.findMany({ orderBy: { timestamp: 'asc' } });  
     
     
     const xml = createXmlBuilder({ version: '1.0' }) //set to xml version 1.0
@@ -124,8 +73,6 @@ const DumpLogUser: LogHandlers['DumpLogUser'] = async (call, callback) => {
     const usersSystemEvents = await prisma.systemEvent.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
     const usersQuoteServers = await prisma.quoteServer.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
     const usersErrorEvents = await prisma.errorEvent.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
-
-    convertTimeStampDumpUser(usersUserCommands, usersAccountTransactions, usersSystemEvents, usersQuoteServers, usersErrorEvents);
 
     const xml = createXmlBuilder({ version: '1.0' }) //set to xml version 1.0
         .ele('?xml version="1.0"?')

@@ -12,7 +12,7 @@ datasource db {
 
 model UserCommand {
   transactionNum Int    @id @default(autoincrement())
-  timestamp      DateTime @default(now()) //All timestamps will need to be stored as Unix timestamp format in milliseconds
+  timestamp      BigInt //Will have to convert current date to unix: const unixTimestamp = new Date().getTime();
   server         String
   command        String //"ADD", "BUY", "SELL", etc
   username       String
@@ -22,7 +22,7 @@ model UserCommand {
 
 model accountTransaction {
   transactionNum Int    @id @default(autoincrement())
-  timestamp      DateTime @default(now()) 
+  timestamp      BigInt
   server         String
   action         String //"add", "remove", etc
   username       String
@@ -31,7 +31,7 @@ model accountTransaction {
 
 model systemEvent {
   transactionNum Int    @id @default(autoincrement())
-  timestamp      DateTime @default(now())
+  timestamp      BigInt
   server         String
   command        String
   username       String
@@ -41,7 +41,7 @@ model systemEvent {
 
 model quoteServer {
   transactionNum  Int    @id @default(autoincrement())
-  timestamp       DateTime @default(now())
+  timestamp       BigInt
   server          String
   quoteServerTime BigInt
   username        String
@@ -52,7 +52,7 @@ model quoteServer {
 
 model errorEvent {
   transactionNum  Int    @id @default(autoincrement())
-  timestamp       DateTime @default(now())
+  timestamp       BigInt
   server          String
   command         String
   username        String
