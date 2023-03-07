@@ -12,51 +12,51 @@ datasource db {
 
 model UserCommand {
   transactionNum Int    @id @default(autoincrement())
-  timestamp      BigInt //All timestamps will need to be stored as Unix timestamp format in milliseconds
+  timestamp      DateTime @default(now()) //All timestamps will need to be stored as Unix timestamp format in milliseconds
   server         String
   command        String //"ADD", "BUY", "SELL", etc
   username       String
-  stockSymbol String?
-  funds          Int //funds of the user
+  stockSymbol    String?
+  funds          Float //funds of the user
 }
 
 model accountTransaction {
   transactionNum Int    @id @default(autoincrement())
-  timestamp      BigInt 
+  timestamp      DateTime @default(now()) 
   server         String
   action         String //"add", "remove", etc
   username       String
-  funds          Int
+  funds          Float
 }
 
 model systemEvent {
   transactionNum Int    @id @default(autoincrement())
-  timestamp      BigInt
+  timestamp      DateTime @default(now())
   server         String
   command        String
   username       String
   stockSymbol    String
-  funds          Int
+  funds          Float
 }
 
 model quoteServer {
   transactionNum  Int    @id @default(autoincrement())
-  timestamp       BigInt
+  timestamp       DateTime @default(now())
   server          String
   quoteServerTime BigInt
   username        String
   stockSymbol     String
-  price           Int
+  price           Float
   cryptokey       String
 }
 
 model errorEvent {
   transactionNum  Int    @id @default(autoincrement())
-  timestamp       BigInt
+  timestamp       DateTime @default(now())
   server          String
   command         String
   username        String
   stockSymbol     String
-  funds           Int
+  funds           Float
   errorMessage    String
 }
