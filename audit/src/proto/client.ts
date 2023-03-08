@@ -140,10 +140,35 @@ const DumpLogUser: LogHandlers['DumpLogUser'] = async (call, callback) => {
     return callback(null, { xml: xmlString })
 }
 
+const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async (call, callback) => {
+    return callback(null, {})
+}
+
+const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback) => {
+    return callback(null, {})
+}
+
+const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callback) => {
+    return callback(null, {})
+}
+
+const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callback) => {
+    return callback(null, {})
+}
+
+const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callback) => {
+    return callback(null, {})
+}
+
 const implementation: LogHandlers = {
     DisplaySummary,
     DumpLog,
     DumpLogUser,
+    InsertAccountTransaction,
+    InsertErrorEvent,
+    InsertQuoteServer,
+    InsertSystemEvent,
+    InsertUserCommand,
 }
 
 server.addService(definitions.day_trader.Log.service, implementation)
