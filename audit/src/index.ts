@@ -12,7 +12,7 @@ const server = new grpc.Server();
 const port = process.env.PORT || 50051;
 const credentials = grpc.ServerCredentials.createInsecure();
 
-const def = loadSync(__dirname + "../protos/day_trader.proto")
+const def = loadSync(__dirname + "/proto/day-trader-copy.proto")
 const definitions = loadPackageDefinition(def) as unknown as ProtoGrpcType
 
 server.bindAsync(`0.0.0.0:${port}`, credentials, () => {
