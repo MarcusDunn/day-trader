@@ -8,9 +8,7 @@ COPY . .
 
 RUN npm install
 RUN npx prisma generate
-RUN npm run build
-
 
 EXPOSE 50051
 
-CMD ["npm", "run", "docker"]
+CMD npx prisma db push && npm run dev

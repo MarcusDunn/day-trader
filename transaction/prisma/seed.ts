@@ -1,7 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 import { Users } from './dummy_data/Users';
 import { OwnedStocks } from './dummy_data/OwnedStocks';
-import { BuySellTriggers } from './dummy_data/BuySellTriggers';
+import { BuyTriggers } from './dummy_data/BuyTriggers';
+import { SellTriggers } from './dummy_data/SellTriggers';
 
 const prisma = new PrismaClient();
 
@@ -29,10 +30,17 @@ async function main(){
         data: stock
       });
     }
-    console.log("Seeding BuySellTriggers");
-    for(const trigger of BuySellTriggers){
-      console.log("Seeding trigger", BuySellTriggers.indexOf(trigger));
-      await prisma.buySellTrigger.create({
+    console.log("Seeding BuyTriggers");
+    for(const trigger of BuyTriggers){
+      console.log("Seeding trigger", BuyTriggers.indexOf(trigger));
+      await prisma.buyTrigger.create({
+        data: trigger
+      });
+    }
+    console.log("Seeding SellTriggers");
+    for(const trigger of SellTriggers){
+      console.log("Seeding trigger", SellTriggers.indexOf(trigger));
+      await prisma.sellTrigger.create({
         data: trigger
       });
     }

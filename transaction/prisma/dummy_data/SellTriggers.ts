@@ -1,0 +1,92 @@
+export const SellTriggers = [
+  {
+    username: "John",
+    stock: "ABC",
+    sharesToSell: 3.0,
+    triggerAmount: 542.25,
+  },
+  {
+    username: "Jane",
+    stock: "XYZ",
+    sharesToSell: 3.0,
+    triggerAmount: 123.45,
+  },
+  {
+    username: "Bob",
+    stock: "DEF",
+    sharesToSell: 3.0,
+    triggerAmount: 987.65,
+  },
+  {
+    username: "Alice",
+    stock: "GHI",
+    sharesToSell: 3.0,
+    triggerAmount: 654.32,
+  },
+  {
+    username: "David",
+    stock: "JKL",
+    sharesToSell: 3.0,
+    triggerAmount: 321.09,
+  },
+  {
+    username: "Samantha",
+    stock: "MNO",
+    sharesToSell: 3.0,
+    triggerAmount: 456.78,
+  },
+  {
+    username: "Tom",
+    stock: "PQR",
+    sharesToSell: 3.0,
+    triggerAmount: 789.01,
+  },
+  {
+    username: "Emily",
+    stock: "STU",
+    sharesToSell: 3.0,
+    triggerAmount: 234.56,
+  },
+  {
+    username: "Mike",
+    stock: "VWX",
+    sharesToSell: 3.0,
+    triggerAmount: 890.12,
+  },
+  {
+    username: "Jessica",
+    stock: "YZA",
+    sharesToSell: 3.0,
+    triggerAmount: 567.89,
+  },
+  {
+    username: "William",
+    stock: "BCD",
+    sharesToSell: 3.0,
+    triggerAmount: 432.1,
+  },
+  {
+    username: "Linda",
+    stock: "EFG",
+    sharesToSell: 3.0,
+    triggerAmount: 765.43,
+  },
+  {
+    username: "Chris",
+    stock: "HIJ",
+    sharesToSell: 3.0,
+    triggerAmount: 901.23,
+  },
+  {
+    username: "Megan",
+    stock: "KLM",
+    sharesToSell: 3.0,
+    triggerAmount: 234.56,
+  },
+  {
+    username: "Jason",
+    stock: "NOP",
+    sharesToSell: 3.0,
+    triggerAmount: 789.01,
+  },
+];

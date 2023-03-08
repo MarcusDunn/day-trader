@@ -1,20 +1,11 @@
-import {credentials, loadPackageDefinition, Server} from "@grpc/grpc-js";
-import {loadSync} from "@grpc/proto-loader";
-import {ProtoGrpcType} from "./day-trader";
-import { TransactionHandlers } from "./day_trader/Transaction";
+import { TransactionHandlers } from "../proto/day_trader/Transaction";
 import { PrismaClient } from '@prisma/client'
 import { notExpired } from "../utils/DateUtils";
+import { GetQuote } from "../utils/GetQuote";
+import { Status } from "@grpc/grpc-js/build/src/constants";
 
 const prisma = new PrismaClient()
 
-const def = loadSync(__dirname + "../../../protos/day_trader.proto")
-const definitions = loadPackageDefinition(def) as unknown as ProtoGrpcType
-
-
-// example of a client if you need to call an external service
-// const quoteClient = new definitions.day_trader.Quote("localhost:80", credentials.createInsecure())
-
-const server = new Server();
 
 const Add: TransactionHandlers['Add'] = async (call, callback) => {
     const user = await prisma.user.update({
@@ -33,17 +24,19 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
     })).balance;
 
     // ensure call.request arguments are present for ts
-    if(!call.request.amount || !call.request.userId){
-        return callback({ code: 400, details: "Missing amount or userId in request" }, {});
+    if(!call.request.amount || !call.request.userId || !call.request.stockSymbol){
+        return callback({ code: Status.INVALID_ARGUMENT, details: "Missing amount or userId in request" }, {});
     }
 
     // ensure user has enough funds
     if(!(userBalance < call.request.amount)){
-        return callback({ code: 402, details: "Insufficient funds" }, {});
+        return callback({ code: Status.FAILED_PRECONDITION, details: "Insufficient funds" }, {});
     }
 
     // get current price of stock
-    const currentPrice = 50.34;
+    
+    const currentPrice: number = Number((await GetQuote(call.request.userId, call.request.stockSymbol)).quote)
+
     const shares = call.request.amount/currentPrice;
 
     // create uncommited buy 
@@ -78,21 +71,21 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
 
     // ensure user has stock
     if(!usersStock){
-        return callback({ code: 403, details: "user does not own stock" }, {})
+        return callback({ code: Status.FAILED_PRECONDITION, details: "user does not own stock" }, {})
     }
     
     // ensure arguments are included
-    if(!call.request.amount || !call.request.userId){
-        return callback({ code: 400, details: "Missing arguments in request" }, {});
+    if(!call.request.amount || !call.request.userId || !call.request.stockSymbol){
+        return callback({ code: Status.INVALID_ARGUMENT, details: "Missing arguments in request" }, {});
     }
 
     // get current price of stock
-    const currentPrice = 50.34;
+    const currentPrice = Number((await GetQuote(call.request.userId, call.request.stockSymbol)).quote)
     const shares = call.request.amount/currentPrice;
 
     // ensure user has more stock then attempting to sell
     if(usersStock.shares < shares){
-        return callback({ code: 402, details: "Insufficient owned stock" }, {}); 
+        return callback({ code: Status.FAILED_PRECONDITION, details: "Insufficient owned stock" }, {}); 
     }
 
     // create uncommited buy 
@@ -143,12 +136,12 @@ const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
 
     // ensure user has made buy request
     if(!buyToCommit){
-        return callback({ code: 403, details: "user did not make a buy request" }, {})
+        return callback({ code: Status.FAILED_PRECONDITION, details: "user did not make a buy request" }, {})
     }
     
     // ensures its not expired
     if(!(notExpired(buyToCommit.expiresAt))){
-        return callback({ code: 403, details: "Buy request expired" }, {})
+        return callback({ code: Status.DEADLINE_EXCEEDED, details: "Buy request expired" }, {})
     }
 
     // upsert ownedStock
@@ -192,12 +185,12 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
 
     // ensure user has made sell request
     if(!sellToCommit){
-        return callback({ code: 403, details: "user did not make a sell request" }, {})
+        return callback({ code: Status.FAILED_PRECONDITION, details: "user did not make a sell request" }, {})
     }
     
     // ensures its not expired
     if(!(notExpired(sellToCommit.expiresAt))){
-        return callback({ code: 403, details: "Sell request expired" }, {})
+        return callback({ code: Status.DEADLINE_EXCEEDED, details: "Sell request expired" }, {})
     }
 
     // update stock owned amount
@@ -244,10 +237,10 @@ const CreateUser: TransactionHandlers['CreateUser'] = async (call, callback) => 
         where: {username: call.request.userId}
     });
     if(existingUser){
-        return callback({code: 409, details: "User exists with that username"}, {});
+        return callback({code: Status.ALREADY_EXISTS, details: "User exists with that username"}, {});
     }
     if(!call.request.userId){
-        return callback({code: 400, details: "Include username in request"}, {});
+        return callback({code: Status.INVALID_ARGUMENT, details: "Include username in request"}, {});
     }
     const newUser = await prisma.user.create({
         data: {
@@ -262,16 +255,17 @@ const GetUser: TransactionHandlers['GetUser'] = async (call, callback) => {
         where: {username: call.request.userId},
         include: {
             OwnedStock: true,
-            BuySellTrigger: true,
+            BuyTrigger: true,
+            SellTrigger: true,
         }
     });
     if(!user){
-        return callback({code: 404, details: "User not found"}, {})
+        return callback({code: Status.NOT_FOUND, details: "User not found"}, {})
     }
     return callback(null, user)
 }
 
-const implementation: TransactionHandlers = {
+export const TransactionImplementations: TransactionHandlers = {
     Add,
     Buy,
     CancelBuy,
@@ -282,7 +276,3 @@ const implementation: TransactionHandlers = {
     CreateUser,
     GetUser,
 }
-
-server.addService(definitions.day_trader.Transaction.service, implementation)
-
-server.start()
