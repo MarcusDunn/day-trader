@@ -7,21 +7,24 @@ import { Status } from "@grpc/grpc-js/build/src/constants";
 const prisma = new PrismaClient()
 
 
-// const Add: TransactionHandlers['Add'] = async (call, callback) => {
-//     console.log("In transaction service in Add handler",call.request)
-//     if(!call.request.userId){
-//         return callback({code: Status.INVALID_ARGUMENT}, {balance: 0})
-//     }
-//     const user = await prisma.user.upsert({
-//         where: { username: call.request.userId },
-//         update: { balance: { increment: call.request.amount } },
-//         create: { username: call.request.userId, balance: call.request.amount }
-//       });
-//     return callback({code: Status.OK}, {balance: user.balance})
-// }
 const Add: TransactionHandlers['Add'] = async (call, callback) => {
-    console.log("In transaction service in Add handler",call.request);
-    return callback({code: Status.OK}, {balance: 69.42})
+    console.log("In transaction service in Add handler",call.request)
+    if(!call.request.userId){
+        console.log("no userId was found in argument")
+        callback({code: Status.INVALID_ARGUMENT}, {balance: 0})
+        console.log("Error callback sent")
+        return;
+    }
+    console.log("passed !userId check, going to call prisma")
+    const user = await prisma.user.upsert({
+        where: { username: call.request.userId },
+        update: { balance: { increment: call.request.amount } },
+        create: { username: call.request.userId, balance: call.request.amount }
+      });
+    console.log("Called prisma with user data:",user)
+    callback({code: Status.OK}, {balance: user.balance})
+    console.log("success callback sent, exiting now")
+    return
 }
 
 const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
