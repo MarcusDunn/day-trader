@@ -239,6 +239,37 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
     return callback(null, incrementedUserBalance.balance)
 }
 
+const CreateUser: TransactionHandlers['CreateUser'] = async (call, callback) => {
+    const existingUser = await prisma.user.findUnique({
+        where: {username: call.request.userId}
+    });
+    if(existingUser){
+        return callback({code: 409, details: "User exists with that username"}, {});
+    }
+    if(!call.request.userId){
+        return callback({code: 400, details: "Include username in request"}, {});
+    }
+    const newUser = await prisma.user.create({
+        data: {
+            username: call.request.userId,
+        }
+    });
+    return callback(null, newUser)
+}
+
+const GetUser: TransactionHandlers['GetUser'] = async (call, callback) => {
+    const user = await prisma.user.findUnique({
+        where: {username: call.request.userId},
+        include: {
+            OwnedStock: true,
+            BuySellTrigger: true,
+        }
+    });
+    if(!user){
+        return callback({code: 404, details: "User not found"}, {})
+    }
+    return callback(null, user)
+}
 
 const implementation: TransactionHandlers = {
     Add,
@@ -247,7 +278,9 @@ const implementation: TransactionHandlers = {
     CancelSell,
     CommitBuy,
     CommitSell,
-    Sell
+    Sell,
+    CreateUser,
+    GetUser,
 }
 
 server.addService(definitions.day_trader.Transaction.service, implementation)
