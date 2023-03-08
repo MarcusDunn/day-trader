@@ -2,10 +2,14 @@ import { PrismaClient } from "@prisma/client";
 import { LogHandlers } from "./proto/day_trader/Log";
 import { create as createXmlBuilder } from 'xmlbuilder2';
 import { Status } from "@grpc/grpc-js/build/src/constants";
+import { GetUserInfo } from "./utils/GetUserInfo";
 
 const prisma = new PrismaClient();
 
 const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => {
+    if(!call.request.userId){
+        return callback({code: Status.INVALID_ARGUMENT}, {});
+    }
     const userCommands = await prisma.userCommand.findMany({
         where: {
             username: call.request.userId,
@@ -24,7 +28,7 @@ const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => 
         },
     });
 
-    //will also need to query the transaction server to get current status of the user
+    const userInfo = await GetUserInfo(call.request.userId);
 
     const userSummary = {
         userCommands: userCommands.map((cmd: any) => {
@@ -35,6 +39,7 @@ const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => 
             cmd.timestamp = String(cmd.timestamp);
             return cmd;
         }),
+        userSummary: userInfo
     }
 
     return callback({code: Status.OK}, userSummary);
