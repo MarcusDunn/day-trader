@@ -82,7 +82,7 @@ const SetBuyAmount: TriggerHandlers['SetBuyAmount'] = async (call, callback) => 
                 username: call.request.userId
             },
             data: {
-                balance: { increment: existingTrigger.buyAmount }
+                balance: { increment: existingTrigger?.buyAmount ?? 0.0 }
             }
         });
     }
