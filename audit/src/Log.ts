@@ -27,8 +27,14 @@ const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => 
     //will also need to query the transaction server to get current status of the user
 
     const userSummary = {
-        userCommands: userCommands,
-        accountTransactions: accountTransactions,
+        userCommands: userCommands.map((cmd: any) => {
+            cmd.timestamp = String(cmd.timestamp);
+            return cmd;
+        }),
+        accountTransactions: accountTransactions.map((cmd: any) => {
+            cmd.timestamp = String(cmd.timestamp);
+            return cmd;
+        }),
     }
 
     return callback({code: Status.OK}, userSummary);
@@ -85,7 +91,9 @@ const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async 
             funds: call.request.funds || 0,
         },
     });
-    return callback({code: Status.OK}, insertTransaction)
+    const insertTransactionReturn: any = insertTransaction;
+    insertTransactionReturn.timestep = String(insertTransactionReturn.timestep);
+    return callback({code: Status.OK}, insertTransactionReturn)
 }
 
 const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback) => {
@@ -100,7 +108,9 @@ const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback)
             errorMessage: call.request.errorMessage || 'undefined',
         },
     });
-    return callback({code: Status.OK}, insertError );
+    const insertErrorReturn: any = insertError;
+    insertErrorReturn.timestep = String(insertErrorReturn.timestep);
+    return callback({code: Status.OK}, insertErrorReturn );
 }
 
 const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callback) => {
@@ -115,7 +125,9 @@ const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callbac
             cryptokey: call.request.cryptokey || 'undefined'
         }
     })
-    return callback({code: Status.OK}, insertQuote);
+    const insertQuoteReturn: any = insertQuote;
+    insertQuoteReturn.timestep = String(insertQuoteReturn.timestep);
+    return callback({code: Status.OK}, insertQuoteReturn);
 }
 
 const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callback) => {
@@ -129,7 +141,9 @@ const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callbac
             funds: call.request.funds || 0,
         },
     })
-    return callback({code: Status.OK}, insertSystemEventQuery);
+    const insertSystemEventQueryReturn: any = insertSystemEventQuery;
+    insertSystemEventQueryReturn.timestep = String(insertSystemEventQueryReturn.timestep);
+    return callback({code: Status.OK}, insertSystemEventQueryReturn);
 }
 
 const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callback) => {
@@ -143,7 +157,9 @@ const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callbac
             funds: call.request.funds || 0,
         },
     })
-    return callback({code: Status.OK}, insertCommand);
+    const insertCommandReturn: any = insertCommand;
+    insertCommandReturn.timestep = String(insertCommandReturn.timestep);
+    return callback({code: Status.OK}, insertCommandReturn);
 }
 
 export const LogImplementation: LogHandlers = {
