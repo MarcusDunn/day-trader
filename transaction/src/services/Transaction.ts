@@ -12,7 +12,7 @@ const Add: TransactionHandlers['Add'] = async (call, callback) => {
         where: { username: call.request.userId },
         data: { balance: { increment: call.request.amount } },
       });
-    return callback(null, user.balance)
+    return callback({code: Status.OK}, {balance: user.balance})
 }
 
 const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
@@ -25,12 +25,12 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
 
     // ensure call.request arguments are present for ts
     if(!call.request.amount || !call.request.userId || !call.request.stockSymbol){
-        return callback({ code: Status.INVALID_ARGUMENT, details: "Missing amount or userId in request" }, {});
+        return callback({ code: Status.INVALID_ARGUMENT, details: "Missing amount or userId in request" }, { shares: 0, success: false });
     }
 
     // ensure user has enough funds
     if(!(userBalance < call.request.amount)){
-        return callback({ code: Status.FAILED_PRECONDITION, details: "Insufficient funds" }, {});
+        return callback({ code: Status.FAILED_PRECONDITION, details: "Insufficient funds" }, { shares: 0, success: false });
     }
 
     // get current price of stock
@@ -57,7 +57,11 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
         }
     })
 
-    return callback(null, createdBuy)
+    if(!createdBuy){
+        return callback({code: Status.INTERNAL, details: "Error creating uncommitedBuy"}, { shares: 0, success: false })
+    }
+
+    return callback({code: Status.OK}, { shares: shares, success: true })
 }
 
 const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
@@ -71,12 +75,12 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
 
     // ensure user has stock
     if(!usersStock){
-        return callback({ code: Status.FAILED_PRECONDITION, details: "user does not own stock" }, {})
+        return callback({ code: Status.FAILED_PRECONDITION, details: "user does not own stock" }, { amount: 0.0, shares: 0.0, success: false })
     }
     
     // ensure arguments are included
     if(!call.request.amount || !call.request.userId || !call.request.stockSymbol){
-        return callback({ code: Status.INVALID_ARGUMENT, details: "Missing arguments in request" }, {});
+        return callback({ code: Status.INVALID_ARGUMENT, details: "Missing arguments in request" }, { amount: 0.0, shares: 0.0, success: false });
     }
 
     // get current price of stock
@@ -85,7 +89,7 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
 
     // ensure user has more stock then attempting to sell
     if(usersStock.shares < shares){
-        return callback({ code: Status.FAILED_PRECONDITION, details: "Insufficient owned stock" }, {}); 
+        return callback({ code: Status.FAILED_PRECONDITION, details: "Insufficient owned stock" }, { amount: 0.0, shares: 0.0, success: false } ); 
     }
 
     // create uncommited buy 
@@ -106,7 +110,7 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
         }
     })
 
-    return callback(null, createdSell)
+    return callback({code: Status.OK}, { amount: createdSell.amount, shares: createdSell.shares, success: true})
 }
 
 const CancelBuy: TransactionHandlers['CancelBuy'] = async (call, callback) => {
@@ -115,7 +119,7 @@ const CancelBuy: TransactionHandlers['CancelBuy'] = async (call, callback) => {
             username: call.request.userId,
         }
     })
-    return callback(null, {deletedBuy})
+    return callback({code: Status.OK}, { success: true })
 }
 
 const CancelSell: TransactionHandlers['CancelSell'] = async (call, callback) => {
@@ -124,7 +128,7 @@ const CancelSell: TransactionHandlers['CancelSell'] = async (call, callback) => 
             username: call.request.userId,
         }
     })
-    return callback(null, deletedSell)
+    return callback({code: Status.OK}, { success: true })
 }
 
 const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
@@ -136,12 +140,12 @@ const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
 
     // ensure user has made buy request
     if(!buyToCommit){
-        return callback({ code: Status.FAILED_PRECONDITION, details: "user did not make a buy request" }, {})
+        return callback({ code: Status.FAILED_PRECONDITION, details: "user did not make a buy request" }, { stocksOwned: 0.0, balance: 0.0, success: false })
     }
     
     // ensures its not expired
     if(!(notExpired(buyToCommit.expiresAt))){
-        return callback({ code: Status.DEADLINE_EXCEEDED, details: "Buy request expired" }, {})
+        return callback({ code: Status.DEADLINE_EXCEEDED, details: "Buy request expired" }, { stocksOwned: 0.0, balance: 0.0, success: false })
     }
 
     // upsert ownedStock
@@ -173,7 +177,7 @@ const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
         }
     })
 
-    return callback(null, newPurchasedStock)
+    return callback({code: Status.OK}, { stocksOwned: newPurchasedStock.shares, balance: decrementedUserBalance.balance, success: true })
 }
 
 const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => {
@@ -185,12 +189,12 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
 
     // ensure user has made sell request
     if(!sellToCommit){
-        return callback({ code: Status.FAILED_PRECONDITION, details: "user did not make a sell request" }, {})
+        return callback({ code: Status.FAILED_PRECONDITION, details: "user did not make a sell request" }, { stocksOwned: 0.0, balance: 0.0, success: false })
     }
     
     // ensures its not expired
     if(!(notExpired(sellToCommit.expiresAt))){
-        return callback({ code: Status.DEADLINE_EXCEEDED, details: "Sell request expired" }, {})
+        return callback({ code: Status.DEADLINE_EXCEEDED, details: "Sell request expired" }, { stocksOwned: 0.0, balance: 0.0, success: false })
     }
 
     // update stock owned amount
@@ -229,7 +233,7 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
         }
     })
 
-    return callback(null, incrementedUserBalance.balance)
+    return callback({code: Status.OK}, { stocksOwned: newPurchasedStock.shares, balance: incrementedUserBalance.balance, success: true })
 }
 
 const CreateUser: TransactionHandlers['CreateUser'] = async (call, callback) => {
@@ -237,17 +241,17 @@ const CreateUser: TransactionHandlers['CreateUser'] = async (call, callback) => 
         where: {username: call.request.userId}
     });
     if(existingUser){
-        return callback({code: Status.ALREADY_EXISTS, details: "User exists with that username"}, {});
+        return callback({code: Status.ALREADY_EXISTS, details: "User exists with that username"}, { username: "error", success: false });
     }
     if(!call.request.userId){
-        return callback({code: Status.INVALID_ARGUMENT, details: "Include username in request"}, {});
+        return callback({code: Status.INVALID_ARGUMENT, details: "Include username in request"}, { username: "error", success: false });
     }
     const newUser = await prisma.user.create({
         data: {
             username: call.request.userId,
         }
     });
-    return callback(null, newUser)
+    return callback({code: Status.OK}, { username: newUser.username, success: true })
 }
 
 const GetUser: TransactionHandlers['GetUser'] = async (call, callback) => {
@@ -260,9 +264,20 @@ const GetUser: TransactionHandlers['GetUser'] = async (call, callback) => {
         }
     });
     if(!user){
-        return callback({code: Status.NOT_FOUND, details: "User not found"}, {})
+        return callback({code: Status.NOT_FOUND, details: "User not found"}, { username: "error", balance: 0.0, role: "error", success: false, ownedStock: [], buyTriggers: [], sellTriggers: [] })
     }
-    return callback(null, user)
+    
+    return callback({code: Status.OK}, { 
+        username: user.username, 
+        balance: user.balance, 
+        role: user.role, 
+        success: true, 
+        ownedStock: user.OwnedStock, 
+        buyTriggers: [],
+        sellTriggers: [],
+        // buyTriggers: user.BuyTrigger,
+        // sellTriggers: user.SellTrigger 
+    })
 }
 
 export const TransactionImplementations: TransactionHandlers = {
