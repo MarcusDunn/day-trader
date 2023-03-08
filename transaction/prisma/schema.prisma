@@ -14,7 +14,8 @@ model User {
   username       String           @id
   role           String           @default("user")
   balance        Float            @default(0.0)
-  BuySellTrigger BuySellTrigger[]
+  BuyTrigger     BuyTrigger[]
+  SellTrigger    SellTrigger[]
   OwnedStock     OwnedStock[]
   UncommitedBuy  UncommitedBuy[]
   UncommitedSell UncommitedSell[]
@@ -48,16 +49,24 @@ model UncommitedSell {
   expiresAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP + interval '61' second"))
 }
 
-model BuySellTrigger {
-  id       Int         @id @default(autoincrement())
-  user     User        @relation(fields: [username], references: [username])
-  username String
-  stock    String
-  type     TriggerType
-  amount   Float
+model BuyTrigger {
+  id            Int    @id @default(autoincrement())
+  user          User   @relation(fields: [username], references: [username])
+  username      String
+  stock         String
+  triggerAmount Float?
+  buyAmount     Float
+
+  @@unique([username, stock])
 }
 
-enum TriggerType {
-  SELL
-  BUY
+model SellTrigger {
+  id            Int    @id @default(autoincrement())
+  user          User   @relation(fields: [username], references: [username])
+  username      String
+  stock         String
+  triggerAmount Float?
+  sharesToSell  Float
+
+  @@unique([username, stock])
 }
