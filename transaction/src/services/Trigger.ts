@@ -1,7 +1,7 @@
 import { loadPackageDefinition, Server} from "@grpc/grpc-js";
 import {loadSync} from "@grpc/proto-loader";
-import {ProtoGrpcType} from "./proto/day-trader";
-import { TriggerHandlers } from "./proto/day_trader/Trigger";
+import {ProtoGrpcType} from "../proto/day-trader";
+import { TriggerHandlers } from "../proto/day_trader/Trigger";
 import { PrismaClient } from '@prisma/client'
 import * as grpc from '@grpc/grpc-js';
 
