@@ -4,6 +4,8 @@ import {ProtoGrpcType} from "./day-trader";
 import { TransactionHandlers } from "./day_trader/Transaction";
 import { PrismaClient } from '@prisma/client'
 import { notExpired } from "../utils/DateUtils";
+import * as grpc from '@grpc/grpc-js';
+import { QuoteResponse } from "./day_trader/QuoteResponse";
 
 const prisma = new PrismaClient()
 
@@ -43,7 +45,20 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
     }
 
     // get current price of stock
-    const currentPrice = 50.34;
+    // const currentPrice = 50.34;
+    const QuoteClient = new definitions.day_trader.Quote('localhost:50051', grpc.credentials.createInsecure()); 
+    const currentPrice: QuoteResponse = await (new Promise((accept, reject) => {
+        QuoteClient.Quote({
+            userId: call.request.userId,
+            stockSymbol: call.request.stockSymbol
+        }, (error, val) => {
+            if(!error && val){
+                accept(val);
+            }else{
+                reject(error);
+            }
+        });
+    }))
     const shares = call.request.amount/currentPrice;
 
     // create uncommited buy 
