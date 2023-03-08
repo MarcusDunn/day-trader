@@ -7,6 +7,7 @@ import { GetUserInfo } from "./utils/GetUserInfo";
 const prisma = new PrismaClient();
 
 const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => {
+    console.log("Log DisplaySummary called with:",call.request);
     if(!call.request.userId){
         return callback({code: Status.INVALID_ARGUMENT}, {});
     }
@@ -42,10 +43,11 @@ const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => 
         userSummary: userInfo
     }
 
-    return callback({code: Status.OK}, userSummary);
+    return callback(null, userSummary);
 }
 
 const DumpLog: LogHandlers['DumpLog'] = async (call, callback) => {
+    console.log("Log DumpLog called with:",call.request);
     const allUserCommands = await prisma.userCommand.findMany({ orderBy: { timestamp: 'asc' } });
     const allAccountTransactions = await prisma.accountTransaction.findMany({ orderBy: { timestamp: 'asc' } });
     const allSystemEvents = await prisma.systemEvent.findMany({ orderBy: { timestamp: 'asc' } });
@@ -63,10 +65,11 @@ const DumpLog: LogHandlers['DumpLog'] = async (call, callback) => {
         .ele(allErrorEvents)
 
     const xmlString = xml.end({ prettyPrint: true });
-    return callback({code: Status.OK}, { xml: xmlString })
+    return callback(null, { xml: xmlString })
 }
 
 const DumpLogUser: LogHandlers['DumpLogUser'] = async (call, callback) => {
+    console.log("Log DumpLogUser called with:",call.request);
     const usersUserCommands = await prisma.userCommand.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
     const usersAccountTransactions = await prisma.accountTransaction.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
     const usersSystemEvents = await prisma.systemEvent.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
@@ -83,10 +86,11 @@ const DumpLogUser: LogHandlers['DumpLogUser'] = async (call, callback) => {
         .ele(usersErrorEvents)
 
     const xmlString = xml.end({ prettyPrint: true });
-    return callback({code: Status.OK}, { xml: xmlString })
+    return callback(null, { xml: xmlString })
 }
 
-const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async (call, callback) => {
+const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async (call, callback)  => {
+    console.log("Log InsertAccountTransaction called with:",call.request);
     const insertTransaction = await prisma.accountTransaction.create({
         data: {
             timestamp: Date.now(),
@@ -98,10 +102,11 @@ const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async 
     });
     const insertTransactionReturn: any = insertTransaction;
     insertTransactionReturn.timestep = String(insertTransactionReturn.timestep);
-    return callback({code: Status.OK}, insertTransactionReturn)
+    return callback(null, insertTransactionReturn)
 }
 
 const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback) => {
+    console.log("Log InsertErrorEvent called with:",call.request);
     const insertError = await prisma.errorEvent.create({
         data: {
             timestamp: Date.now(),
@@ -115,10 +120,11 @@ const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback)
     });
     const insertErrorReturn: any = insertError;
     insertErrorReturn.timestep = String(insertErrorReturn.timestep);
-    return callback({code: Status.OK}, insertErrorReturn );
+    return callback(null, insertErrorReturn );
 }
 
 const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callback) => {
+    console.log("Log InsertQuoteServer called with:",call.request);
     const insertQuote = await prisma.quoteServer.create({
         data: {
             timestamp: Date.now(),
@@ -132,10 +138,11 @@ const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callbac
     })
     const insertQuoteReturn: any = insertQuote;
     insertQuoteReturn.timestep = String(insertQuoteReturn.timestep);
-    return callback({code: Status.OK}, insertQuoteReturn);
+    return callback(null, insertQuoteReturn);
 }
 
 const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callback) => {
+    console.log("Log InsertSystemEvent called with:",call.request);
     const insertSystemEventQuery = await prisma.systemEvent.create({
         data: {
             timestamp: Date.now(),
@@ -148,10 +155,11 @@ const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callbac
     })
     const insertSystemEventQueryReturn: any = insertSystemEventQuery;
     insertSystemEventQueryReturn.timestep = String(insertSystemEventQueryReturn.timestep);
-    return callback({code: Status.OK}, insertSystemEventQueryReturn);
+    return callback(null, insertSystemEventQueryReturn);
 }
 
 const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callback) => {
+    console.log("Log InsertUserCommand called with:",call.request);
     const insertCommand = await prisma.userCommand.create({
         data: {
             timestamp: Date.now(),
@@ -164,7 +172,7 @@ const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callbac
     })
     const insertCommandReturn: any = insertCommand;
     insertCommandReturn.timestep = String(insertCommandReturn.timestep);
-    return callback({code: Status.OK}, insertCommandReturn);
+    return callback(null, insertCommandReturn);
 }
 
 export const LogImplementation: LogHandlers = {

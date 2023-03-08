@@ -10,21 +10,14 @@ const prisma = new PrismaClient()
 const Add: TransactionHandlers['Add'] = async (call, callback) => {
     console.log("In transaction service in Add handler",call.request)
     if(!call.request.userId){
-        console.log("no userId was found in argument")
-        callback({code: Status.INVALID_ARGUMENT}, {balance: 0})
-        console.log("Error callback sent")
-        return;
+        return callback({code: Status.INVALID_ARGUMENT}, {balance: 0})
     }
-    console.log("passed !userId check, going to call prisma")
     const user = await prisma.user.upsert({
         where: { username: call.request.userId },
         update: { balance: { increment: call.request.amount } },
         create: { username: call.request.userId, balance: call.request.amount }
       });
-    console.log("Called prisma with user data:",user)
-    callback(null, {balance: user.balance})
-    console.log("success callback sent, exiting now")
-    return
+    return callback(null, {balance: user.balance})
 }
 
 const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
@@ -74,7 +67,7 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
         return callback({code: Status.INTERNAL, details: "Error creating uncommitedBuy"}, { shares: 0, success: false })
     }
 
-    return callback({code: Status.OK}, { shares: shares, success: true })
+    return callback(null, { shares: shares, success: true })
 }
 
 const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
@@ -124,7 +117,7 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
         }
     })
 
-    return callback({code: Status.OK}, { amount: createdSell.amount, shares: createdSell.shares, success: true})
+    return callback(null, { amount: createdSell.amount, shares: createdSell.shares, success: true})
 }
 
 const CancelBuy: TransactionHandlers['CancelBuy'] = async (call, callback) => {
@@ -134,7 +127,7 @@ const CancelBuy: TransactionHandlers['CancelBuy'] = async (call, callback) => {
             username: call.request.userId,
         }
     })
-    return callback({code: Status.OK}, { success: true })
+    return callback(null, { success: true })
 }
 
 const CancelSell: TransactionHandlers['CancelSell'] = async (call, callback) => {
@@ -144,7 +137,7 @@ const CancelSell: TransactionHandlers['CancelSell'] = async (call, callback) => 
             username: call.request.userId,
         }
     })
-    return callback({code: Status.OK}, { success: true })
+    return callback(null, { success: true })
 }
 
 const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
@@ -194,7 +187,7 @@ const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
         }
     })
 
-    return callback({code: Status.OK}, { stocksOwned: newPurchasedStock.shares, balance: decrementedUserBalance.balance, success: true })
+    return callback(null, { stocksOwned: newPurchasedStock.shares, balance: decrementedUserBalance.balance, success: true })
 }
 
 const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => {
@@ -251,7 +244,7 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
         }
     })
 
-    return callback({code: Status.OK}, { stocksOwned: newPurchasedStock.shares, balance: incrementedUserBalance.balance, success: true })
+    return callback(null, { stocksOwned: newPurchasedStock.shares, balance: incrementedUserBalance.balance, success: true })
 }
 
 const CreateUser: TransactionHandlers['CreateUser'] = async (call, callback) => {
@@ -270,7 +263,7 @@ const CreateUser: TransactionHandlers['CreateUser'] = async (call, callback) => 
             username: call.request.userId,
         }
     });
-    return callback({code: Status.OK}, { username: newUser.username, success: true })
+    return callback(null, { username: newUser.username, success: true })
 }
 
 const GetUser: TransactionHandlers['GetUser'] = async (call, callback) => {
@@ -287,7 +280,7 @@ const GetUser: TransactionHandlers['GetUser'] = async (call, callback) => {
         return callback({code: Status.NOT_FOUND, details: "User not found"}, { username: "error", balance: 0.0, role: "error", success: false, ownedStock: [], buyTriggers: [], sellTriggers: [] })
     }
     
-    return callback({code: Status.OK}, { 
+    return callback(null, { 
         username: user.username, 
         balance: user.balance, 
         role: user.role, 

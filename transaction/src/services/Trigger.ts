@@ -19,7 +19,7 @@ const CancelSetBuy: TriggerHandlers['CancelSetBuy'] = async (call, callback) => 
                 }
             }
         })
-        return callback({code: Status.OK}, {success: true});
+        return callback(null, {success: true});
     }catch(error){
         return callback({code: Status.NOT_FOUND, message: "Error on delete buy trigger"}, {success: false});
     }
@@ -39,7 +39,7 @@ const CancelSetSell: TriggerHandlers['CancelSetSell'] = async (call, callback) =
                 }
             }
         })
-        return callback({code: Status.OK}, { success: true });
+        return callback(null, { success: true });
     }catch(error){
         return callback({code: Status.NOT_FOUND, message: "Error on delete sell trigger"}, {success: false});
     }
@@ -114,7 +114,7 @@ const SetBuyAmount: TriggerHandlers['SetBuyAmount'] = async (call, callback) => 
         }
     })
 
-    return callback({code: Status.OK}, { balance: removeFunds.balance, buyAmount: AddedTrigger.buyAmount, success: false})
+    return callback(null, { balance: removeFunds.balance, buyAmount: AddedTrigger.buyAmount, success: false})
 }
 
 const SetBuyTrigger: TriggerHandlers['SetBuyTrigger'] = async (call, callback) => {
@@ -145,7 +145,7 @@ const SetBuyTrigger: TriggerHandlers['SetBuyTrigger'] = async (call, callback) =
         }
     })
     
-    return callback({code: Status.OK}, { triggerAmount: updatedTrigger.triggerAmount || undefined, stock: updatedTrigger.stock, success: true })
+    return callback(null, { triggerAmount: updatedTrigger.triggerAmount || undefined, stock: updatedTrigger.stock, success: true })
 }
 
 const SetSellAmount: TriggerHandlers['SetSellAmount'] = async (call, callback) => {
@@ -196,7 +196,7 @@ const SetSellAmount: TriggerHandlers['SetSellAmount'] = async (call, callback) =
         }
     });
 
-    return callback({code: Status.OK}, { currentStockPrice: currentStockPrice, numSharesToSell: numSharesToSell, success: true})
+    return callback(null, { currentStockPrice: currentStockPrice, numSharesToSell: numSharesToSell, success: true})
 }
 
 const SetSellTrigger: TriggerHandlers['SetSellTrigger'] = async (call, callback) => {
@@ -241,7 +241,7 @@ const SetSellTrigger: TriggerHandlers['SetSellTrigger'] = async (call, callback)
         }
     })
     
-    return callback({code: Status.OK}, {stock: updatedTrigger.stock, sharesLeft: takenStock.shares, success: true })
+    return callback(null, {stock: updatedTrigger.stock, sharesLeft: takenStock.shares, success: true })
 }
 
 export const TriggerImplementation: TriggerHandlers = {
