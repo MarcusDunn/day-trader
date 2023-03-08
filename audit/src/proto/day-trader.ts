@@ -28,12 +28,26 @@ export interface ProtoGrpcType {
     CommitBuyResponse: MessageTypeDefinition
     CommitSellRequest: MessageTypeDefinition
     CommitSellResponse: MessageTypeDefinition
+    CreateUserRequest: MessageTypeDefinition
+    CreateUserResponse: MessageTypeDefinition
     DisplaySummaryRequest: MessageTypeDefinition
     DisplaySummaryResponse: MessageTypeDefinition
     DumpLogRequest: MessageTypeDefinition
     DumpLogResponse: MessageTypeDefinition
     DumpLogUserRequest: MessageTypeDefinition
     DumpLogUserResponse: MessageTypeDefinition
+    GetUserRequest: MessageTypeDefinition
+    GetUserResponse: MessageTypeDefinition
+    InsertAccountTransactionRequest: MessageTypeDefinition
+    InsertAccountTransactionResponse: MessageTypeDefinition
+    InsertErrorEventRequest: MessageTypeDefinition
+    InsertErrorEventResponse: MessageTypeDefinition
+    InsertQuoteServerRequest: MessageTypeDefinition
+    InsertQuoteServerResponse: MessageTypeDefinition
+    InsertSystemEventRequest: MessageTypeDefinition
+    InsertSystemEventResponse: MessageTypeDefinition
+    InsertUserCommandRequest: MessageTypeDefinition
+    InsertUserCommandResponse: MessageTypeDefinition
     Log: SubtypeConstructor<typeof grpc.Client, _day_trader_LogClient> & { service: _day_trader_LogDefinition }
     Quote: SubtypeConstructor<typeof grpc.Client, _day_trader_QuoteClient> & { service: _day_trader_QuoteDefinition }
     QuoteRequest: MessageTypeDefinition

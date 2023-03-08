@@ -13,6 +13,16 @@ service Log {
   rpc DumpLog(DumpLogRequest) returns (DumpLogResponse);
   // Provides a summary to the client of the given user's transaction history and the current status of their accounts as well as any set buy or sell triggers and their parameters
   rpc DisplaySummary(DisplaySummaryRequest) returns (DisplaySummaryResponse);
+  // insert UserCommand into log db
+  rpc InsertUserCommand(InsertUserCommandRequest) returns (InsertUserCommandResponse);
+  // insert AccountTransaction into log db
+  rpc InsertAccountTransaction(InsertAccountTransactionRequest) returns (InsertAccountTransactionResponse);
+  // insert SystemEvent into log db
+  rpc InsertSystemEvent(InsertSystemEventRequest) returns (InsertSystemEventResponse);
+  // insert QuoteServer into log db
+  rpc InsertQuoteServer(InsertQuoteServerRequest) returns (InsertQuoteServerResponse);
+  // insert ErrorEvent into log db
+  rpc InsertErrorEvent(InsertErrorEventRequest) returns (InsertErrorEventResponse);
 }
 
 service Transaction {
@@ -30,6 +40,10 @@ service Transaction {
   rpc CommitSell(CommitSellRequest) returns (CommitSellResponse);
   // Cancels the most recently executed SELL Command
   rpc CancelSell(CancelSellRequest) returns (CancelSellResponse);
+  // Gets the users balance and stocks owned
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  // Creates a user
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
 }
 
 service Trigger {
@@ -99,6 +113,14 @@ message CancelSellRequest {
   string user_id = 1;
 }
 message  CancelSellResponse {}
+message GetUserRequest {
+  string user_id = 1;
+}
+message  GetUserResponse {}
+message CreateUserRequest {
+  string user_id = 1;
+}
+message  CreateUserResponse {}
 message SetBuyAmountRequest {
   string user_id = 1;
   string stock_symbol = 2;
@@ -146,3 +168,49 @@ message DisplaySummaryRequest {
   string user_id = 1;
 }
 message  DisplaySummaryResponse {}
+
+message InsertUserCommandRequest {
+  string server = 1;
+  string command = 2;
+  string username = 3;
+  string stockSymbol = 4;
+  float funds = 5;
+}
+message InsertUserCommandResponse {}
+
+message InsertAccountTransactionRequest {
+  string server = 1;
+  string action = 2;
+  string username = 3;
+  float funds = 4;
+}
+message InsertAccountTransactionResponse {}
+
+message InsertSystemEventRequest {
+  string server = 1;
+  string command = 2;
+  string username = 3;
+  string stockSymbol = 4;
+  float funds = 5;
+}
+message InsertSystemEventResponse {}
+
+message InsertQuoteServerRequest {
+  string server = 1;
+  int32 quoteServerTime = 2;
+  string username = 3;
+  string stockSymbol = 4;
+  float price = 5;
+  string cryptokey = 6;
+}
+message InsertQuoteServerResponse {}
+
+message InsertErrorEventRequest {
+  string server = 1;
+  string command = 2;
+  string username = 3;
+  string stockSymbol = 4;
+  float funds = 5;
+  string errorMessage = 6;
+}
+message InsertErrorEventResponse {}
