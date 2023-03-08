@@ -141,7 +141,7 @@ const SetBuyTrigger: TriggerHandlers['SetBuyTrigger'] = async (call, callback) =
         }
     })
     
-    return callback({code: Status.OK}, { triggerAmount: updatedTrigger.triggerAmount, stock: updatedTrigger.stock, success: true })
+    return callback({code: Status.OK}, { triggerAmount: updatedTrigger.triggerAmount || undefined, stock: updatedTrigger.stock, success: true })
 }
 
 const SetSellAmount: TriggerHandlers['SetSellAmount'] = async (call, callback) => {

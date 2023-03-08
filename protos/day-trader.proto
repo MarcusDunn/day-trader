@@ -200,7 +200,7 @@ message SetBuyTriggerRequest {
   float amount = 3;
 }
 message  SetBuyTriggerResponse {
-  float triggerAmount = 1;
+  float trigger_amount = 1;
   string stock = 2;
   bool success = 3;
 }
@@ -219,7 +219,9 @@ message SetSellTriggerRequest {
   string stock_symbol = 2;
   float amount = 3;
 }
-message  SetSellTriggerResponse {}
+message  SetSellTriggerResponse {
+
+}
 message CancelSetSellRequest {
   string user_id = 1;
   string stock_symbol = 2;
