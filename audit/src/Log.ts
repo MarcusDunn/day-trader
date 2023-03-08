@@ -56,7 +56,6 @@ const DumpLog: LogHandlers['DumpLog'] = async (call, callback) => {
 
 
     const xml = createXmlBuilder({ version: '1.0' }) //set to xml version 1.0
-        .ele('?xml version="1.0"?')
         .ele('root')
         .ele(allUserCommands)
         .ele(allAccountTransactions)
@@ -77,7 +76,6 @@ const DumpLogUser: LogHandlers['DumpLogUser'] = async (call, callback) => {
     const usersErrorEvents = await prisma.errorEvent.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
 
     const xml = createXmlBuilder({ version: '1.0' }) //set to xml version 1.0
-        .ele('?xml version="1.0"?')
         .ele('root')
         .ele(usersUserCommands)
         .ele(usersAccountTransactions)
