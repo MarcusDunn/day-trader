@@ -1,9 +1,10 @@
 // Original file: ../protos/day-trader.proto
 
+import type { Long } from '@grpc/proto-loader';
 
 export interface InsertQuoteServerRequest {
   'server'?: (string);
-  'quoteServerTime'?: (number);
+  'quoteServerTime'?: (number | string | Long);
   'username'?: (string);
   'stockSymbol'?: (string);
   'price'?: (number | string);
@@ -12,7 +13,7 @@ export interface InsertQuoteServerRequest {
 
 export interface InsertQuoteServerRequest__Output {
   'server'?: (string);
-  'quoteServerTime'?: (number);
+  'quoteServerTime'?: (Long);
   'username'?: (string);
   'stockSymbol'?: (string);
   'price'?: (number);

@@ -197,7 +197,7 @@ message InsertSystemEventResponse {}
 
 message InsertQuoteServerRequest {
   string server = 1;
-  int32 quoteServerTime = 2;
+  int64 quoteServerTime = 2;
   string username = 3;
   string stockSymbol = 4;
   float price = 5;

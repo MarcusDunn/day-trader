@@ -239,6 +239,14 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
     return callback(null, incrementedUserBalance.balance)
 }
 
+const CreateUser: TransactionHandlers['CreateUser'] = async (call, callback) => {
+    return callback(null, {})
+}
+
+const GetUser: TransactionHandlers['GetUser'] = async (call, callback) => {
+    return callback(null, {})
+}
+
 
 const implementation: TransactionHandlers = {
     Add,
@@ -247,7 +255,9 @@ const implementation: TransactionHandlers = {
     CancelSell,
     CommitBuy,
     CommitSell,
-    Sell
+    Sell,
+    CreateUser,
+    GetUser,
 }
 
 server.addService(definitions.day_trader.Transaction.service, implementation)
