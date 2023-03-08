@@ -122,12 +122,17 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
 
 const CancelBuy: TransactionHandlers['CancelBuy'] = async (call, callback) => {
     console.log("In transaction service in CancelBuy handler",call.request)
-    const deletedBuy = await prisma.uncommitedBuy.delete({
-        where: {
-            username: call.request.userId,
-        }
-    })
-    return callback(null, { success: true })
+    
+    try{
+        const deletedBuy = await prisma.uncommitedBuy.delete({
+            where: {
+                username: call.request.userId,
+            }
+        })
+        return callback(null, { success: true })
+    }catch(error){
+        return callback({code: Status.NOT_FOUND, details: "Uncommitted buy not found"}, { success: false })
+    }
 }
 
 const CancelSell: TransactionHandlers['CancelSell'] = async (call, callback) => {
@@ -185,13 +190,17 @@ const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
     });
 
     // remove uncommited buy
-    const deletedBuy = await prisma.uncommitedBuy.delete({
-        where: {
-            username: call.request.userId,
-        }
-    })
-
-    return callback(null, { stocksOwned: newPurchasedStock.shares, balance: decrementedUserBalance.balance, success: true })
+    try{
+        const deletedBuy = await prisma.uncommitedBuy.delete({
+            where: {
+                username: call.request.userId,
+            }
+        })
+    
+        return callback(null, { stocksOwned: newPurchasedStock.shares, balance: decrementedUserBalance.balance, success: true })
+    }catch(error){
+        return callback({code: Status.FAILED_PRECONDITION}, { stocksOwned: newPurchasedStock.shares, balance: decrementedUserBalance.balance, success: false })
+    }
 }
 
 const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => {
@@ -225,14 +234,18 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
 
     // if updated stock has less then 0 amount delete it
     if(newPurchasedStock.shares <= 0){
-        const deletedOwnedStock = await prisma.ownedStock.delete({
-            where: {
-                username_stock: {
-                    username: sellToCommit.username,
-                    stock: sellToCommit.stock,
+        try{
+            const deletedOwnedStock = await prisma.ownedStock.delete({
+                where: {
+                    username_stock: {
+                        username: sellToCommit.username,
+                        stock: sellToCommit.stock,
+                    }
                 }
-            }
-        });
+            });
+        }catch(error){
+            console.log("No ownedStock to delete?")
+        }
     }
 
     // add balance to user account
