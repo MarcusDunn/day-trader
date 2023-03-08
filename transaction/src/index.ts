@@ -4,8 +4,9 @@ import {ProtoGrpcType} from "./proto/day-trader";
 import * as grpc from '@grpc/grpc-js';
 import { TransactionImplementations } from "./services/Transaction";
 import { TriggerImplementation } from "./services/Trigger";
+import { CheckTriggers } from "./utils/CheckTriggers";
 
-const def = loadSync(__dirname + "../../../protos/day_trader.proto")
+const def = loadSync(__dirname + "../../protos/day_trader.proto")
 const definitions = loadPackageDefinition(def) as unknown as ProtoGrpcType
 
 const server = new Server();
@@ -19,4 +20,7 @@ const port = process.env.PORT || 50051;
 server.bindAsync(`0.0.0.0:${port}`, grpc.ServerCredentials.createInsecure(), () => {
     server.start();
     console.log(`gRPC server started on port ${port}`);
+    setInterval(() => {
+        CheckTriggers();
+    }, 10000); //every 5 minutes = 300000
 });
