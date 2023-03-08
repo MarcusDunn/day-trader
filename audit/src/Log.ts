@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { LogHandlers } from "./proto/day_trader/Log";
 import { create as createXmlBuilder } from 'xmlbuilder2';
+import { Status } from "@grpc/grpc-js/build/src/constants";
 
 const prisma = new PrismaClient();
 
@@ -30,7 +31,7 @@ const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => 
         accountTransactions: accountTransactions,
     }
 
-    return callback(null, userSummary);
+    return callback({code: Status.OK}, userSummary);
 }
 
 const DumpLog: LogHandlers['DumpLog'] = async (call, callback) => {
@@ -51,7 +52,7 @@ const DumpLog: LogHandlers['DumpLog'] = async (call, callback) => {
         .ele(allErrorEvents)
 
     const xmlString = xml.end({ prettyPrint: true });
-    return callback(null, { xml: xmlString })
+    return callback({code: Status.OK}, { xml: xmlString })
 }
 
 const DumpLogUser: LogHandlers['DumpLogUser'] = async (call, callback) => {
@@ -71,7 +72,7 @@ const DumpLogUser: LogHandlers['DumpLogUser'] = async (call, callback) => {
         .ele(usersErrorEvents)
 
     const xmlString = xml.end({ prettyPrint: true });
-    return callback(null, { xml: xmlString })
+    return callback({code: Status.OK}, { xml: xmlString })
 }
 
 const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async (call, callback) => {
@@ -84,7 +85,7 @@ const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async 
             funds: call.request.funds || 0,
         },
     });
-    return callback(null, { transaction: insertTransaction })
+    return callback({code: Status.OK}, { transaction: insertTransaction })
 }
 
 const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback) => {
@@ -99,7 +100,7 @@ const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback)
             errorMessage: call.request.errorMessage || 'undefined',
         },
     });
-    return callback(null, { errorMessage: insertError });
+    return callback({code: Status.OK}, { errorMessage: insertError });
 }
 
 const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callback) => {
@@ -114,7 +115,7 @@ const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callbac
             cryptokey: call.request.cryptokey || 'undefined'
         }
     })
-    return callback(null, { quoteMessage: insertQuote });
+    return callback({code: Status.OK}, { quoteMessage: insertQuote });
 }
 
 const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callback) => {
@@ -128,7 +129,7 @@ const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callbac
             funds: call.request.funds || 0,
         },
     })
-    return callback(null, { systemMessage: insertSystemEventQuery });
+    return callback({code: Status.OK}, { systemMessage: insertSystemEventQuery });
 }
 
 const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callback) => {
@@ -142,7 +143,7 @@ const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callbac
             funds: call.request.funds || 0,
         },
     })
-    return callback(null, { commandMessage: insertCommand });
+    return callback({code: Status.OK}, { commandMessage: insertCommand });
 }
 
 export const LogImplementation: LogHandlers = {
