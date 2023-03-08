@@ -182,24 +182,38 @@ message SetBuyAmountRequest {
   string stock_symbol = 2;
   float amount = 3;
 }
-message  SetBuyAmountResponse {}
+message  SetBuyAmountResponse {
+  float balance = 1;
+  float buy_amount = 2;
+  bool success = 3;
+}
 message CancelSetBuyRequest {
   string user_id = 1;
   string stock_symbol = 2;
 }
-message  CancelSetBuyResponse {}
+message  CancelSetBuyResponse {
+  bool success = 1;
+}
 message SetBuyTriggerRequest {
   string user_id = 1;
   string stock_symbol = 2;
   float amount = 3;
 }
-message  SetBuyTriggerResponse {}
+message  SetBuyTriggerResponse {
+  float triggerAmount = 1;
+  string stock = 2;
+  bool success = 3;
+}
 message SetSellAmountRequest {
   string user_id = 1;
   string stock_symbol = 2;
   float amount = 3;
 }
-message  SetSellAmountResponse {}
+message  SetSellAmountResponse {
+  float currentStockPrice = 1;
+  float numSharesToSell = 2;
+  bool success = 3;
+}
 message SetSellTriggerRequest {
   string user_id = 1;
   string stock_symbol = 2;

@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
 
 const CancelSetBuy: TriggerHandlers['CancelSetBuy'] = async (call, callback) => {
     if(!call.request.userId || !call.request.stockSymbol ){
-        return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, {})
+        return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, {success: false})
     }
     try{
         const buyTrigger = await prisma.buyTrigger.delete({
@@ -18,7 +18,7 @@ const CancelSetBuy: TriggerHandlers['CancelSetBuy'] = async (call, callback) => 
                 }
             }
         })
-        return callback(null, {success: true});
+        return callback({code: Status.OK}, {success: true});
     }catch(error){
         return callback({code: Status.NOT_FOUND, message: "Error on delete buy trigger"}, {success: false});
     }
@@ -26,7 +26,7 @@ const CancelSetBuy: TriggerHandlers['CancelSetBuy'] = async (call, callback) => 
 
 const CancelSetSell: TriggerHandlers['CancelSetSell'] = async (call, callback) => {
     if(!call.request.userId || !call.request.stockSymbol ){
-        return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, {})
+        return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, {success: false})
     }
     try{
         const sellTrigger = await prisma.sellTrigger.delete({
@@ -37,7 +37,7 @@ const CancelSetSell: TriggerHandlers['CancelSetSell'] = async (call, callback) =
                 }
             }
         })
-        return callback(null, { success: true });
+        return callback({code: Status.OK}, { success: true });
     }catch(error){
         return callback({code: Status.NOT_FOUND, message: "Error on delete sell trigger"}, {success: false});
     }
@@ -59,7 +59,7 @@ const SetBuyAmount: TriggerHandlers['SetBuyAmount'] = async (call, callback) => 
     // error handling
     if(!call.request.userId || !call.request.stockSymbol || !call.request.amount || !user){
         const message = user ? "Invalid arguments" : "Invalid UserId";
-        return callback({code: Status.INVALID_ARGUMENT, message: message}, {})
+        return callback({code: Status.INVALID_ARGUMENT, message: message}, { balance: 0.0, buyAmount: 0.0, success: false})
     }
     // need to check if existing trigger exists for user_stock
     // if it does, ensure the difference of the balance is taken/given
@@ -71,7 +71,7 @@ const SetBuyAmount: TriggerHandlers['SetBuyAmount'] = async (call, callback) => 
     }
 
     if(userBalanceTotal < call.request.amount){
-        return callback({code: Status.INVALID_ARGUMENT, message: "Insufficent funds"}, {})
+        return callback({code: Status.INVALID_ARGUMENT, message: "Insufficent funds"}, { balance: 0.0, buyAmount: 0.0, success: false})
     }
     if(user.BuyTrigger){
         await prisma.user.update({
@@ -111,12 +111,12 @@ const SetBuyAmount: TriggerHandlers['SetBuyAmount'] = async (call, callback) => 
         }
     })
 
-    return callback(null, AddedTrigger)
+    return callback({code: Status.OK}, { balance: removeFunds.balance, buyAmount: AddedTrigger.buyAmount, success: false})
 }
 
 const SetBuyTrigger: TriggerHandlers['SetBuyTrigger'] = async (call, callback) => {
     if(!call.request.userId || !call.request.stockSymbol || !call.request.amount){
-        return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, {})
+        return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, { triggerAmount: 0.0, stock: "error", success: false })
     }
     const buyTrigger = await prisma.buyTrigger.findUnique({
         where: {
@@ -127,7 +127,7 @@ const SetBuyTrigger: TriggerHandlers['SetBuyTrigger'] = async (call, callback) =
         }
     })
     if(!buyTrigger){
-        return callback({code: Status.NOT_FOUND, message: "No buy trigger was found"}, {})
+        return callback({code: Status.NOT_FOUND, message: "No buy trigger was found"}, { triggerAmount: 0.0, stock: "error", success: false })
     }
     const updatedTrigger = await prisma.buyTrigger.update({
         where: {
@@ -141,7 +141,7 @@ const SetBuyTrigger: TriggerHandlers['SetBuyTrigger'] = async (call, callback) =
         }
     })
     
-    return callback(null, updatedTrigger)
+    return callback({code: Status.OK}, { triggerAmount: updatedTrigger.triggerAmount, stock: updatedTrigger.stock, success: true })
 }
 
 const SetSellAmount: TriggerHandlers['SetSellAmount'] = async (call, callback) => {
@@ -163,14 +163,14 @@ const SetSellAmount: TriggerHandlers['SetSellAmount'] = async (call, callback) =
         return callback({code: Status.INVALID_ARGUMENT, message: message}, {})
     }
     if(!user.OwnedStock[0]){
-        return callback({code: Status.FAILED_PRECONDITION, message: "User does not own stock"}, {})
+        return callback({code: Status.FAILED_PRECONDITION, message: "User does not own stock"}, { currentStockPrice: 0.0, numSharesToSell: 0.0, success: false})
     }
     
     const currentStockPrice = Number((await GetQuote(call.request.userId, call.request.stockSymbol)).quote);
     const numSharesToSell = call.request.amount/currentStockPrice;
     const dollarValueOwnedCurrently = currentStockPrice*user.OwnedStock[0].shares
     if(dollarValueOwnedCurrently < call.request.amount){
-        return callback({code: Status.FAILED_PRECONDITION, message: "Not enough stock owned"}, {})
+        return callback({code: Status.FAILED_PRECONDITION, message: "Not enough stock owned"}, { currentStockPrice: 0.0, numSharesToSell: 0.0, success: false})
     }
 
     const AddedTrigger = await prisma.sellTrigger.upsert({
@@ -191,12 +191,12 @@ const SetSellAmount: TriggerHandlers['SetSellAmount'] = async (call, callback) =
         }
     });
 
-    return callback(null, AddedTrigger)
+    return callback({code: Status.OK}, { currentStockPrice: currentStockPrice, numSharesToSell: numSharesToSell, success: true})
 }
 
 const SetSellTrigger: TriggerHandlers['SetSellTrigger'] = async (call, callback) => {
     if(!call.request.userId || !call.request.stockSymbol || !call.request.amount){
-        return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, {})
+        return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, {stock: "error", sharesLeft: 0.0, success: false })
     }
     const sellTrigger = await prisma.sellTrigger.findUnique({
         where: {
@@ -207,7 +207,7 @@ const SetSellTrigger: TriggerHandlers['SetSellTrigger'] = async (call, callback)
         }
     })
     if(!sellTrigger){
-        return callback({code: Status.NOT_FOUND, message: "No sell trigger was found"}, {})
+        return callback({code: Status.NOT_FOUND, message: "No sell trigger was found"}, {stock: "error", sharesLeft: 0.0, success: false })
     }
 
     // take stock from user
@@ -235,7 +235,7 @@ const SetSellTrigger: TriggerHandlers['SetSellTrigger'] = async (call, callback)
         }
     })
     
-    return callback(null, updatedTrigger)
+    return callback({code: Status.OK}, {stock: updatedTrigger.stock, sharesLeft: takenStock.shares, success: true })
 }
 
 export const TriggerImplementation: TriggerHandlers = {
