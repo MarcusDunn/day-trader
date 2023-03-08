@@ -85,7 +85,7 @@ const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async 
             funds: call.request.funds || 0,
         },
     });
-    return callback({code: Status.OK}, { transaction: insertTransaction })
+    return callback({code: Status.OK}, insertTransaction)
 }
 
 const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback) => {
@@ -100,7 +100,7 @@ const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback)
             errorMessage: call.request.errorMessage || 'undefined',
         },
     });
-    return callback({code: Status.OK}, { errorMessage: insertError });
+    return callback({code: Status.OK}, insertError );
 }
 
 const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callback) => {
@@ -115,7 +115,7 @@ const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callbac
             cryptokey: call.request.cryptokey || 'undefined'
         }
     })
-    return callback({code: Status.OK}, { quoteMessage: insertQuote });
+    return callback({code: Status.OK}, insertQuote);
 }
 
 const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callback) => {
@@ -129,7 +129,7 @@ const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callbac
             funds: call.request.funds || 0,
         },
     })
-    return callback({code: Status.OK}, { systemMessage: insertSystemEventQuery });
+    return callback({code: Status.OK}, insertSystemEventQuery);
 }
 
 const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callback) => {
@@ -143,7 +143,7 @@ const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callbac
             funds: call.request.funds || 0,
         },
     })
-    return callback({code: Status.OK}, { commandMessage: insertCommand });
+    return callback({code: Status.OK}, insertCommand);
 }
 
 export const LogImplementation: LogHandlers = {

@@ -231,15 +231,41 @@ message DumpLogUserRequest  {
   string user_id = 1;
   string filename = 2;
 }
-message  DumpLogUserResponse {}
+message  DumpLogUserResponse {
+  string xml = 1;
+}
 message DumpLogRequest {
   string filename = 1;
 }
-message  DumpLogResponse {}
+message  DumpLogResponse {
+  string xml = 1;
+}
 message DisplaySummaryRequest {
   string user_id = 1;
 }
-message  DisplaySummaryResponse {}
+message DisplaySummaryResponse {
+  repeated UserCommand user_commands = 1;
+  repeated AccountTransaction account_transactions = 2;
+}
+
+message UserCommand {
+  int32 transaction_num = 1;
+  int64 timestamp = 2;
+  string server = 3;
+  string command = 4;
+  string username = 5;
+  string stock_symbol = 6;
+  float funds = 7;
+}
+
+message AccountTransaction {
+  int32 transaction_num = 1;
+  int64 timestamp = 2;
+  string server = 3;
+  string action = 4;
+  string username = 5;
+  float funds = 6;
+}
 
 message InsertUserCommandRequest {
   string server = 1;
@@ -248,7 +274,15 @@ message InsertUserCommandRequest {
   string stockSymbol = 4;
   float funds = 5;
 }
-message InsertUserCommandResponse {}
+message InsertUserCommandResponse {
+  int32 transaction_num = 1;
+  int64 timestamp = 2;
+  string server = 3;
+  string command = 4;
+  string username = 5;
+  string stock_symbol = 6;
+  float funds = 7;
+}
 
 message InsertAccountTransactionRequest {
   string server = 1;
@@ -256,7 +290,14 @@ message InsertAccountTransactionRequest {
   string username = 3;
   float funds = 4;
 }
-message InsertAccountTransactionResponse {}
+message InsertAccountTransactionResponse {
+  int32 transaction_num = 1;
+  int64 timestamp = 2;
+  string server = 3;
+  string action = 4;
+  string username = 5;
+  float funds = 6;
+}
 
 message InsertSystemEventRequest {
   string server = 1;
@@ -265,7 +306,15 @@ message InsertSystemEventRequest {
   string stockSymbol = 4;
   float funds = 5;
 }
-message InsertSystemEventResponse {}
+message InsertSystemEventResponse {
+  int32 transaction_num = 1;
+  int64 timestamp = 2;
+  string server = 3;
+  string command = 4;
+  string username = 5;
+  string stock_symbol = 6;
+  float funds = 7;
+}
 
 message InsertQuoteServerRequest {
   string server = 1;
@@ -275,7 +324,16 @@ message InsertQuoteServerRequest {
   float price = 5;
   string cryptokey = 6;
 }
-message InsertQuoteServerResponse {}
+message InsertQuoteServerResponse {
+  int32 transaction_num = 1;
+  int64 timestamp = 2;
+  string server = 3;
+  int64 quote_server_time = 4;
+  string username = 5;
+  string stock_symbol = 6;
+  float price = 7;
+  string crypto_key = 8;
+}
 
 message InsertErrorEventRequest {
   string server = 1;
@@ -285,4 +343,13 @@ message InsertErrorEventRequest {
   float funds = 5;
   string errorMessage = 6;
 }
-message InsertErrorEventResponse {}
+message InsertErrorEventResponse {
+  int32 transaction_num = 1;
+  int64 timestamp = 2;
+  string server = 3;
+  string command = 4;
+  string username = 5;
+  string stock_symbol = 6;
+  float funds = 7;
+  string error_message = 8;
+}

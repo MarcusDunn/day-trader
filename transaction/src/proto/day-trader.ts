@@ -12,6 +12,7 @@ type SubtypeConstructor<Constructor extends new (...args: any) => any, Subtype> 
 
 export interface ProtoGrpcType {
   day_trader: {
+    AccountTransaction: MessageTypeDefinition
     AddRequest: MessageTypeDefinition
     AddResponse: MessageTypeDefinition
     BuyRequest: MessageTypeDefinition
@@ -67,6 +68,7 @@ export interface ProtoGrpcType {
     SetSellTriggerResponse: MessageTypeDefinition
     Transaction: SubtypeConstructor<typeof grpc.Client, _day_trader_TransactionClient> & { service: _day_trader_TransactionDefinition }
     Trigger: SubtypeConstructor<typeof grpc.Client, _day_trader_TriggerClient> & { service: _day_trader_TriggerDefinition }
+    UserCommand: MessageTypeDefinition
   }
 }
 
