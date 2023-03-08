@@ -66,7 +66,9 @@ message AddRequest {
   float amount = 2;
 }
 
-message AddResponse {}
+message AddResponse {
+  float balance = 1;
+}
 
 message QuoteRequest {
   string user_id = 1;
@@ -87,40 +89,94 @@ message BuyRequest {
   float amount = 3;
 }
 
-message BuyResponse {}
+message BuyResponse {
+  float shares = 1;
+  bool success = 2;
+}
 
 message CommitBuyRequest{
   string user_id = 1;
 }
 
-message CommitBuyResponse {}
+message CommitBuyResponse {
+  float stocksOwned = 1;
+  float balance = 2;
+  bool success = 3;
+}
 
 message CancelBuyRequest {string user_id = 1;}
-message  CancelBuyResponse {}
+message  CancelBuyResponse {
+  bool success = 1;
+}
 
 message SellRequest {
   string user_id = 1;
   string stock_symbol = 2;
   float amount = 3;
 }
-message SellResponse {}
+message SellResponse {
+  float amount = 1;
+  float shares = 2;
+  bool success = 3;
+}
 
 message CommitSellRequest {
   string user_id = 1;
 }
-message  CommitSellResponse {}
+message  CommitSellResponse {
+  float stocksOwned = 1;
+  float balance = 2;
+  bool success = 3;
+}
 message CancelSellRequest {
   string user_id = 1;
 }
-message  CancelSellResponse {}
+message  CancelSellResponse {
+  bool success = 1;
+}
 message GetUserRequest {
   string user_id = 1;
 }
-message  GetUserResponse {}
+message GetUserResponse {
+  string username = 1;
+  float balance = 2;
+  string role = 3;
+  bool success = 4;
+  repeated OwnedStock owned_stock = 5;
+  repeated BuyTrigger buy_triggers = 6;
+  repeated SellTrigger sell_triggers = 7;
+}
+
+message OwnedStock {
+  int32 id = 1;
+  string username = 2;
+  string stock = 3;
+  float shares = 4;
+}
+
+message BuyTrigger {
+  int32 id = 1;
+  string username = 2;
+  string stock = 3;
+  float trigger_amount = 4;
+  float buy_amount = 5;
+}
+
+message SellTrigger {
+  int32 id = 1;
+  string username = 2;
+  string stock = 3;
+  float trigger_amount = 4;
+  float shares_to_sell = 5;
+}
+
 message CreateUserRequest {
   string user_id = 1;
 }
-message  CreateUserResponse {}
+message  CreateUserResponse {
+  string username = 1;
+  bool success = 2;
+}
 message SetBuyAmountRequest {
   string user_id = 1;
   string stock_symbol = 2;
