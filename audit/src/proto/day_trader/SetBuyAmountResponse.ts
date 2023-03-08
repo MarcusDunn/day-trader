@@ -2,7 +2,13 @@
 
 
 export interface SetBuyAmountResponse {
+  'balance'?: (number | string);
+  'buyAmount'?: (number | string);
+  'success'?: (boolean);
 }
 
 export interface SetBuyAmountResponse__Output {
+  'balance'?: (number);
+  'buyAmount'?: (number);
+  'success'?: (boolean);
 }

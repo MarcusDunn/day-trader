@@ -2,22 +2,20 @@
 
 import type { Long } from '@grpc/proto-loader';
 
-export interface InsertUserCommandResponse {
+export interface AccountTransaction {
   'transactionNum'?: (number);
   'timestamp'?: (number | string | Long);
   'server'?: (string);
-  'command'?: (string);
+  'action'?: (string);
   'username'?: (string);
-  'stockSymbol'?: (string);
   'funds'?: (number | string);
 }
 
-export interface InsertUserCommandResponse__Output {
+export interface AccountTransaction__Output {
   'transactionNum'?: (number);
   'timestamp'?: (Long);
   'server'?: (string);
-  'command'?: (string);
+  'action'?: (string);
   'username'?: (string);
-  'stockSymbol'?: (string);
   'funds'?: (number);
 }

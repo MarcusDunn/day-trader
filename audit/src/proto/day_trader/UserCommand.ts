@@ -2,24 +2,22 @@
 
 import type { Long } from '@grpc/proto-loader';
 
-export interface InsertQuoteServerResponse {
+export interface UserCommand {
   'transactionNum'?: (number);
   'timestamp'?: (number | string | Long);
   'server'?: (string);
-  'quoteServerTime'?: (number | string | Long);
+  'command'?: (string);
   'username'?: (string);
   'stockSymbol'?: (string);
-  'price'?: (number | string);
-  'cryptoKey'?: (string);
+  'funds'?: (number | string);
 }
 
-export interface InsertQuoteServerResponse__Output {
+export interface UserCommand__Output {
   'transactionNum'?: (number);
   'timestamp'?: (Long);
   'server'?: (string);
-  'quoteServerTime'?: (Long);
+  'command'?: (string);
   'username'?: (string);
   'stockSymbol'?: (string);
-  'price'?: (number);
-  'cryptoKey'?: (string);
+  'funds'?: (number);
 }

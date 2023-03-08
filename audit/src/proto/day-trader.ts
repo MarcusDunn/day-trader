@@ -12,10 +12,12 @@ type SubtypeConstructor<Constructor extends new (...args: any) => any, Subtype> 
 
 export interface ProtoGrpcType {
   day_trader: {
+    AccountTransaction: MessageTypeDefinition
     AddRequest: MessageTypeDefinition
     AddResponse: MessageTypeDefinition
     BuyRequest: MessageTypeDefinition
     BuyResponse: MessageTypeDefinition
+    BuyTrigger: MessageTypeDefinition
     CancelBuyRequest: MessageTypeDefinition
     CancelBuyResponse: MessageTypeDefinition
     CancelSellRequest: MessageTypeDefinition
@@ -49,11 +51,13 @@ export interface ProtoGrpcType {
     InsertUserCommandRequest: MessageTypeDefinition
     InsertUserCommandResponse: MessageTypeDefinition
     Log: SubtypeConstructor<typeof grpc.Client, _day_trader_LogClient> & { service: _day_trader_LogDefinition }
+    OwnedStock: MessageTypeDefinition
     Quote: SubtypeConstructor<typeof grpc.Client, _day_trader_QuoteClient> & { service: _day_trader_QuoteDefinition }
     QuoteRequest: MessageTypeDefinition
     QuoteResponse: MessageTypeDefinition
     SellRequest: MessageTypeDefinition
     SellResponse: MessageTypeDefinition
+    SellTrigger: MessageTypeDefinition
     SetBuyAmountRequest: MessageTypeDefinition
     SetBuyAmountResponse: MessageTypeDefinition
     SetBuyTriggerRequest: MessageTypeDefinition
@@ -64,6 +68,7 @@ export interface ProtoGrpcType {
     SetSellTriggerResponse: MessageTypeDefinition
     Transaction: SubtypeConstructor<typeof grpc.Client, _day_trader_TransactionClient> & { service: _day_trader_TransactionDefinition }
     Trigger: SubtypeConstructor<typeof grpc.Client, _day_trader_TriggerClient> & { service: _day_trader_TriggerDefinition }
+    UserCommand: MessageTypeDefinition
   }
 }
 

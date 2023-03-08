@@ -2,7 +2,9 @@
 
 
 export interface CancelBuyResponse {
+  'success'?: (boolean);
 }
 
 export interface CancelBuyResponse__Output {
+  'success'?: (boolean);
 }
