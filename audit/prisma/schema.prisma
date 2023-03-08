@@ -12,7 +12,7 @@ datasource db {
 }
 
 model UserCommand {
-  transactionNum Int    @id @default(autoincrement())
+  transactionNum Int     @id @default(autoincrement())
   timestamp      BigInt //Will have to convert current date to unix: const unixTimestamp = new Date().getTime();
   server         String
   command        String //"ADD", "BUY", "SELL", etc
@@ -52,12 +52,12 @@ model quoteServer {
 }
 
 model errorEvent {
-  transactionNum  Int    @id @default(autoincrement())
-  timestamp       BigInt
-  server          String
-  command         String
-  username        String
-  stockSymbol     String
-  funds           Float
-  errorMessage    String
+  transactionNum Int    @id @default(autoincrement())
+  timestamp      BigInt
+  server         String
+  command        String
+  username       String
+  stockSymbol    String
+  funds          Float
+  errorMessage   String
 }
