@@ -7,7 +7,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://admin:postgrespw@auditDB:5432/devdb?schema=public"
+  url      = "postgresql://admin:postgrespw@auditDB:5432/devdb?schema=public" // for docker-deployment
+  // url      = "postgresql://admin:postgrespw@localhost:5432/devdb?schema=public" // for npm run dev
 }
 
 model UserCommand {
