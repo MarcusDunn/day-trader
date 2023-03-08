@@ -132,12 +132,16 @@ const CancelBuy: TransactionHandlers['CancelBuy'] = async (call, callback) => {
 
 const CancelSell: TransactionHandlers['CancelSell'] = async (call, callback) => {
     console.log("In transaction service in CancelSell handler",call.request)
-    const deletedSell = await prisma.uncommitedSell.delete({
-        where: {
-            username: call.request.userId,
-        }
-    })
-    return callback(null, { success: true })
+    try{
+        const deletedSell = await prisma.uncommitedSell.delete({
+            where: {
+                username: call.request.userId,
+            }
+        })
+        return callback(null, { success: true })
+    }catch(error){
+        return callback({code: Status.NOT_FOUND, details: "Uncommitted sell not found"}, { success: false })
+    }
 }
 
 const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
@@ -238,13 +242,18 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
     });
 
     // remove uncommited sell
-    const deletedSell = await prisma.uncommitedSell.delete({
-        where: {
-            username: sellToCommit.username,
-        }
-    })
+    try{
+        const deletedSell = await prisma.uncommitedSell.delete({
+            where: {
+                username: sellToCommit.username,
+            }
+        })
+        return callback(null, { stocksOwned: newPurchasedStock.shares, balance: incrementedUserBalance.balance, success: true })
+    }catch(error){
+        return callback({code: Status.NOT_FOUND, details: "Uncommitted sell to delete was not found"}, { stocksOwned: newPurchasedStock.shares, balance: incrementedUserBalance.balance, success: true } )
+    }
+    
 
-    return callback(null, { stocksOwned: newPurchasedStock.shares, balance: incrementedUserBalance.balance, success: true })
 }
 
 const CreateUser: TransactionHandlers['CreateUser'] = async (call, callback) => {
