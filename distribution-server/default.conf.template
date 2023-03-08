@@ -3,4 +3,13 @@ server {
     location /day_trader.Quote {
         grpc_pass ${QUOTE_SERVER_URI};
     }
+    location /day_trader.Transaction {
+        grpc_pass ${TRANSACTION_SERVER_URI};
+    }
+    location /day_trader.Trigger {
+        grpc_pass ${TRIGGER_SERVER_URI};
+    }
+    location /day_trader.Log {
+        grpc_pass ${LOG_SERVER_URI};
+    }
 }

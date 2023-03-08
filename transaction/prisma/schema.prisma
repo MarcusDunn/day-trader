@@ -7,14 +7,18 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://admin:postgrespw@postgres:5432/devdb?schema=public"
+  url      = "postgresql://admin:postgrespw@transactionDB:5432/devdb?schema=public"
 }
 
 model User {
-  username        String            @id
-  balance         Float             @default(0.0)
-  BuySellTrigger BuySellTrigger[]
+  username       String           @id
+  role           String           @default("user")
+  balance        Float            @default(0.0)
+  BuyTrigger     BuyTrigger[]
+  SellTrigger    SellTrigger[]
   OwnedStock     OwnedStock[]
+  UncommitedBuy  UncommitedBuy[]
+  UncommitedSell UncommitedSell[]
 }
 
 model OwnedStock {
@@ -22,19 +26,47 @@ model OwnedStock {
   user     User   @relation(fields: [username], references: [username])
   username String
   stock    String
-  shares   Int
+  shares   Float
+
+  @@unique([username, stock])
 }
 
-model BuySellTrigger {
-  id       Int         @id @default(autoincrement())
-  user     User        @relation(fields: [username], references: [username])
-  username String
-  stock    String
-  type     TriggerType
-  amount   Float
+model UncommitedBuy {
+  user      User     @relation(fields: [username], references: [username])
+  username  String   @id
+  stock     String
+  amount    Float
+  shares    Float
+  expiresAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP + interval '61' second"))
 }
 
-enum TriggerType {
-  SELL
-  BUY
+model UncommitedSell {
+  user      User     @relation(fields: [username], references: [username])
+  username  String   @id
+  stock     String
+  amount    Float
+  shares    Float
+  expiresAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP + interval '61' second"))
+}
+
+model BuyTrigger {
+  id            Int    @id @default(autoincrement())
+  user          User   @relation(fields: [username], references: [username])
+  username      String
+  stock         String
+  triggerAmount Float?
+  buyAmount     Float
+
+  @@unique([username, stock])
+}
+
+model SellTrigger {
+  id            Int    @id @default(autoincrement())
+  user          User   @relation(fields: [username], references: [username])
+  username      String
+  stock         String
+  triggerAmount Float?
+  sharesToSell  Float
+
+  @@unique([username, stock])
 }

@@ -13,7 +13,8 @@
     "build": "tsc",
     "dev": "nodemon src/index.ts",
     "docker": "chmod +x ./cmd.sh; ./cmd.sh",
-    "start": "node dist/src/index.js"
+    "start": "node dist/src/index.js",
+    "gen-grpc-types": "npx proto-loader-gen-types --grpcLib=@grpc/grpc-js --outDir=src/proto/ ../protos/day-trader.proto && cp ../protos/day-trader.proto src/proto/day-trader-copy.proto"
   },
   "keywords": [],
   "author": "",
