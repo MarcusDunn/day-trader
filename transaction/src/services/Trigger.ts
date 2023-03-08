@@ -69,7 +69,7 @@ const SetBuyAmount: TriggerHandlers['SetBuyAmount'] = async (call, callback) => 
     const existingTrigger = user.BuyTrigger[0]
     let userBalanceTotal = user.balance;
 
-    if(user.BuyTrigger){
+    if(user.BuyTrigger && existingTrigger?.buyAmount){
         userBalanceTotal += existingTrigger.buyAmount
     }
 
