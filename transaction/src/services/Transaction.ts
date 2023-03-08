@@ -8,9 +8,13 @@ const prisma = new PrismaClient()
 
 
 const Add: TransactionHandlers['Add'] = async (call, callback) => {
-    const user = await prisma.user.update({
+    if(!call.request.userId){
+        return callback({code: Status.INVALID_ARGUMENT}, {balance: 0})
+    }
+    const user = await prisma.user.upsert({
         where: { username: call.request.userId },
-        data: { balance: { increment: call.request.amount } },
+        update: { balance: { increment: call.request.amount } },
+        create: { username: call.request.userId, balance: call.request.amount }
       });
     return callback({code: Status.OK}, {balance: user.balance})
 }
