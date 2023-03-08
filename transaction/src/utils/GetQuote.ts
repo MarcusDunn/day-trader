@@ -12,7 +12,7 @@ const prisma = new PrismaClient();
 
 const def = loadSync(__dirname + "/../proto/day-trader-copy.proto")
 const definitions = grpc.loadPackageDefinition(def) as unknown as ProtoGrpcType
-const QuoteClient = new definitions.day_trader.Quote('localhost:50051', grpc.credentials.createInsecure());
+const QuoteClient = new definitions.day_trader.Quote(process.env.QuoteURI || 'http://quote-server-adapter:50051', grpc.credentials.createInsecure());
 const TransactionClient = new definitions.day_trader.Transaction(`0.0.0.0:${process.env.PORT || 50051}`, grpc.credentials.createInsecure());
 
 export async function GetQuote(userId: string, stockSymbol: string): Promise<QuoteResponse>{
