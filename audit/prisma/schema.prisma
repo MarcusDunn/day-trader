@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://admin:postgrespw@postgres:5432/devdb?schema=public"
+  url      = "postgresql://admin:postgrespw@auditDB:5432/devdb?schema=public"
 }
 
 model UserCommand {

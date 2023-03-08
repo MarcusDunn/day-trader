@@ -4,14 +4,11 @@ RUN apk add --no-cache openssl libssl1.1
 
 WORKDIR /app
 
-COPY package*.json ./
-
-RUN npm install
-
 COPY . .
 
+RUN npm install
 RUN npx prisma generate
 
 EXPOSE 50051
 
-CMD ["npm", "run", "docker"]
+CMD npx prisma db push && npm run dev

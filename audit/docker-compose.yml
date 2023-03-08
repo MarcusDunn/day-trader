@@ -2,7 +2,7 @@ version: "3.9"
 services:
   postgres:
     image: postgres:latest
-    container_name: logDB
+    container_name: auditDB
     hostname: postgres
     ports:
       - 5432:5432
@@ -10,12 +10,12 @@ services:
       POSTGRES_USER: "admin"
       POSTGRES_PASSWORD: "postgrespw"
       POSTGRES_DB: "devdb"
-    # volumes:
-    #   - logDB-data:/var/lib/postgresql/data
+    volumes:
+      - auditDB-data:/var/lib/postgresql/data
     restart: unless-stopped
-  transactionserver:
-    image: transactionserver
-    container_name: transactionService
+  auditserver:
+    image: auditserver
+    container_name: auditService
     build: "./"
     ports:
       - 50051:50051
@@ -25,5 +25,5 @@ services:
       - postgres
     restart: unless-stopped
 
-# volumes:
-#   logDB-data:
+volumes:
+  auditDB-data:
