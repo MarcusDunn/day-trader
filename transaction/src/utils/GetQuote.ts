@@ -10,7 +10,7 @@ import { CommitBuyResponse } from "../proto/day_trader/CommitBuyResponse";
 
 const prisma = new PrismaClient();
 
-const def = loadSync(__dirname + "/../../../protos/day-trader.proto")
+const def = loadSync(__dirname + "/../proto/day-trader-copy.proto")
 const definitions = grpc.loadPackageDefinition(def) as unknown as ProtoGrpcType
 const QuoteClient = new definitions.day_trader.Quote('localhost:50051', grpc.credentials.createInsecure());
 const TransactionClient = new definitions.day_trader.Transaction(`0.0.0.0:${process.env.PORT || 50051}`, grpc.credentials.createInsecure());

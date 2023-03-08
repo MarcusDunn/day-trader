@@ -7,7 +7,7 @@ import { TriggerImplementation } from "./services/Trigger";
 import { CheckTriggers } from "./utils/CheckTriggers";
 
 
-const def = loadSync(__dirname + "/../../protos/day-trader.proto")
+const def = loadSync(__dirname + "/proto/day-trader-copy.proto")
 const definitions = loadPackageDefinition(def) as unknown as ProtoGrpcType
 
 const server = new Server();
