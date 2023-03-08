@@ -8,6 +8,7 @@ const prisma = new PrismaClient()
 
 
 const Add: TransactionHandlers['Add'] = async (call, callback) => {
+    console.log("In transaction service in Add handler",call.request)
     if(!call.request.userId){
         return callback({code: Status.INVALID_ARGUMENT}, {balance: 0})
     }
@@ -20,6 +21,7 @@ const Add: TransactionHandlers['Add'] = async (call, callback) => {
 }
 
 const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
+    console.log("In transaction service in Buy handler",call.request)
     // get user balance
     const userBalance = (await prisma.user.findFirstOrThrow({
         where: {
@@ -69,6 +71,7 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
 }
 
 const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
+    console.log("In transaction service in Sell handler",call.request)
     // get users current stock
     const usersStock = await prisma.ownedStock.findFirst({
         where: {
@@ -118,6 +121,7 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
 }
 
 const CancelBuy: TransactionHandlers['CancelBuy'] = async (call, callback) => {
+    console.log("In transaction service in CancelBuy handler",call.request)
     const deletedBuy = await prisma.uncommitedBuy.delete({
         where: {
             username: call.request.userId,
@@ -127,6 +131,7 @@ const CancelBuy: TransactionHandlers['CancelBuy'] = async (call, callback) => {
 }
 
 const CancelSell: TransactionHandlers['CancelSell'] = async (call, callback) => {
+    console.log("In transaction service in CancelSell handler",call.request)
     const deletedSell = await prisma.uncommitedSell.delete({
         where: {
             username: call.request.userId,
@@ -136,6 +141,7 @@ const CancelSell: TransactionHandlers['CancelSell'] = async (call, callback) => 
 }
 
 const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
+    console.log("In transaction service in CommitBuy handler",call.request)
     const buyToCommit = await prisma.uncommitedBuy.findFirst({
         where: {
             username: call.request.userId,
@@ -185,6 +191,7 @@ const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
 }
 
 const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => {
+    console.log("In transaction service in CommitSell handler",call.request)
     const sellToCommit = await prisma.uncommitedSell.findFirst({
         where: {
             username: call.request.userId,
@@ -241,6 +248,7 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
 }
 
 const CreateUser: TransactionHandlers['CreateUser'] = async (call, callback) => {
+    console.log("In transaction service in CreateUser handler",call.request)
     const existingUser = await prisma.user.findUnique({
         where: {username: call.request.userId}
     });
@@ -259,6 +267,7 @@ const CreateUser: TransactionHandlers['CreateUser'] = async (call, callback) => 
 }
 
 const GetUser: TransactionHandlers['GetUser'] = async (call, callback) => {
+    console.log("In transaction service in GetUser handler",call.request)
     const user = await prisma.user.findUnique({
         where: {username: call.request.userId},
         include: {

@@ -6,6 +6,7 @@ import { GetQuote } from "../utils/GetQuote";
 const prisma = new PrismaClient()
 
 const CancelSetBuy: TriggerHandlers['CancelSetBuy'] = async (call, callback) => {
+    console.log("In trigger service in CancelSetBuy handler:",call.request)
     if(!call.request.userId || !call.request.stockSymbol ){
         return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, {success: false})
     }
@@ -25,6 +26,7 @@ const CancelSetBuy: TriggerHandlers['CancelSetBuy'] = async (call, callback) => 
 }
 
 const CancelSetSell: TriggerHandlers['CancelSetSell'] = async (call, callback) => {
+    console.log("In trigger service in CancelSetSell handler:",call.request)
     if(!call.request.userId || !call.request.stockSymbol ){
         return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, {success: false})
     }
@@ -44,6 +46,7 @@ const CancelSetSell: TriggerHandlers['CancelSetSell'] = async (call, callback) =
 }
 
 const SetBuyAmount: TriggerHandlers['SetBuyAmount'] = async (call, callback) => {
+    console.log("In trigger service in SetBuyAmount handler:",call.request)
     const user = await prisma.user.findUnique({
         where: {
             username: call.request.userId,
@@ -115,6 +118,7 @@ const SetBuyAmount: TriggerHandlers['SetBuyAmount'] = async (call, callback) => 
 }
 
 const SetBuyTrigger: TriggerHandlers['SetBuyTrigger'] = async (call, callback) => {
+    console.log("In trigger service in SetBuyTrigger handler:",call.request)
     if(!call.request.userId || !call.request.stockSymbol || !call.request.amount){
         return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, { triggerAmount: 0.0, stock: "error", success: false })
     }
@@ -145,6 +149,7 @@ const SetBuyTrigger: TriggerHandlers['SetBuyTrigger'] = async (call, callback) =
 }
 
 const SetSellAmount: TriggerHandlers['SetSellAmount'] = async (call, callback) => {
+    console.log("In trigger service in SetSellAmount handler:",call.request)
     const user = await prisma.user.findUnique({
         where: {
             username: call.request.userId,
@@ -195,6 +200,7 @@ const SetSellAmount: TriggerHandlers['SetSellAmount'] = async (call, callback) =
 }
 
 const SetSellTrigger: TriggerHandlers['SetSellTrigger'] = async (call, callback) => {
+    console.log("In trigger service in SetSellTrigger handler:",call.request)
     if(!call.request.userId || !call.request.stockSymbol || !call.request.amount){
         return callback({code: Status.INVALID_ARGUMENT, message: "Invalid arguments"}, {stock: "error", sharesLeft: 0.0, success: false })
     }
