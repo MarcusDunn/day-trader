@@ -22,7 +22,7 @@ const Add: TransactionHandlers['Add'] = async (call, callback) => {
         create: { username: call.request.userId, balance: call.request.amount }
       });
     console.log("Called prisma with user data:",user)
-    callback({code: Status.OK}, {balance: user.balance})
+    callback(null, {balance: user.balance})
     console.log("success callback sent, exiting now")
     return
 }
