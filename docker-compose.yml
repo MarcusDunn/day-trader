@@ -16,7 +16,7 @@ services:
       LOG_ADDR: http://auditserver:50051
     depends_on:
       auditserver:
-        condition: service_healthy
+        condition: service_started
     init: true
   distribution-server:
     image: ghcr.io/marcusdunn/day-trader/distribution-server:latest
@@ -80,7 +80,8 @@ services:
       - auditDB
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "grpcurl", "-plaintext", "-d", "'{\"user_id\": \"healthcheck\"}'", "-proto", "proto/dat-trader-copy.proto", "day_trader.Log.DisplaySummary"]
+      # grpcurl -plaintext -d '{"user_id": "healthcheck"}' -format json -format-error -proto ./src/proto/day-trader-copy.proto localhost:50051 day_trader.Log.DisplaySummary | jq
+      test: ["CMD", "grpcurl", "-plaintext", "-d", "{\"user_id\": \"healthcheck\"}", "-format", "json", "-format-error", "-proto", "./src/proto/day-trader-copy.proto", "localhost:50051", "day_trader.Log.DisplaySummary", "|", "jq"]
       interval: 5s
       timeout: 5s
       retries: 3
