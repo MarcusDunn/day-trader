@@ -41,7 +41,7 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
         }
     
         // ensure user has enough funds
-        if(!(userBalance < call.request.amount)){
+        if(userBalance < call.request.amount){
             return callback({ code: Status.FAILED_PRECONDITION, details: "Insufficient funds" }, { shares: 0, success: false });
         }
     
@@ -59,7 +59,8 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
             update: {
                 stock: call.request.stockSymbol || '', 
                 amount: call.request.amount, 
-                shares: shares, 
+                shares: shares,
+                expiresAt: new Date(new Date().getTime() + 61000), 
             },
             create: {
                 username: call.request.userId,
@@ -119,6 +120,7 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
                 stock: call.request.stockSymbol || '', 
                 amount: call.request.amount,
                 shares: shares,
+                expiresAt: new Date(new Date().getTime() + 61000), 
             },
             create: {
                 username: call.request.userId,
