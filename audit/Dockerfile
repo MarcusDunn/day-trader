@@ -1,6 +1,7 @@
 FROM node:16-alpine
 
-RUN apk add --no-cache openssl libssl1.1
+# grpcurl for healthcheck
+RUN apk add --no-cache openssl libssl1.1 grpcurl
 
 WORKDIR /app
 

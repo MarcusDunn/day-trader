@@ -13,7 +13,10 @@ services:
       OTEL_EXPORTER_URI: http://jaeger:4317
       SERVER_ADDR: 0.0.0.0:50051
       RUST_LOG: quote_server_adaptor
-      LOG_ADDR: auditserver:50051
+      LOG_ADDR: http://auditserver:50051
+    depends_on:
+      auditserver:
+        condition: service_healthy
     init: true
   distribution-server:
     image: ghcr.io/marcusdunn/day-trader/distribution-server:latest
@@ -76,6 +79,12 @@ services:
     links:
       - auditDB
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "grpcurl", "-plaintext", "-d", "'{\"user_id\": \"healthcheck\"}'", "-proto", "proto/dat-trader-copy.proto" "day_trader.Log.DisplaySummary"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 volumes:
   transactionDB-data:
   auditDB-data:
