@@ -68,23 +68,37 @@ async fn main() -> Result<(), anyhow::Error> {
             })
             .await??;
         }
-        CommandList::List(commands) => {
-            if args.concurrent {
-                let join_set = spawn_commands(commands, stack)?;
-                join_all(join_set).await?;
-            } else {
+        CommandList::List(commands, mode) => match mode {
+            Mode::Sequential | Mode::Slow => {
+                let mut stack = stack.clone();
                 for command in commands {
-                    match command.clone().execute(&mut stack.clone()).await {
+                    if mode == Mode::Slow {
+                        let command = command.clone();
+                        tokio::task::spawn_blocking(move || {
+                            println!("Press enter to run {command:?}");
+                            let mut input = String::new();
+                            std::io::stdin()
+                                .read_line(&mut input)
+                                .expect("failed to read line");
+                        })
+                        .await?
+                    }
+                    info!("Executing {command:?}");
+                    match command.execute(&mut stack).await {
                         Ok(()) => {
-                            debug!("command {command:?} succeeded");
+                            info!("Command executed successfully");
                         }
                         Err(err) => {
-                            error!("command {command:?} failed: {err:?}");
+                            error!("Error executing command: {err:?}");
                         }
-                    };
+                    }
                 }
             }
-        }
+            Mode::Concurrent => {
+                let join_set = spawn_commands(commands, stack)?;
+                join_all(join_set).await?;
+            }
+        },
     }
 
     Ok(())
@@ -99,9 +113,6 @@ struct CliArgs {
     services_uri: String,
     #[command(subcommand)]
     command: CliCommand,
-    /// Run commands concurrently.
-    #[arg(short, long, default_value_t = false)]
-    concurrent: bool,
 }
 
 #[derive(clap::Subcommand, Clone, Debug, PartialEq)]
@@ -109,9 +120,23 @@ enum CliCommand {
     #[command(flatten)]
     Single(LoadTestCommand),
     /// Run a load test file.
-    File { file: PathBuf },
+    File {
+        file: PathBuf,
+        #[arg(value_enum, default_value_t = Mode::Sequential)]
+        mode: Mode,
+    },
     /// Fuzz the API
     Fuzz(Fuzz),
+}
+
+#[derive(clap::ValueEnum, Clone, Debug, PartialEq, Copy)]
+enum Mode {
+    /// Run the commands in the file sequentially.
+    Sequential,
+    /// Run the commands in the file concurrently.
+    Concurrent,
+    /// Run the commands in the file sequentially, waiting for user input to run the next one.
+    Slow,
 }
 
 #[derive(clap::Subcommand, Clone, Debug, PartialEq, Eq)]
@@ -207,13 +232,15 @@ fn spawn_commands(
 
 enum CommandList {
     Fuzz(u32, SBoxedStrategy<LoadTestCommand>),
-    List(Vec<LoadTestCommand>),
+    List(Vec<LoadTestCommand>, Mode),
 }
 
 fn command_list_from_cli_command(command: &CliCommand) -> Result<CommandList, anyhow::Error> {
     Ok(match command {
-        CliCommand::File { file } => CommandList::List(parse_commands_from_file(file)?),
-        CliCommand::Single(single) => CommandList::List(vec![single.clone()]),
+        CliCommand::File { file, mode } => {
+            CommandList::List(parse_commands_from_file(file)?, *mode)
+        }
+        CliCommand::Single(single) => CommandList::List(vec![single.clone()], Mode::Sequential),
         CliCommand::Fuzz(Fuzz { number, command }) => {
             let types = match command {
                 FuzzCommand::All => FuzzCommand::ALL.to_vec(),
