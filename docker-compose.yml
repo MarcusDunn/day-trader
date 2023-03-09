@@ -13,6 +13,7 @@ services:
       OTEL_EXPORTER_URI: http://jaeger:4317
       SERVER_ADDR: 0.0.0.0:50051
       RUST_LOG: quote_server_adaptor
+      LOG_ADDR: auditserver:50051
     init: true
   distribution-server:
     image: ghcr.io/marcusdunn/day-trader/distribution-server:latest
