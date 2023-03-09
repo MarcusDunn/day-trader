@@ -2,6 +2,7 @@ import { TriggerHandlers } from "../proto/day_trader/Trigger";
 import { PrismaClient } from '@prisma/client'
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { GetQuote } from "../utils/GetQuote";
+import { SendAccountTransactionLog } from "../utils/LogClient";
 
 const prisma = new PrismaClient()
 
@@ -96,8 +97,9 @@ const SetBuyAmount: TriggerHandlers['SetBuyAmount'] = async (call, callback) => 
                     balance: { increment: existingTrigger?.buyAmount ?? 0.0 }
                 }
             });
+            SendAccountTransactionLog(call.request.userId, "add", existingTrigger?.buyAmount ?? 0.0);
         }
-    
+        
         const removeFunds = await prisma.user.update({
             where: {
                 username: call.request.userId
@@ -106,6 +108,8 @@ const SetBuyAmount: TriggerHandlers['SetBuyAmount'] = async (call, callback) => 
                 balance: { decrement: call.request.amount }
             }
         });
+
+        SendAccountTransactionLog(call.request.userId, "remove", call.request.amount ?? 0.0);
     
         const AddedTrigger = await prisma.buyTrigger.upsert({
             where: {

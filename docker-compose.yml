@@ -56,6 +56,7 @@ services:
       - transactionDB
     environment:
       QuoteURI: quote-server-adaptor:50051
+      LogURI: auditserver:50051
     restart: unless-stopped
   auditDB:
     image: postgres:latest

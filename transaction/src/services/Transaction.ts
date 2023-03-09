@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import { notExpired } from "../utils/DateUtils";
 import { GetQuote } from "../utils/GetQuote";
 import { Status } from "@grpc/grpc-js/build/src/constants";
+import { SendAccountTransactionLog } from "../utils/LogClient";
 
 const prisma = new PrismaClient()
 
@@ -13,11 +14,14 @@ const Add: TransactionHandlers['Add'] = async (call, callback) => {
         if(!call.request.userId){
             return callback({code: Status.INVALID_ARGUMENT}, {balance: 0})
         }
+        call.request.amount = call.request.amount ?? 0.0;
         const user = await prisma.user.upsert({
             where: { username: call.request.userId },
             update: { balance: { increment: call.request.amount } },
             create: { username: call.request.userId, balance: call.request.amount }
           });
+        
+        SendAccountTransactionLog(call.request.userId, "add", call.request.amount)
         return callback(null, {balance: user.balance})
     }catch(error){
         console.log(error)
@@ -206,7 +210,9 @@ const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
             where: { username: buyToCommit.username },
             data: { balance: { decrement: buyToCommit.amount }}
         });
-    
+        
+        SendAccountTransactionLog(buyToCommit.username, "remove", buyToCommit.amount)
+
         // remove uncommited buy
         try{
             const deletedBuy = await prisma.uncommitedBuy.delete({
@@ -214,7 +220,7 @@ const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
                     username: call.request.userId,
                 }
             })
-        
+            
             return callback(null, { stocksOwned: newPurchasedStock.shares, balance: decrementedUserBalance.balance, success: true })
         }catch(error){
             return callback({code: Status.FAILED_PRECONDITION}, { stocksOwned: newPurchasedStock.shares, balance: decrementedUserBalance.balance, success: false })
@@ -276,6 +282,8 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
             where: { username: sellToCommit.username },
             data: { balance: { increment: sellToCommit.amount }}
         });
+        
+        SendAccountTransactionLog(sellToCommit.username, "add", sellToCommit.amount);
     
         // remove uncommited sell
         try{
