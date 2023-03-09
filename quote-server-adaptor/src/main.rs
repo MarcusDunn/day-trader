@@ -3,14 +3,15 @@ use opentelemetry::sdk::propagation::TraceContextPropagator;
 use opentelemetry::sdk::{trace, Resource};
 use opentelemetry::{global, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
+use quote_server_adaptor::fake::FakeQuoteServer;
+use quote_server_adaptor::log_client::LogClient;
+use quote_server_adaptor::quote_server::{Quote, QuoteServer};
+use quote_server_adaptor::tower_otel::OtelLayer;
+use quote_server_adaptor::{InsertQuoteServerRequest, QuoteRequest, QuoteResponse};
 use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
-use quote_server_adaptor::fake::FakeQuoteServer;
-use quote_server_adaptor::quote_server::{Quote, QuoteServer};
-use quote_server_adaptor::tower_otel::OtelLayer;
-use quote_server_adaptor::{InsertQuoteServerRequest, QuoteRequest, QuoteResponse};
 use tokio::io::{AsyncBufRead, AsyncWriteExt};
 use tokio::io::{AsyncBufReadExt, AsyncWrite};
 use tokio::io::{AsyncRead, BufReader};
@@ -26,7 +27,6 @@ use tracing_subscriber::filter::{Directive, LevelFilter};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{EnvFilter, Layer};
-use quote_server_adaptor::log_client::LogClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -86,8 +86,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let addr = env::var("SERVER_ADDR")
         .unwrap_or_else(|_| String::from("0.0.0.0:50051"))
         .parse()?;
-    let log_addr: String = env::var("LOG_ADDR")
-        .unwrap_or_else(|_| String::from("audit:50051"));
+    let log_addr: String = env::var("LOG_ADDR").unwrap_or_else(|_| String::from("audit:50051"));
 
     let server = Server::builder()
         .layer(OtelLayer::new(open_telemetry_tracer))
@@ -190,9 +189,9 @@ async fn get_response<W, R>(
     reader: &mut R,
     message: String,
 ) -> Result<String, &'static str>
-    where
-        W: AsyncWrite + Unpin + Debug,
-        R: AsyncBufRead + Unpin + Debug,
+where
+    W: AsyncWrite + Unpin + Debug,
+    R: AsyncBufRead + Unpin + Debug,
 {
     if (writer.write_all(message.as_bytes()).await).is_err() {
         return Err("Failed to write to socket.");
@@ -217,23 +216,34 @@ struct QuoteWithLog {
 
 #[tonic::async_trait]
 impl Quote for QuoteWithLog {
-    async fn quote(&self, request: Request<QuoteRequest>) -> Result<Response<QuoteResponse>, Status> {
+    async fn quote(
+        &self,
+        request: Request<QuoteRequest>,
+    ) -> Result<Response<QuoteResponse>, Status> {
         let response = self.inner.quote(request).await?;
         let inner = response.into_inner();
-        let QuoteResponse { quote, sym, user_id, timestamp, crypto_key } = inner.clone();
-        self.logger.clone().insert_quote_server(InsertQuoteServerRequest {
-            server: "quote_server_adaptor".to_string(),
-            quote_server_time: timestamp,
-            username: user_id,
-            stock_symbol: sym,
-            price: quote,
-            cryptokey: crypto_key,
-        }).await?;
+        let QuoteResponse {
+            quote,
+            sym,
+            user_id,
+            timestamp,
+            crypto_key,
+        } = inner.clone();
+        self.logger
+            .clone()
+            .insert_quote_server(InsertQuoteServerRequest {
+                server: "quote_server_adaptor".to_string(),
+                quote_server_time: timestamp,
+                username: user_id,
+                stock_symbol: sym,
+                price: quote,
+                cryptokey: crypto_key,
+            })
+            .await?;
 
         Ok(Response::new(inner))
     }
 }
-
 
 #[tonic::async_trait]
 impl Quote for Quoter {
@@ -349,12 +359,12 @@ mod tests {
         let response = Quoter {
             tcp_handler_send: send,
         }
-            .quote(Request::new(QuoteRequest {
-                user_id: "marcus".to_string(),
-                stock_symbol: "TSLA".to_string(),
-            }))
-            .await
-            .unwrap();
+        .quote(Request::new(QuoteRequest {
+            user_id: "marcus".to_string(),
+            stock_symbol: "TSLA".to_string(),
+        }))
+        .await
+        .unwrap();
 
         assert_eq!(
             QuoteResponse {
