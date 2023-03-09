@@ -20,6 +20,7 @@ const Add: TransactionHandlers['Add'] = async (call, callback) => {
           });
         return callback(null, {balance: user.balance})
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -74,6 +75,7 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
     
         return callback(null, { shares: shares, success: true })
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -128,6 +130,7 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
     
         return callback(null, { amount: createdSell.amount, shares: createdSell.shares, success: true})
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -215,6 +218,7 @@ const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
             return callback({code: Status.FAILED_PRECONDITION}, { stocksOwned: newPurchasedStock.shares, balance: decrementedUserBalance.balance, success: false })
         }
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -283,6 +287,7 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
             return callback({code: Status.NOT_FOUND, details: "Uncommitted sell to delete was not found"}, { stocksOwned: newPurchasedStock.shares, balance: incrementedUserBalance.balance, success: true } )
         }
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -306,6 +311,7 @@ const CreateUser: TransactionHandlers['CreateUser'] = async (call, callback) => 
         });
         return callback(null, { username: newUser.username, success: true })
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -337,6 +343,7 @@ const GetUser: TransactionHandlers['GetUser'] = async (call, callback) => {
             // sellTriggers: user.SellTrigger 
         })
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }

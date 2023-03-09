@@ -46,6 +46,7 @@ const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => 
     
         return callback(null, userSummary);
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -71,6 +72,7 @@ const DumpLog: LogHandlers['DumpLog'] = async (call, callback) => {
         const xmlString = xml.end({ prettyPrint: true });
         return callback(null, { xml: xmlString })
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -95,6 +97,7 @@ const DumpLogUser: LogHandlers['DumpLogUser'] = async (call, callback) => {
         const xmlString = xml.end({ prettyPrint: true });
         return callback(null, { xml: xmlString })
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -115,6 +118,7 @@ const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async 
         insertTransactionReturn.timestep = String(insertTransactionReturn.timestep);
         return callback(null, insertTransactionReturn)
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -137,6 +141,7 @@ const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback)
         insertErrorReturn.timestep = String(insertErrorReturn.timestep);
         return callback(null, insertErrorReturn );
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -159,6 +164,7 @@ const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callbac
         insertQuoteReturn.timestep = String(insertQuoteReturn.timestep);
         return callback(null, insertQuoteReturn);
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -180,6 +186,7 @@ const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callbac
         insertSystemEventQueryReturn.timestep = String(insertSystemEventQueryReturn.timestep);
         return callback(null, insertSystemEventQueryReturn);
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -201,6 +208,7 @@ const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callbac
         insertCommandReturn.timestep = String(insertCommandReturn.timestep);
         return callback(null, insertCommandReturn);
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }

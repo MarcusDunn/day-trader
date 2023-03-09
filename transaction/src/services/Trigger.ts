@@ -25,6 +25,7 @@ const CancelSetBuy: TriggerHandlers['CancelSetBuy'] = async (call, callback) => 
             return callback({code: Status.NOT_FOUND, message: "Error on delete buy trigger"}, {success: false});
         }
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -49,6 +50,7 @@ const CancelSetSell: TriggerHandlers['CancelSetSell'] = async (call, callback) =
             return callback({code: Status.NOT_FOUND, message: "Error on delete sell trigger"}, {success: false});
         }
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -125,6 +127,7 @@ const SetBuyAmount: TriggerHandlers['SetBuyAmount'] = async (call, callback) => 
     
         return callback(null, { balance: removeFunds.balance, buyAmount: AddedTrigger.buyAmount, success: false})
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -160,6 +163,7 @@ const SetBuyTrigger: TriggerHandlers['SetBuyTrigger'] = async (call, callback) =
         
         return callback(null, { triggerAmount: updatedTrigger.triggerAmount || undefined, stock: updatedTrigger.stock, success: true })
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -215,6 +219,7 @@ const SetSellAmount: TriggerHandlers['SetSellAmount'] = async (call, callback) =
     
         return callback(null, { currentStockPrice: currentStockPrice, numSharesToSell: numSharesToSell, success: true})
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -264,6 +269,7 @@ const SetSellTrigger: TriggerHandlers['SetSellTrigger'] = async (call, callback)
         
         return callback(null, {stock: updatedTrigger.stock, sharesLeft: takenStock.shares, success: true })
     }catch(error){
+        console.log(error)
         return callback({code: Status.INTERNAL}, {});
     }
 }
