@@ -250,7 +250,7 @@ message DisplaySummaryResponse {
 
 message UserCommand {
   int32 transaction_num = 1;
-  int64 timestamp = 2;
+  uint64 timestamp = 2;
   string server = 3;
   string command = 4;
   string username = 5;
@@ -260,7 +260,7 @@ message UserCommand {
 
 message AccountTransaction {
   int32 transaction_num = 1;
-  int64 timestamp = 2;
+  uint64 timestamp = 2;
   string server = 3;
   string action = 4;
   string username = 5;
@@ -276,7 +276,7 @@ message InsertUserCommandRequest {
 }
 message InsertUserCommandResponse {
   int32 transaction_num = 1;
-  int64 timestamp = 2;
+  uint64 timestamp = 2;
   string server = 3;
   string command = 4;
   string username = 5;
@@ -292,7 +292,7 @@ message InsertAccountTransactionRequest {
 }
 message InsertAccountTransactionResponse {
   int32 transaction_num = 1;
-  int64 timestamp = 2;
+  uint64 timestamp = 2;
   string server = 3;
   string action = 4;
   string username = 5;
@@ -308,7 +308,7 @@ message InsertSystemEventRequest {
 }
 message InsertSystemEventResponse {
   int32 transaction_num = 1;
-  int64 timestamp = 2;
+  uint64 timestamp = 2;
   string server = 3;
   string command = 4;
   string username = 5;
@@ -318,7 +318,7 @@ message InsertSystemEventResponse {
 
 message InsertQuoteServerRequest {
   string server = 1;
-  int64 quoteServerTime = 2;
+  uint64 quoteServerTime = 2;
   string username = 3;
   string stockSymbol = 4;
   float price = 5;
@@ -326,7 +326,7 @@ message InsertQuoteServerRequest {
 }
 message InsertQuoteServerResponse {
   int32 transaction_num = 1;
-  int64 timestamp = 2;
+  uint64 timestamp = 2;
   string server = 3;
   int64 quote_server_time = 4;
   string username = 5;

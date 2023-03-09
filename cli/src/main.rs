@@ -7,10 +7,8 @@ use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use tokio::task::JoinSet;
-use tonic::Status;
 use tonic::transport::{Channel, Uri};
 use tracing::{debug, error, info};
-use tracing::field::debug;
 use tracing_subscriber::EnvFilter;
 
 use cli::command::LoadTestCommand;
