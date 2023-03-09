@@ -18,7 +18,7 @@ services:
     container_name: transactionService
     build: "./"
     ports:
-      - 50051:50051
+      - "50051:50051"
     links:
       - postgres
     depends_on:

@@ -80,7 +80,7 @@ services:
       - auditDB
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "grpcurl", "-plaintext", "-d", "'{\"user_id\": \"healthcheck\"}'", "-proto", "proto/dat-trader-copy.proto" "day_trader.Log.DisplaySummary"]
+      test: ["CMD", "grpcurl", "-plaintext", "-d", "'{\"user_id\": \"healthcheck\"}'", "-proto", "proto/dat-trader-copy.proto", "day_trader.Log.DisplaySummary"]
       interval: 5s
       timeout: 5s
       retries: 3
