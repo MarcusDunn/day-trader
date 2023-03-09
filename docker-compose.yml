@@ -9,14 +9,14 @@ services:
   quote-server-adaptor:
     image: ghcr.io/marcusdunn/day-trader/quote-server-adaptor:latest
     environment:
-      QUOTE_SERVER_URI: FAKE
+      QUOTE_SERVER_URI: quoteserve.seng.uvic.ca:4444
       OTEL_EXPORTER_URI: http://jaeger:4317
       SERVER_ADDR: 0.0.0.0:50051
       RUST_LOG: quote_server_adaptor
       LOG_ADDR: http://auditserver:50051
     depends_on:
       auditserver:
-        condition: service_started
+        condition: service_healthy
     init: true
   distribution-server:
     image: ghcr.io/marcusdunn/day-trader/distribution-server:latest
@@ -81,11 +81,11 @@ services:
     restart: unless-stopped
     healthcheck:
       # grpcurl -plaintext -d '{"user_id": "healthcheck"}' -format json -format-error -proto ./src/proto/day-trader-copy.proto localhost:50051 day_trader.Log.DisplaySummary | jq
-      test: ["CMD", "grpcurl", "-plaintext", "-d", "{\"user_id\": \"healthcheck\"}", "-format", "json", "-format-error", "-proto", "./src/proto/day-trader-copy.proto", "localhost:50051", "day_trader.Log.DisplaySummary", "|", "jq"]
-      interval: 5s
+      test: ["CMD-SHELL", "grpcurl -plaintext -d '{\"user_id\": \"healthcheck\"}' -format json -format-error -proto ./src/proto/day-trader-copy.proto 0.0.0.0:50051 day_trader.Log.DisplaySummary | jq"]
+      interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 5s
+      start_period: 10s
 volumes:
   transactionDB-data:
   auditDB-data:
