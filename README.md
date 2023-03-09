@@ -12,7 +12,6 @@ graph TD
     CLI[CLI + Load Tester]
     DistributionServer[Distribution Server]
     LogDB[Log Database]
-    LogIngest[Log Ingest]
     AuditService[Audit Service]
     TransactionServer[Transaction Server]
     DB[Postgres Database]
@@ -23,13 +22,13 @@ graph TD
     NextServer <-->|gRPC calls| DistributionServer
     CLI <--> |gRPC calls| DistributionServer
     DistributionServer <--> |gRPC calls| TransactionServer
-    DistributionServer --> |calls recived events| LogIngest
+    DistributionServer --> |calls recived events| AuditService
     LogDB -->|normalized logs| AuditService
-    LogIngest --> |normalized events| LogDB
+    AuditService --> |normalized events| LogDB
     AuditService -->|formatted logs| DistributionServer
     DistributionServer --> |audit requests| AuditService
     DistributionServer <-->|gRPC calls| QSA
-    TransactionServer --> |processed events| LogIngest
+    TransactionServer --> |processed events| AuditService
     TransactionServer --> |gRPC calls| QSA
     DB --> |user data| TransactionServer
     TransactionServer --> |updates and queries| DB
