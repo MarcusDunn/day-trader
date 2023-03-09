@@ -24,6 +24,11 @@ services:
       LOG_SERVER_URI: auditserver:50051
     ports:
       - "80:80"
+    links:
+      - transactionserver
+      - auditserver
+      - jaeger
+      - quote-server-adaptor
     depends_on:
       transactionserver:
         condition: service_started

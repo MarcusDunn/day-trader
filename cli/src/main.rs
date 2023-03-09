@@ -7,8 +7,10 @@ use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use tokio::task::JoinSet;
+use tonic::Status;
 use tonic::transport::{Channel, Uri};
 use tracing::{debug, error, info};
+use tracing::field::debug;
 use tracing_subscriber::EnvFilter;
 
 use cli::command::LoadTestCommand;
@@ -69,8 +71,21 @@ async fn main() -> Result<(), anyhow::Error> {
             .await??;
         }
         CommandList::List(commands) => {
-            let join_set = spawn_commands(commands, stack)?;
-            join_all(join_set).await?;
+            if args.concurrent {
+                let join_set = spawn_commands(commands, stack)?;
+                join_all(join_set).await?;
+            } else {
+                for command in commands {
+                    match command.clone().execute(&mut stack.clone()).await {
+                        Ok(()) => {
+                            debug!("command {command:?} succeeded");
+                        }
+                        Err(err) => {
+                            error!("command {command:?} failed: {err:?}");
+                        }
+                    };
+                }
+            }
         }
     }
 
@@ -86,6 +101,9 @@ struct CliArgs {
     services_uri: String,
     #[command(subcommand)]
     command: CliCommand,
+    /// Run commands concurrently.
+    #[arg(short, long, default_value_t = false)]
+    concurrent: bool,
 }
 
 #[derive(clap::Subcommand, Clone, Debug, PartialEq)]

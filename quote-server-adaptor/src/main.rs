@@ -7,6 +7,7 @@ use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
+use opentelemetry::sdk::trace::Sampler;
 
 use quote_server_adaptor::fake::FakeQuoteServer;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
@@ -20,13 +21,14 @@ use tokio::select;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender;
 use tokio::sync::{mpsc, oneshot};
-use tonic::transport::Server;
+use tonic::transport::{Channel, Server};
 use tonic::{Request, Response, Status};
-use tracing::{info, instrument, Level};
+use tracing::{error, info, instrument, trace};
 use tracing_subscriber::filter::{Directive, LevelFilter};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{EnvFilter, Layer};
+use quote_server_adaptor::log_server::LogServer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -44,10 +46,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .with_endpoint(exporter_uri),
         )
         .with_trace_config(
-            trace::config().with_resource(Resource::new(vec![KeyValue::new(
-                "service.name",
-                "quote-server-adaptor",
-            )])),
+            trace::config()
+                .with_sampler(Sampler::TraceIdRatioBased(0.1))
+                .with_resource(Resource::new(vec![KeyValue::new(
+                    "service.name",
+                    "quote-server-adaptor",
+                )])),
         )
         .install_batch(Tokio)?;
 
@@ -57,14 +61,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .with_ansi(true)
                 .with_filter(
                     EnvFilter::builder()
-                        .with_default_directive(Directive::from(LevelFilter::DEBUG))
+                        .with_default_directive(Directive::from(LevelFilter::INFO))
                         .from_env_lossy(),
                 ),
         )
         .with(
             tracing_opentelemetry::layer()
                 .with_tracer(open_telemetry_tracer.clone())
-                .with_filter(LevelFilter::from_level(Level::INFO)),
+                .with_filter(EnvFilter::builder()
+                    .with_default_directive(Directive::from(LevelFilter::TRACE))
+                    .from_env_lossy()
+                ),
         )
         .try_init()?;
 
@@ -168,7 +175,9 @@ async fn handle_socket<T, G>(
         .await
         .expect("The send side of the tcp_handler should never be closed.");
 
-    match respond.send(get_response(&mut writer, &mut reader, send).await) {
+    let response = get_response(&mut writer, &mut reader, send).await;
+
+    match respond.send(response) {
         Ok(()) => {}
         Err(err) => {
             println!("Failed to send {err:?} to oneshot channel.")
@@ -182,9 +191,9 @@ async fn get_response<W, R>(
     reader: &mut R,
     message: String,
 ) -> Result<String, &'static str>
-where
-    W: AsyncWrite + Unpin + Debug,
-    R: AsyncBufRead + Unpin + Debug,
+    where
+        W: AsyncWrite + Unpin + Debug,
+        R: AsyncBufRead + Unpin + Debug,
 {
     if (writer.write_all(message.as_bytes()).await).is_err() {
         return Err("Failed to write to socket.");
@@ -200,6 +209,7 @@ where
 #[derive(Debug)]
 struct Quoter {
     tcp_handler_send: mpsc::Sender<(String, Sender<Result<String, &'static str>>)>,
+    log_client: quote_server_adaptor::log_server
 }
 
 #[tonic::async_trait]
@@ -216,10 +226,15 @@ impl Quote for Quoter {
             stock_symbol,
         } = request.into_inner();
 
+        let socket_message = make_socket_message(user_id, &stock_symbol);
+
+        trace!("sending {socket_message} to quote server.");
+
         self.tcp_handler_send
-            .send((make_socket_message(user_id, &stock_symbol), send))
+            .send((socket_message, send))
             .await
             .map_err(|err| {
+                error!("Error while sending request to mpsc channel: {err}");
                 Status::internal(format!(
                     "Error while sending request to mpsc channel: {err}"
                 ))
@@ -229,12 +244,17 @@ impl Quote for Quoter {
             .await
             .expect("The send end of the oneshot should never be closed.")
             .map_err(|err| {
+                error!("Error while receiving a message from oneshot channel {err}");
                 Status::internal(format!(
                     "Error while receiving a message from oneshot channel {err}"
                 ))
             })?;
 
+        trace!("received {line} from quote server.");
+
         let response = response_from_quote_server_string(&line).map_err(Status::internal)?;
+
+        trace!("parsed {response:?} from quote server.");
 
         Ok(Response::new(response))
     }
@@ -315,12 +335,12 @@ mod tests {
         let response = Quoter {
             tcp_handler_send: send,
         }
-        .quote(Request::new(QuoteRequest {
-            user_id: "marcus".to_string(),
-            stock_symbol: "TSLA".to_string(),
-        }))
-        .await
-        .unwrap();
+            .quote(Request::new(QuoteRequest {
+                user_id: "marcus".to_string(),
+                stock_symbol: "TSLA".to_string(),
+            }))
+            .await
+            .unwrap();
 
         assert_eq!(
             QuoteResponse {
