@@ -8,10 +8,13 @@ use quote_server_adaptor::log_client::LogClient;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 use quote_server_adaptor::tower_otel::OtelLayer;
 use quote_server_adaptor::{InsertQuoteServerRequest, QuoteRequest, QuoteResponse};
+use std::collections::btree_map::Entry;
+use std::collections::BTreeMap;
 use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
+use std::sync::Arc;
 use tokio::io::{AsyncBufRead, AsyncWriteExt};
 use tokio::io::{AsyncBufReadExt, AsyncWrite};
 use tokio::io::{AsyncRead, BufReader};
@@ -90,11 +93,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let server = Server::builder()
         .layer(OtelLayer::new(open_telemetry_tracer))
-        .add_service(QuoteServer::new(QuoteWithLog {
-            inner: Quoter {
-                tcp_handler_send: tcp_handler_send.clone(),
+        .add_service(QuoteServer::new(QuoteWithCache {
+            inner: QuoteWithLog {
+                inner: Quoter {
+                    tcp_handler_send: tcp_handler_send.clone(),
+                },
+                logger: LogClient::connect(log_addr).await?,
             },
-            logger: LogClient::connect(log_addr).await?,
+            cache: Arc::new(tokio::sync::Mutex::new(BTreeMap::new())),
         }))
         .serve_with_shutdown(addr, async {
             tokio::signal::ctrl_c().await.unwrap();
@@ -183,6 +189,41 @@ async fn handle_socket<T, G>(
     };
 }
 
+struct QuoteWithCache {
+    inner: QuoteWithLog,
+    // TODO: use redis and not a BTreeMap like an animal.
+    cache: Arc<tokio::sync::Mutex<BTreeMap<String, QuoteResponse>>>,
+}
+
+#[tonic::async_trait]
+impl Quote for QuoteWithCache {
+    #[instrument(skip(self))]
+    async fn quote(
+        &self,
+        request: Request<QuoteRequest>,
+    ) -> Result<Response<QuoteResponse>, Status> {
+        let quote_request = request.into_inner();
+        let mut cache = self.cache.lock().await;
+        return match cache.entry(quote_request.stock_symbol.clone()) {
+            Entry::Vacant(v) => {
+                info!("cache miss");
+                let quote_response = self
+                    .inner
+                    .quote(Request::new(quote_request))
+                    .await?
+                    .into_inner();
+                v.insert(quote_response.clone());
+                Ok(Response::new(quote_response))
+            }
+            Entry::Occupied(o) => {
+                info!("cache hit");
+                let quote_response = o.get().clone();
+                Ok(Response::new(quote_response))
+            }
+        };
+    }
+}
+
 #[instrument(skip(writer, reader))]
 async fn get_response<W, R>(
     writer: &mut W,
@@ -247,7 +288,6 @@ impl Quote for QuoteWithLog {
 
 #[tonic::async_trait]
 impl Quote for Quoter {
-    #[instrument(skip(self))]
     async fn quote(
         &self,
         request: Request<QuoteRequest>,
