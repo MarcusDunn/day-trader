@@ -64,7 +64,7 @@ function logEventToXml(xmlBuilder: XMLBuilder, event: LogEvent): void {
     switch (event.eventType) {
         case "user command":
             xmlBuilder.ele('userCommand')
-                .ele(event.event)
+                .ele({...event.event, command: event.event.command.toUpperCase() })
                 .up()
             break;
         case "account transaction":
@@ -74,7 +74,7 @@ function logEventToXml(xmlBuilder: XMLBuilder, event: LogEvent): void {
             break;
         case "system event":
             xmlBuilder.ele('systemEvent')
-                .ele(event.event)
+                .ele({...event.event, command: event.event.command.toUpperCase() })
                 .up()
             break;
         case "quote server":
@@ -84,10 +84,9 @@ function logEventToXml(xmlBuilder: XMLBuilder, event: LogEvent): void {
             break;
         case "error event":
             xmlBuilder.ele('errorEvent')
-                .ele(event.event)
+                .ele({...event.event, command: event.event.command.toUpperCase() })
                 .up()
             break;
-
     }
 }
 
