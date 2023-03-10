@@ -7,10 +7,10 @@ import { GetUserInfo } from "./utils/GetUserInfo";
 const prisma = new PrismaClient();
 
 const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => {
-    console.log("Log DisplaySummary called with:",call.request);
-    try{
-        if(!call.request.userId){
-            return callback({code: Status.INVALID_ARGUMENT}, {});
+    console.log("Log DisplaySummary called with:", call.request);
+    try {
+        if (!call.request.userId) {
+            return callback({ code: Status.INVALID_ARGUMENT }, {});
         }
         const userCommands = await prisma.userCommand.findMany({
             where: {
@@ -20,7 +20,7 @@ const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => 
                 timestamp: 'asc',
             },
         });
-    
+
         const accountTransactions = await prisma.accountTransaction.findMany({
             where: {
                 username: call.request.userId,
@@ -29,9 +29,9 @@ const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => 
                 timestamp: 'asc',
             },
         });
-    
+
         const userInfo = await GetUserInfo(call.request.userId);
-    
+
         const userSummary = {
             userCommands: userCommands.map((cmd: any) => {
                 cmd.timestamp = String(cmd.timestamp);
@@ -43,196 +43,178 @@ const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => 
             }),
             userSummary: userInfo
         }
-    
+
         return callback(null, userSummary);
-    }catch(error){
+    } catch (error) {
         console.log(error)
-        return callback({code: Status.INTERNAL}, {});
+        return callback({ code: Status.INTERNAL }, {});
     }
 }
 
 const DumpLog: LogHandlers['DumpLog'] = async (call, callback) => {
-    console.log("Log DumpLog called with:",call.request);
-    try{
+    console.log("Log DumpLog called with:", call.request);
+    try {
         const allUserCommands = await prisma.userCommand.findMany({ orderBy: { timestamp: 'asc' } });
         const allAccountTransactions = await prisma.accountTransaction.findMany({ orderBy: { timestamp: 'asc' } });
         const allSystemEvents = await prisma.systemEvent.findMany({ orderBy: { timestamp: 'asc' } });
         const allQuoteServers = await prisma.quoteServer.findMany({ orderBy: { timestamp: 'asc' } });
         const allErrorEvents = await prisma.errorEvent.findMany({ orderBy: { timestamp: 'asc' } });
-    
-    
+
+
         const xml = createXmlBuilder({ version: '1.0' }) //set to xml version 1.0
-        .ele('root')
-        .ele('userCommands')
+            .ele('root')
         allUserCommands.forEach((cmd) => {
-            xml.ele('quoteServer')
-              .ele('transactionNum', cmd.transactionNum)
-              .ele('timestamp', cmd.timestamp)
-              .ele('server', cmd.server)
-              .ele('quoteServerTime', cmd.quoteServerTime)
-              .ele('username', cmd.username)
-              .ele('stockSymbol', cmd.stockSymbol)
-              .ele('price', cmd.price)
-              .ele('cryptokey', cmd.cryptokey)
-              .up() // go back to the parent element
-          })
-        .up()
-        .ele('accountTransactions')
+            xml.ele('userCommands')
+                .ele('transactionNum', cmd.transactionNum)
+                .ele('timestamp', cmd.timestamp)
+                .ele('server', cmd.server)
+                .ele('command', cmd.command)
+                .ele('username', cmd.username)
+                .ele('stockSymbol', cmd.stockSymbol)
+                .ele('funds', cmd.funds)
+                .up() // go back to the parent element
+        })
+            .up()
         allAccountTransactions.forEach((tx) => {
-            xml.ele('quoteServer')
-              .ele('transactionNum', tx.transactionNum)
-              .ele('timestamp', tx.timestamp)
-              .ele('server', tx.server)
-              .ele('quoteServerTime', tx.quoteServerTime)
-              .ele('username', tx.username)
-              .ele('stockSymbol', tx.stockSymbol)
-              .ele('price', tx.price)
-              .ele('cryptokey', tx.cryptokey)
-              .up() // go back to the parent element
-          })
-        .up()
-        .ele('systemEvents')
+            xml.ele('accountTransactions')
+                .ele('transactionNum', tx.transactionNum)
+                .ele('timestamp', tx.timestamp)
+                .ele('server', tx.server)
+                .ele('action', tx.action)
+                .ele('username', tx.username)
+                .ele('funds', tx.funds)
+                .up() // go back to the parent element
+        })
+            .up()
         allSystemEvents.forEach((evt) => {
-            xml.ele('quoteServer')
-              .ele('transactionNum', evt.transactionNum)
-              .ele('timestamp', evt.timestamp)
-              .ele('server', evt.server)
-              .ele('quoteServerTime', evt.quoteServerTime)
-              .ele('username', evt.username)
-              .ele('stockSymbol', evt.stockSymbol)
-              .ele('price', evt.price)
-              .ele('cryptokey', evt.cryptokey)
-              .up() // go back to the parent element
-          })
-        .up()
-        .ele('quoteServers')
+            xml.ele('systemEvents')
+                .ele('transactionNum', evt.transactionNum)
+                .ele('timestamp', evt.timestamp)
+                .ele('server', evt.server)
+                .ele('command', evt.command)
+                .ele('username', evt.username)
+                .ele('stockSymbol', evt.stockSymbol)
+                .ele('funds', evt.funds)
+                .up() // go back to the parent element
+        })
+            .up()
         allQuoteServers.forEach((qs) => {
             xml.ele('quoteServer')
-              .ele('transactionNum', qs.transactionNum)
-              .ele('timestamp', qs.timestamp)
-              .ele('server', qs.server)
-              .ele('quoteServerTime', qs.quoteServerTime)
-              .ele('username', qs.username)
-              .ele('stockSymbol', qs.stockSymbol)
-              .ele('price', qs.price)
-              .ele('cryptokey', qs.cryptokey)
-              .up() // go back to the parent element
-          })
-        .up()
-        .ele('errorEvents')
+                .ele('transactionNum', qs.transactionNum)
+                .ele('timestamp', qs.timestamp)
+                .ele('server', qs.server)
+                .ele('quoteServerTime', qs.quoteServerTime)
+                .ele('username', qs.username)
+                .ele('stockSymbol', qs.stockSymbol)
+                .ele('price', qs.price)
+                .ele('cryptokey', qs.cryptokey)
+                .up() // go back to the parent element
+        })
+            .up()
         allErrorEvents.forEach((err) => {
-            xml.ele('quoteServer')
-              .ele('transactionNum', err.transactionNum)
-              .ele('timestamp', err.timestamp)
-              .ele('server', err.server)
-              .ele('quoteServerTime', err.quoteServerTime)
-              .ele('username', err.username)
-              .ele('stockSymbol', err.stockSymbol)
-              .ele('price', err.price)
-              .ele('cryptokey', err.cryptokey)
-              .up() // go back to the parent element
-          });
-    
+            xml.ele('errorEvents')
+                .ele('transactionNum', err.transactionNum)
+                .ele('timestamp', err.timestamp)
+                .ele('server', err.server)
+                .ele('username', err.username)
+                .ele('stockSymbol', err.stockSymbol)
+                .ele('funds', err.funds)
+                .ele('errorMessage', err.errorMessage)
+                .ele()
+                .up() // go back to the parent element
+        });
+
         const xmlString = xml.end({ prettyPrint: true });
         return callback(null, { xml: xmlString })
-    }catch(error){
+    } catch (error) {
         console.log(error)
-        return callback({code: Status.INTERNAL}, {});
+        return callback({ code: Status.INTERNAL }, {});
     }
 }
 
 const DumpLogUser: LogHandlers['DumpLogUser'] = async (call, callback) => {
-    console.log("Log DumpLogUser called with:",call.request);
-    try{
+    console.log("Log DumpLogUser called with:", call.request);
+    try {
         const usersUserCommands = await prisma.userCommand.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
         const usersAccountTransactions = await prisma.accountTransaction.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
         const usersSystemEvents = await prisma.systemEvent.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
         const usersQuoteServers = await prisma.quoteServer.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
         const usersErrorEvents = await prisma.errorEvent.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
-    
+
         const xml = createXmlBuilder({ version: '1.0' }) //set to xml version 1.0
         .ele('root')
-        .ele('userCommands')
         usersUserCommands.forEach((cmd) => {
-            xml.ele('quoteServer')
-              .ele('transactionNum', cmd.transactionNum)
-              .ele('timestamp', cmd.timestamp)
-              .ele('server', cmd.server)
-              .ele('quoteServerTime', cmd.quoteServerTime)
-              .ele('username', cmd.username)
-              .ele('stockSymbol', cmd.stockSymbol)
-              .ele('price', cmd.price)
-              .ele('cryptokey', cmd.cryptokey)
-              .up() // go back to the parent element
-          })
-        .up()
-        .ele('accountTransactions')
+            xml.ele('userCommands')
+                .ele('transactionNum', cmd.transactionNum)
+                .ele('timestamp', cmd.timestamp)
+                .ele('server', cmd.server)
+                .ele('command', cmd.command)
+                .ele('username', cmd.username)
+                .ele('stockSymbol', cmd.stockSymbol)
+                .ele('funds', cmd.funds)
+                .up() // go back to the parent element
+        })
+            .up()
         usersAccountTransactions.forEach((tx) => {
-            xml.ele('quoteServer')
-              .ele('transactionNum', tx.transactionNum)
-              .ele('timestamp', tx.timestamp)
-              .ele('server', tx.server)
-              .ele('quoteServerTime', tx.quoteServerTime)
-              .ele('username', tx.username)
-              .ele('stockSymbol', tx.stockSymbol)
-              .ele('price', tx.price)
-              .ele('cryptokey', tx.cryptokey)
-              .up() // go back to the parent element
-          })
-        .up()
-        .ele('systemEvents')
+            xml.ele('accountTransactions')
+                .ele('transactionNum', tx.transactionNum)
+                .ele('timestamp', tx.timestamp)
+                .ele('server', tx.server)
+                .ele('action', tx.action)
+                .ele('username', tx.username)
+                .ele('funds', tx.funds)
+                .up() // go back to the parent element
+        })
+            .up()
         usersSystemEvents.forEach((evt) => {
-            xml.ele('quoteServer')
-              .ele('transactionNum', evt.transactionNum)
-              .ele('timestamp', evt.timestamp)
-              .ele('server', evt.server)
-              .ele('quoteServerTime', evt.quoteServerTime)
-              .ele('username', evt.username)
-              .ele('stockSymbol', evt.stockSymbol)
-              .ele('price', evt.price)
-              .ele('cryptokey', evt.cryptokey)
-              .up() // go back to the parent element
-          })
-        .up()
-        .ele('quoteServers')
+            xml.ele('systemEvents')
+                .ele('transactionNum', evt.transactionNum)
+                .ele('timestamp', evt.timestamp)
+                .ele('server', evt.server)
+                .ele('command', evt.command)
+                .ele('username', evt.username)
+                .ele('stockSymbol', evt.stockSymbol)
+                .ele('funds', evt.funds)
+                .up() // go back to the parent element
+        })
+            .up()
         usersQuoteServers.forEach((qs) => {
             xml.ele('quoteServer')
-              .ele('transactionNum', qs.transactionNum)
-              .ele('timestamp', qs.timestamp)
-              .ele('server', qs.server)
-              .ele('quoteServerTime', qs.quoteServerTime)
-              .ele('username', qs.username)
-              .ele('stockSymbol', qs.stockSymbol)
-              .ele('price', qs.price)
-              .ele('cryptokey', qs.cryptokey)
-              .up() // go back to the parent element
-          })
-        .up()
-        .ele('errorEvents')
+                .ele('transactionNum', qs.transactionNum)
+                .ele('timestamp', qs.timestamp)
+                .ele('server', qs.server)
+                .ele('quoteServerTime', qs.quoteServerTime)
+                .ele('username', qs.username)
+                .ele('stockSymbol', qs.stockSymbol)
+                .ele('price', qs.price)
+                .ele('cryptokey', qs.cryptokey)
+                .up() // go back to the parent element
+        })
+            .up()
         usersErrorEvents.forEach((err) => {
-            xml.ele('quoteServer')
-              .ele('transactionNum', err.transactionNum)
-              .ele('timestamp', err.timestamp)
-              .ele('server', err.server)
-              .ele('quoteServerTime', err.quoteServerTime)
-              .ele('username', err.username)
-              .ele('stockSymbol', err.stockSymbol)
-              .ele('price', err.price)
-              .ele('cryptokey', err.cryptokey)
-              .up() // go back to the parent element
-          });
-    
+            xml.ele('errorEvents')
+                .ele('transactionNum', err.transactionNum)
+                .ele('timestamp', err.timestamp)
+                .ele('server', err.server)
+                .ele('username', err.username)
+                .ele('stockSymbol', err.stockSymbol)
+                .ele('funds', err.funds)
+                .ele('errorMessage', err.errorMessage)
+                .ele()
+                .up() // go back to the parent element
+        });
+
         const xmlString = xml.end({ prettyPrint: true });
         return callback(null, { xml: xmlString })
-    }catch(error){
+    } catch (error) {
         console.log(error)
-        return callback({code: Status.INTERNAL}, {});
+        return callback({ code: Status.INTERNAL }, {});
     }
 }
 
-const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async (call, callback)  => {
-    console.log("Log InsertAccountTransaction called with:",call.request);
-    try{
+const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async (call, callback) => {
+    console.log("Log InsertAccountTransaction called with:", call.request);
+    try {
         const insertTransaction = await prisma.accountTransaction.create({
             data: {
                 timestamp: Date.now(),
@@ -245,15 +227,15 @@ const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async 
         const insertTransactionReturn: any = insertTransaction;
         insertTransactionReturn.timestep = String(insertTransactionReturn.timestep);
         return callback(null, insertTransactionReturn)
-    }catch(error){
+    } catch (error) {
         console.log(error)
-        return callback({code: Status.INTERNAL}, {});
+        return callback({ code: Status.INTERNAL }, {});
     }
 }
 
 const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback) => {
-    console.log("Log InsertErrorEvent called with:",call.request);
-    try{
+    console.log("Log InsertErrorEvent called with:", call.request);
+    try {
         const insertError = await prisma.errorEvent.create({
             data: {
                 timestamp: Date.now(),
@@ -267,16 +249,16 @@ const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback)
         });
         const insertErrorReturn: any = insertError;
         insertErrorReturn.timestep = String(insertErrorReturn.timestep);
-        return callback(null, insertErrorReturn );
-    }catch(error){
+        return callback(null, insertErrorReturn);
+    } catch (error) {
         console.log(error)
-        return callback({code: Status.INTERNAL}, {});
+        return callback({ code: Status.INTERNAL }, {});
     }
 }
 
 const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callback) => {
-    console.log("Log InsertQuoteServer called with:",call.request);
-    try{
+    console.log("Log InsertQuoteServer called with:", call.request);
+    try {
         const insertQuote = await prisma.quoteServer.create({
             data: {
                 timestamp: Date.now(),
@@ -291,15 +273,15 @@ const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callbac
         const insertQuoteReturn: any = insertQuote;
         insertQuoteReturn.timestep = String(insertQuoteReturn.timestep);
         return callback(null, insertQuoteReturn);
-    }catch(error){
+    } catch (error) {
         console.log(error)
-        return callback({code: Status.INTERNAL}, {});
+        return callback({ code: Status.INTERNAL }, {});
     }
 }
 
 const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callback) => {
-    console.log("Log InsertSystemEvent called with:",call.request);
-    try{
+    console.log("Log InsertSystemEvent called with:", call.request);
+    try {
         const insertSystemEventQuery = await prisma.systemEvent.create({
             data: {
                 timestamp: Date.now(),
@@ -313,15 +295,15 @@ const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callbac
         const insertSystemEventQueryReturn: any = insertSystemEventQuery;
         insertSystemEventQueryReturn.timestep = String(insertSystemEventQueryReturn.timestep);
         return callback(null, insertSystemEventQueryReturn);
-    }catch(error){
+    } catch (error) {
         console.log(error)
-        return callback({code: Status.INTERNAL}, {});
+        return callback({ code: Status.INTERNAL }, {});
     }
 }
 
 const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callback) => {
-    console.log("Log InsertUserCommand called with:",call.request);
-    try{
+    console.log("Log InsertUserCommand called with:", call.request);
+    try {
         const insertCommand = await prisma.userCommand.create({
             data: {
                 timestamp: Date.now(),
@@ -335,9 +317,9 @@ const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callbac
         const insertCommandReturn: any = insertCommand;
         insertCommandReturn.timestep = String(insertCommandReturn.timestep);
         return callback(null, insertCommandReturn);
-    }catch(error){
+    } catch (error) {
         console.log(error)
-        return callback({code: Status.INTERNAL}, {});
+        return callback({ code: Status.INTERNAL }, {});
     }
 }
 
