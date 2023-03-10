@@ -64,70 +64,74 @@ const DumpLog: LogHandlers['DumpLog'] = async (call, callback) => {
         const xml = createXmlBuilder({ version: '1.0' }) //set to xml version 1.0
         .ele('root')
         .ele('userCommands')
-        .ele(allUserCommands.map((cmd) => {
-            return {
-                transactionNum: cmd.transactionNum,
-                timestamp: cmd.timestamp,
-                server: cmd.server,
-                command: cmd.command,
-                username: cmd.username,
-                stockSymbol: cmd.stockSymbol,
-                funds: cmd.funds
-            }
-        }))
+        allUserCommands.forEach((cmd) => {
+            xml.ele('quoteServer')
+              .ele('transactionNum', cmd.transactionNum)
+              .ele('timestamp', cmd.timestamp)
+              .ele('server', cmd.server)
+              .ele('quoteServerTime', cmd.quoteServerTime)
+              .ele('username', cmd.username)
+              .ele('stockSymbol', cmd.stockSymbol)
+              .ele('price', cmd.price)
+              .ele('cryptokey', cmd.cryptokey)
+              .up() // go back to the parent element
+          })
         .up()
         .ele('accountTransactions')
-        .ele(allAccountTransactions.map((tx) => {
-            return {
-                transactionNum: tx.transactionNum,
-                timestamp: tx.timestamp,
-                server: tx.server,
-                action: tx.action,
-                username: tx.username,
-                funds: tx.funds
-            }
-        }))
+        allAccountTransactions.forEach((tx) => {
+            xml.ele('quoteServer')
+              .ele('transactionNum', tx.transactionNum)
+              .ele('timestamp', tx.timestamp)
+              .ele('server', tx.server)
+              .ele('quoteServerTime', tx.quoteServerTime)
+              .ele('username', tx.username)
+              .ele('stockSymbol', tx.stockSymbol)
+              .ele('price', tx.price)
+              .ele('cryptokey', tx.cryptokey)
+              .up() // go back to the parent element
+          })
         .up()
         .ele('systemEvents')
-        .ele(allSystemEvents.map((evt) => {
-            return {
-                transactionNum: evt.transactionNum,
-                timestamp: evt.timestamp,
-                server: evt.server,
-                command: evt.command,
-                username: evt.username,
-                stockSymbol: evt.stockSymbol,
-                funds: evt.funds
-            }
-        }))
+        allSystemEvents.forEach((evt) => {
+            xml.ele('quoteServer')
+              .ele('transactionNum', evt.transactionNum)
+              .ele('timestamp', evt.timestamp)
+              .ele('server', evt.server)
+              .ele('quoteServerTime', evt.quoteServerTime)
+              .ele('username', evt.username)
+              .ele('stockSymbol', evt.stockSymbol)
+              .ele('price', evt.price)
+              .ele('cryptokey', evt.cryptokey)
+              .up() // go back to the parent element
+          })
         .up()
         .ele('quoteServers')
-        .ele(allQuoteServers.map((qs) => {
-            return {
-                transactionNum: qs.transactionNum,
-                timestamp: qs.timestamp,
-                server: qs.server,
-                quoteServerTime: qs.quoteServerTime,
-                username: qs.username,
-                stockSymbol: qs.stockSymbol,
-                price: qs.price,
-                cryptokey: qs.cryptokey
-            }
-        }))
+        allQuoteServers.forEach((qs) => {
+            xml.ele('quoteServer')
+              .ele('transactionNum', qs.transactionNum)
+              .ele('timestamp', qs.timestamp)
+              .ele('server', qs.server)
+              .ele('quoteServerTime', qs.quoteServerTime)
+              .ele('username', qs.username)
+              .ele('stockSymbol', qs.stockSymbol)
+              .ele('price', qs.price)
+              .ele('cryptokey', qs.cryptokey)
+              .up() // go back to the parent element
+          })
         .up()
         .ele('errorEvents')
-        .ele(allErrorEvents.map((err) => {
-            return {
-                transactionNum: err.transactionNum,
-                timestamp: err.timestamp,
-                server: err.server,
-                command: err.command,
-                username: err.username,
-                stockSymbol: err.stockSymbol,
-                funds: err.funds,
-                errorMessage: err.errorMessage,
-            }
-        }));
+        allErrorEvents.forEach((err) => {
+            xml.ele('quoteServer')
+              .ele('transactionNum', err.transactionNum)
+              .ele('timestamp', err.timestamp)
+              .ele('server', err.server)
+              .ele('quoteServerTime', err.quoteServerTime)
+              .ele('username', err.username)
+              .ele('stockSymbol', err.stockSymbol)
+              .ele('price', err.price)
+              .ele('cryptokey', err.cryptokey)
+              .up() // go back to the parent element
+          });
     
         const xmlString = xml.end({ prettyPrint: true });
         return callback(null, { xml: xmlString })
@@ -149,70 +153,74 @@ const DumpLogUser: LogHandlers['DumpLogUser'] = async (call, callback) => {
         const xml = createXmlBuilder({ version: '1.0' }) //set to xml version 1.0
         .ele('root')
         .ele('userCommands')
-        .ele(usersUserCommands.map((cmd) => {
-            return {
-                transactionNum: cmd.transactionNum,
-                timestamp: cmd.timestamp,
-                server: cmd.server,
-                command: cmd.command,
-                username: cmd.username,
-                stockSymbol: cmd.stockSymbol,
-                funds: cmd.funds
-            }
-        }))
+        usersUserCommands.forEach((cmd) => {
+            xml.ele('quoteServer')
+              .ele('transactionNum', cmd.transactionNum)
+              .ele('timestamp', cmd.timestamp)
+              .ele('server', cmd.server)
+              .ele('quoteServerTime', cmd.quoteServerTime)
+              .ele('username', cmd.username)
+              .ele('stockSymbol', cmd.stockSymbol)
+              .ele('price', cmd.price)
+              .ele('cryptokey', cmd.cryptokey)
+              .up() // go back to the parent element
+          })
         .up()
         .ele('accountTransactions')
-        .ele(usersAccountTransactions.map((tx) => {
-            return {
-                transactionNum: tx.transactionNum,
-                timestamp: tx.timestamp,
-                server: tx.server,
-                action: tx.action,
-                username: tx.username,
-                funds: tx.funds
-            }
-        }))
+        usersAccountTransactions.forEach((tx) => {
+            xml.ele('quoteServer')
+              .ele('transactionNum', tx.transactionNum)
+              .ele('timestamp', tx.timestamp)
+              .ele('server', tx.server)
+              .ele('quoteServerTime', tx.quoteServerTime)
+              .ele('username', tx.username)
+              .ele('stockSymbol', tx.stockSymbol)
+              .ele('price', tx.price)
+              .ele('cryptokey', tx.cryptokey)
+              .up() // go back to the parent element
+          })
         .up()
         .ele('systemEvents')
-        .ele(usersSystemEvents.map((evt) => {
-            return {
-                transactionNum: evt.transactionNum,
-                timestamp: evt.timestamp,
-                server: evt.server,
-                command: evt.command,
-                username: evt.username,
-                stockSymbol: evt.stockSymbol,
-                funds: evt.funds
-            }
-        }))
+        usersSystemEvents.forEach((evt) => {
+            xml.ele('quoteServer')
+              .ele('transactionNum', evt.transactionNum)
+              .ele('timestamp', evt.timestamp)
+              .ele('server', evt.server)
+              .ele('quoteServerTime', evt.quoteServerTime)
+              .ele('username', evt.username)
+              .ele('stockSymbol', evt.stockSymbol)
+              .ele('price', evt.price)
+              .ele('cryptokey', evt.cryptokey)
+              .up() // go back to the parent element
+          })
         .up()
         .ele('quoteServers')
-        .ele(usersQuoteServers.map((qs) => {
-            return {
-                transactionNum: qs.transactionNum,
-                timestamp: qs.timestamp,
-                server: qs.server,
-                quoteServerTime: qs.quoteServerTime,
-                username: qs.username,
-                stockSymbol: qs.stockSymbol,
-                price: qs.price,
-                cryptokey: qs.cryptokey
-            }
-        }))
+        usersQuoteServers.forEach((qs) => {
+            xml.ele('quoteServer')
+              .ele('transactionNum', qs.transactionNum)
+              .ele('timestamp', qs.timestamp)
+              .ele('server', qs.server)
+              .ele('quoteServerTime', qs.quoteServerTime)
+              .ele('username', qs.username)
+              .ele('stockSymbol', qs.stockSymbol)
+              .ele('price', qs.price)
+              .ele('cryptokey', qs.cryptokey)
+              .up() // go back to the parent element
+          })
         .up()
         .ele('errorEvents')
-        .ele(usersErrorEvents.map((err) => {
-            return {
-                transactionNum: err.transactionNum,
-                timestamp: err.timestamp,
-                server: err.server,
-                command: err.command,
-                username: err.username,
-                stockSymbol: err.stockSymbol,
-                funds: err.funds,
-                errorMessage: err.errorMessage,
-            }
-        }));
+        usersErrorEvents.forEach((err) => {
+            xml.ele('quoteServer')
+              .ele('transactionNum', err.transactionNum)
+              .ele('timestamp', err.timestamp)
+              .ele('server', err.server)
+              .ele('quoteServerTime', err.quoteServerTime)
+              .ele('username', err.username)
+              .ele('stockSymbol', err.stockSymbol)
+              .ele('price', err.price)
+              .ele('cryptokey', err.cryptokey)
+              .up() // go back to the parent element
+          });
     
         const xmlString = xml.end({ prettyPrint: true });
         return callback(null, { xml: xmlString })
