@@ -1,6 +1,8 @@
 FROM node:16-alpine
 
-RUN apk add --no-cache openssl libssl1.1
+# grpcurl for healthcheck
+RUN apk add --no-cache openssl libssl1.1 jq
+RUN apk add grpcurl --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 WORKDIR /app
 
