@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import { notExpired } from "../utils/DateUtils";
 import { GetQuote } from "../utils/GetQuote";
 import { Status } from "@grpc/grpc-js/build/src/constants";
-import { SendAccountTransactionLog } from "../utils/LogClient";
+import { SendAccountTransactionLog, SendErrorEventLog, SendSystemEventLog, SendUserCommandLog } from "../utils/LogClient";
 
 const prisma = new PrismaClient()
 
@@ -22,6 +22,7 @@ const Add: TransactionHandlers['Add'] = async (call, callback) => {
           });
         
         SendAccountTransactionLog(call.request.userId, "add", call.request.amount)
+        SendUserCommandLog(call.request.userId, "add", call.request.amount);
         return callback(null, {balance: user.balance})
     }catch(error){
         console.log(error)
@@ -41,11 +42,13 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
     
         // ensure call.request arguments are present for ts
         if(!call.request.amount || !call.request.userId || !call.request.stockSymbol){
+            SendErrorEventLog(call.request.userId ?? '', "buy", call.request.amount ?? 0.0, call.request.stockSymbol ?? '', "Missing arguments");
             return callback({ code: Status.INVALID_ARGUMENT, details: "Missing amount or userId in request" }, { shares: 0, success: false });
         }
     
         // ensure user has enough funds
         if(userBalance < call.request.amount){
+            SendErrorEventLog(call.request.userId, "buy", call.request.amount, call.request.stockSymbol, "Insufficient funds");
             return callback({ code: Status.FAILED_PRECONDITION, details: "Insufficient funds" }, { shares: 0, success: false });
         }
     
@@ -75,12 +78,15 @@ const Buy: TransactionHandlers['Buy'] = async (call, callback) => {
         })
     
         if(!createdBuy){
+            SendErrorEventLog(call.request.userId, "buy", call.request.amount, call.request.stockSymbol, "Error creating uncommitedBuy");
             return callback({code: Status.INTERNAL, details: "Error creating uncommitedBuy"}, { shares: 0, success: false })
         }
-    
+        SendSystemEventLog(call.request.userId, "buy", call.request.amount, call.request.stockSymbol);
+        SendUserCommandLog(call.request.userId, "buy", call.request.amount, call.request.stockSymbol);
         return callback(null, { shares: shares, success: true })
     }catch(error){
         console.log(error)
+        SendErrorEventLog(call.request.userId ?? '', "buy", call.request.amount ?? 0.0, call.request.stockSymbol ?? 'null', "Internal system error");
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -98,11 +104,13 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
     
         // ensure user has stock
         if(!usersStock){
+            SendErrorEventLog(call.request.userId ?? '', "sell", call.request.amount ?? 0.0, call.request.stockSymbol ?? '', "user does not own stock");
             return callback({ code: Status.FAILED_PRECONDITION, details: "user does not own stock" }, { amount: 0.0, shares: 0.0, success: false })
         }
         
         // ensure arguments are included
         if(!call.request.amount || !call.request.userId || !call.request.stockSymbol){
+            SendErrorEventLog(call.request.userId ?? '', "sell", call.request.amount ?? 0.0, call.request.stockSymbol ?? '', "Missing arguments");
             return callback({ code: Status.INVALID_ARGUMENT, details: "Missing arguments in request" }, { amount: 0.0, shares: 0.0, success: false });
         }
     
@@ -112,6 +120,7 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
     
         // ensure user has more stock then attempting to sell
         if(usersStock.shares < shares){
+            SendErrorEventLog(call.request.userId ?? '', "sell", call.request.amount ?? 0.0, call.request.stockSymbol ?? '', "Insufficient owned stock");
             return callback({ code: Status.FAILED_PRECONDITION, details: "Insufficient owned stock" }, { amount: 0.0, shares: 0.0, success: false } ); 
         }
     
@@ -133,10 +142,12 @@ const Sell: TransactionHandlers['Sell'] = async (call, callback) => {
                 shares: shares,
             }
         })
-    
+        SendSystemEventLog(call.request.userId, "sell", call.request.amount, call.request.stockSymbol);
+        SendUserCommandLog(call.request.userId, "sell", call.request.amount, call.request.stockSymbol);
         return callback(null, { amount: createdSell.amount, shares: createdSell.shares, success: true})
     }catch(error){
         console.log(error)
+        SendErrorEventLog(call.request.userId ?? '', "sell", call.request.amount ?? 0.0, call.request.stockSymbol ?? 'null', "Internal system error");
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -150,8 +161,11 @@ const CancelBuy: TransactionHandlers['CancelBuy'] = async (call, callback) => {
                 username: call.request.userId,
             }
         })
+        SendSystemEventLog(call.request.userId ?? '', "cancel_buy", deletedBuy.amount, deletedBuy.stock);
+        SendUserCommandLog(call.request.userId ?? '', "cancel_buy", deletedBuy.amount, deletedBuy.stock);
         return callback(null, { success: true })
     }catch(error){
+        SendErrorEventLog(call.request.userId ?? '', "cancel_buy", 0.0, 'null', "No uncommited buy found");
         return callback({code: Status.NOT_FOUND, details: "Uncommitted buy not found"}, { success: false })
     }
 }
@@ -164,8 +178,11 @@ const CancelSell: TransactionHandlers['CancelSell'] = async (call, callback) => 
                 username: call.request.userId,
             }
         })
+        SendSystemEventLog(call.request.userId ?? '', "cancel_sell", deletedSell.amount, deletedSell.stock);
+        SendUserCommandLog(call.request.userId ?? '', "cancel_sell", deletedSell.amount, deletedSell.stock);
         return callback(null, { success: true })
     }catch(error){
+        SendErrorEventLog(call.request.userId ?? '', "cancel_sell", 0.0, 'null', "No uncommited sell found");
         return callback({code: Status.NOT_FOUND, details: "Uncommitted sell not found"}, { success: false })
     }
 }
@@ -181,11 +198,13 @@ const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
     
         // ensure user has made buy request
         if(!buyToCommit){
+            SendErrorEventLog(call.request.userId ?? '', "commit_buy", 0.0, 'null', "user did not make a buy request");
             return callback({ code: Status.FAILED_PRECONDITION, details: "user did not make a buy request" }, { stocksOwned: 0.0, balance: 0.0, success: false })
         }
         
         // ensures its not expired
         if(!(notExpired(buyToCommit.expiresAt))){
+            SendErrorEventLog(buyToCommit.username, "commit_buy", buyToCommit.amount, buyToCommit.stock, "Buy request expired");
             return callback({ code: Status.DEADLINE_EXCEEDED, details: "Buy request expired" }, { stocksOwned: 0.0, balance: 0.0, success: false })
         }
     
@@ -220,13 +239,16 @@ const CommitBuy: TransactionHandlers['CommitBuy'] = async (call, callback) => {
                     username: call.request.userId,
                 }
             })
-            
+            SendSystemEventLog(call.request.userId ?? '', "commit_buy", deletedBuy.amount, deletedBuy.stock);
+            SendUserCommandLog(call.request.userId ?? '', "commit_buy", deletedBuy.amount, deletedBuy.stock);
             return callback(null, { stocksOwned: newPurchasedStock.shares, balance: decrementedUserBalance.balance, success: true })
         }catch(error){
+            SendErrorEventLog(call.request.userId ?? '', "commit_buy", buyToCommit.amount, buyToCommit.stock, "No uncommited buy found to delete after completion");
             return callback({code: Status.FAILED_PRECONDITION}, { stocksOwned: newPurchasedStock.shares, balance: decrementedUserBalance.balance, success: false })
         }
     }catch(error){
         console.log(error)
+        SendErrorEventLog(call.request.userId ?? '', "commit_buy", 0.0, 'null', "Internal Server Error");
         return callback({code: Status.INTERNAL}, {});
     }
 }
@@ -242,11 +264,13 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
     
         // ensure user has made sell request
         if(!sellToCommit){
+            SendErrorEventLog(call.request.userId ?? '', "commit_sell", 0.0, 'null', "user did not make a sell request");
             return callback({ code: Status.FAILED_PRECONDITION, details: "user did not make a sell request" }, { stocksOwned: 0.0, balance: 0.0, success: false })
         }
         
         // ensures its not expired
         if(!(notExpired(sellToCommit.expiresAt))){
+            SendErrorEventLog(call.request.userId ?? '', "commit_sell", sellToCommit.shares, sellToCommit.stock, "Sell request expired");
             return callback({ code: Status.DEADLINE_EXCEEDED, details: "Sell request expired" }, { stocksOwned: 0.0, balance: 0.0, success: false })
         }
     
@@ -292,12 +316,16 @@ const CommitSell: TransactionHandlers['CommitSell'] = async (call, callback) => 
                     username: sellToCommit.username,
                 }
             })
+            SendUserCommandLog(call.request.userId ?? '', "commit_sell", deletedSell.amount, deletedSell.stock);
+            SendSystemEventLog(call.request.userId ?? '', "commit_sell", deletedSell.amount, deletedSell.stock);
             return callback(null, { stocksOwned: newPurchasedStock.shares, balance: incrementedUserBalance.balance, success: true })
         }catch(error){
+            SendErrorEventLog(call.request.userId ?? '', "commit_sell", sellToCommit.shares, sellToCommit.stock, "Uncommitted sell to delete was not found");
             return callback({code: Status.NOT_FOUND, details: "Uncommitted sell to delete was not found"}, { stocksOwned: newPurchasedStock.shares, balance: incrementedUserBalance.balance, success: true } )
         }
     }catch(error){
         console.log(error)
+        SendErrorEventLog(call.request.userId ?? '', "commit_sell", 0.0, '', "Internal Server Error");
         return callback({code: Status.INTERNAL}, {});
     }
 }
