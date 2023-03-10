@@ -5,7 +5,7 @@ services:
     container_name: auditDB
     hostname: postgres
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
       POSTGRES_USER: "admin"
       POSTGRES_PASSWORD: "postgrespw"
@@ -14,11 +14,10 @@ services:
       - auditDB-data:/var/lib/postgresql/data
     restart: unless-stopped
   auditserver:
-    image: auditserver
+    build: .
     container_name: auditService
-    build: "./"
     ports:
-      - 50051:50051
+      - "50051:50051"
     links:
       - postgres
     depends_on:

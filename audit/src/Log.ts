@@ -1,8 +1,10 @@
-import { PrismaClient } from "@prisma/client";
-import { LogHandlers } from "./proto/day_trader/Log";
-import { create as createXmlBuilder } from 'xmlbuilder2';
-import { Status } from "@grpc/grpc-js/build/src/constants";
-import { GetUserInfo } from "./utils/GetUserInfo";
+import {PrismaClient} from "@prisma/client";
+import {LogHandlers} from "./proto/day_trader/Log";
+import {create as createXmlBuilder} from 'xmlbuilder2';
+import {Status} from "@grpc/grpc-js/build/src/constants";
+import {GetUserInfo} from "./utils/GetUserInfo";
+import {UserCommand, accountTransaction, systemEvent, quoteServer, errorEvent} from "@prisma/client";
+import {ExpandObject, XMLBuilder} from "xmlbuilder2/lib/interfaces";
 
 const prisma = new PrismaClient();
 
@@ -10,7 +12,7 @@ const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => 
     console.log("Log DisplaySummary called with:", call.request);
     try {
         if (!call.request.userId) {
-            return callback({ code: Status.INVALID_ARGUMENT }, {});
+            return callback({code: Status.INVALID_ARGUMENT}, {});
         }
         const userCommands = await prisma.userCommand.findMany({
             where: {
@@ -47,168 +49,123 @@ const DisplaySummary: LogHandlers['DisplaySummary'] = async (call, callback) => 
         return callback(null, userSummary);
     } catch (error) {
         console.log(error)
-        return callback({ code: Status.INTERNAL }, {});
+        return callback({code: Status.INTERNAL}, {});
     }
+}
+
+type LogEvent =
+    | { eventType: 'user command', event: UserCommand }
+    | { eventType: 'account transaction', event: accountTransaction }
+    | { eventType: 'system event', event: systemEvent }
+    | { eventType: 'quote server', event: quoteServer }
+    | { eventType: 'error event', event: errorEvent }
+
+function logEventToXml(xmlBuilder: XMLBuilder, event: LogEvent): void {
+    switch (event.eventType) {
+        case "user command":
+            xmlBuilder.ele('userCommand')
+                .ele(event.event)
+                .up()
+            break;
+        case "account transaction":
+            xmlBuilder.ele('accountTransaction')
+                .ele(event.event)
+                .up()
+            break;
+        case "system event":
+            xmlBuilder.ele('systemEvent')
+                .ele(event.event)
+                .up()
+            break;
+        case "quote server":
+            xmlBuilder.ele('quoteServer')
+                .ele(event.event)
+                .up()
+            break;
+        case "error event":
+            xmlBuilder.ele('errorEvent')
+                .ele(event.event)
+                .up()
+            break;
+
+    }
+}
+
+function createXml(allUserCommands: UserCommand[], allAccountTransactions: accountTransaction[], allSystemEvents: systemEvent[], allQuoteServers: quoteServer[], allErrorEvents: errorEvent[]): XMLBuilder {
+    const xml = createXmlBuilder({version: '1.0'})
+        .ele('log')
+
+    const x: LogEvent[] = [
+        ...allErrorEvents.map(e => ({eventType: 'error event' as const, event: e})),
+        ...allQuoteServers.map(e => ({eventType: 'quote server' as const, event: e})),
+        ...allSystemEvents.map(e => ({eventType: 'system event' as const, event: e})),
+        ...allAccountTransactions.map(e => ({eventType: 'account transaction' as const, event: e})),
+        ...allUserCommands.map(e => ({eventType: 'user command' as const, event: e})),
+    ]
+
+    x.sort(({event: a}, {event: b}) => {
+        if (a.timestamp > b.timestamp) {
+            return 1;
+        } else if (a.timestamp < b.timestamp) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }).forEach((event) => logEventToXml(xml, event))
+
+    return xml
 }
 
 const DumpLog: LogHandlers['DumpLog'] = async (call, callback) => {
     console.log("Log DumpLog called with:", call.request);
     try {
-        const allUserCommands = await prisma.userCommand.findMany({ orderBy: { timestamp: 'asc' } });
-        const allAccountTransactions = await prisma.accountTransaction.findMany({ orderBy: { timestamp: 'asc' } });
-        const allSystemEvents = await prisma.systemEvent.findMany({ orderBy: { timestamp: 'asc' } });
-        const allQuoteServers = await prisma.quoteServer.findMany({ orderBy: { timestamp: 'asc' } });
-        const allErrorEvents = await prisma.errorEvent.findMany({ orderBy: { timestamp: 'asc' } });
+        const allUserCommands = await prisma.userCommand.findMany({orderBy: {timestamp: 'asc'}});
+        const allAccountTransactions = await prisma.accountTransaction.findMany({orderBy: {timestamp: 'asc'}});
+        const allSystemEvents = await prisma.systemEvent.findMany({orderBy: {timestamp: 'asc'}});
+        const allQuoteServers = await prisma.quoteServer.findMany({orderBy: {timestamp: 'asc'}});
+        const allErrorEvents = await prisma.errorEvent.findMany({orderBy: {timestamp: 'asc'}});
 
+        const xml = createXml(allUserCommands, allAccountTransactions, allSystemEvents, allQuoteServers, allErrorEvents)
 
-        const xml = createXmlBuilder({ version: '1.0' }) //set to xml version 1.0
-            .ele('root')
-        allUserCommands.forEach((cmd) => {
-            xml.ele('userCommands')
-                .ele('transactionNum', cmd.transactionNum)
-                .ele('timestamp', cmd.timestamp)
-                .ele('server', cmd.server)
-                .ele('command', cmd.command)
-                .ele('username', cmd.username)
-                .ele('stockSymbol', cmd.stockSymbol)
-                .ele('funds', cmd.funds)
-                .up() // go back to the parent element
-        })
-            .up()
-        allAccountTransactions.forEach((tx) => {
-            xml.ele('accountTransactions')
-                .ele('transactionNum', tx.transactionNum)
-                .ele('timestamp', tx.timestamp)
-                .ele('server', tx.server)
-                .ele('action', tx.action)
-                .ele('username', tx.username)
-                .ele('funds', tx.funds)
-                .up() // go back to the parent element
-        })
-            .up()
-        allSystemEvents.forEach((evt) => {
-            xml.ele('systemEvents')
-                .ele('transactionNum', evt.transactionNum)
-                .ele('timestamp', evt.timestamp)
-                .ele('server', evt.server)
-                .ele('command', evt.command)
-                .ele('username', evt.username)
-                .ele('stockSymbol', evt.stockSymbol)
-                .ele('funds', evt.funds)
-                .up() // go back to the parent element
-        })
-            .up()
-        allQuoteServers.forEach((qs) => {
-            xml.ele('quoteServer')
-                .ele('transactionNum', qs.transactionNum)
-                .ele('timestamp', qs.timestamp)
-                .ele('server', qs.server)
-                .ele('quoteServerTime', qs.quoteServerTime)
-                .ele('username', qs.username)
-                .ele('stockSymbol', qs.stockSymbol)
-                .ele('price', qs.price)
-                .ele('cryptokey', qs.cryptokey)
-                .up() // go back to the parent element
-        })
-            .up()
-        allErrorEvents.forEach((err) => {
-            xml.ele('errorEvents')
-                .ele('transactionNum', err.transactionNum)
-                .ele('timestamp', err.timestamp)
-                .ele('server', err.server)
-                .ele('username', err.username)
-                .ele('stockSymbol', err.stockSymbol)
-                .ele('funds', err.funds)
-                .ele('errorMessage', err.errorMessage)
-                .ele()
-                .up() // go back to the parent element
-        });
-
-        const xmlString = xml.end({ prettyPrint: true });
-        return callback(null, { xml: xmlString })
+        const xmlString = xml.end({prettyPrint: false});
+        return callback(null, {xml: xmlString})
     } catch (error) {
         console.log(error)
-        return callback({ code: Status.INTERNAL }, {});
+        return callback({code: Status.INTERNAL}, {});
     }
 }
 
 const DumpLogUser: LogHandlers['DumpLogUser'] = async (call, callback) => {
     console.log("Log DumpLogUser called with:", call.request);
     try {
-        const usersUserCommands = await prisma.userCommand.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
-        const usersAccountTransactions = await prisma.accountTransaction.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
-        const usersSystemEvents = await prisma.systemEvent.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
-        const usersQuoteServers = await prisma.quoteServer.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
-        const usersErrorEvents = await prisma.errorEvent.findMany({ where: { username: call.request.userId }, orderBy: { timestamp: 'asc' } });
-
-        const xml = createXmlBuilder({ version: '1.0' }) //set to xml version 1.0
-        .ele('root')
-        usersUserCommands.forEach((cmd) => {
-            xml.ele('userCommands')
-                .ele('transactionNum', cmd.transactionNum)
-                .ele('timestamp', cmd.timestamp)
-                .ele('server', cmd.server)
-                .ele('command', cmd.command)
-                .ele('username', cmd.username)
-                .ele('stockSymbol', cmd.stockSymbol)
-                .ele('funds', cmd.funds)
-                .up() // go back to the parent element
-        })
-            .up()
-        usersAccountTransactions.forEach((tx) => {
-            xml.ele('accountTransactions')
-                .ele('transactionNum', tx.transactionNum)
-                .ele('timestamp', tx.timestamp)
-                .ele('server', tx.server)
-                .ele('action', tx.action)
-                .ele('username', tx.username)
-                .ele('funds', tx.funds)
-                .up() // go back to the parent element
-        })
-            .up()
-        usersSystemEvents.forEach((evt) => {
-            xml.ele('systemEvents')
-                .ele('transactionNum', evt.transactionNum)
-                .ele('timestamp', evt.timestamp)
-                .ele('server', evt.server)
-                .ele('command', evt.command)
-                .ele('username', evt.username)
-                .ele('stockSymbol', evt.stockSymbol)
-                .ele('funds', evt.funds)
-                .up() // go back to the parent element
-        })
-            .up()
-        usersQuoteServers.forEach((qs) => {
-            xml.ele('quoteServer')
-                .ele('transactionNum', qs.transactionNum)
-                .ele('timestamp', qs.timestamp)
-                .ele('server', qs.server)
-                .ele('quoteServerTime', qs.quoteServerTime)
-                .ele('username', qs.username)
-                .ele('stockSymbol', qs.stockSymbol)
-                .ele('price', qs.price)
-                .ele('cryptokey', qs.cryptokey)
-                .up() // go back to the parent element
-        })
-            .up()
-        usersErrorEvents.forEach((err) => {
-            xml.ele('errorEvents')
-                .ele('transactionNum', err.transactionNum)
-                .ele('timestamp', err.timestamp)
-                .ele('server', err.server)
-                .ele('username', err.username)
-                .ele('stockSymbol', err.stockSymbol)
-                .ele('funds', err.funds)
-                .ele('errorMessage', err.errorMessage)
-                .ele()
-                .up() // go back to the parent element
+        const usersUserCommands = await prisma.userCommand.findMany({
+            where: {username: call.request.userId},
+            orderBy: {timestamp: 'asc'}
+        });
+        const usersAccountTransactions = await prisma.accountTransaction.findMany({
+            where: {username: call.request.userId},
+            orderBy: {timestamp: 'asc'}
+        });
+        const usersSystemEvents = await prisma.systemEvent.findMany({
+            where: {username: call.request.userId},
+            orderBy: {timestamp: 'asc'}
+        });
+        const usersQuoteServers = await prisma.quoteServer.findMany({
+            where: {username: call.request.userId},
+            orderBy: {timestamp: 'asc'}
+        });
+        const usersErrorEvents = await prisma.errorEvent.findMany({
+            where: {username: call.request.userId},
+            orderBy: {timestamp: 'asc'}
         });
 
-        const xmlString = xml.end({ prettyPrint: true });
-        return callback(null, { xml: xmlString })
+        const xml = createXml(usersUserCommands, usersAccountTransactions, usersSystemEvents, usersQuoteServers, usersErrorEvents)
+
+        const xmlString = xml.end({prettyPrint: false});
+        return callback(null, {xml: xmlString})
     } catch (error) {
         console.log(error)
-        return callback({ code: Status.INTERNAL }, {});
+        return callback({code: Status.INTERNAL}, {});
     }
 }
 
@@ -229,7 +186,7 @@ const InsertAccountTransaction: LogHandlers['InsertAccountTransaction'] = async 
         return callback(null, insertTransactionReturn)
     } catch (error) {
         console.log(error)
-        return callback({ code: Status.INTERNAL }, {});
+        return callback({code: Status.INTERNAL}, {});
     }
 }
 
@@ -252,7 +209,7 @@ const InsertErrorEvent: LogHandlers['InsertErrorEvent'] = async (call, callback)
         return callback(null, insertErrorReturn);
     } catch (error) {
         console.log(error)
-        return callback({ code: Status.INTERNAL }, {});
+        return callback({code: Status.INTERNAL}, {});
     }
 }
 
@@ -275,7 +232,7 @@ const InsertQuoteServer: LogHandlers['InsertQuoteServer'] = async (call, callbac
         return callback(null, insertQuoteReturn);
     } catch (error) {
         console.log(error)
-        return callback({ code: Status.INTERNAL }, {});
+        return callback({code: Status.INTERNAL}, {});
     }
 }
 
@@ -297,7 +254,7 @@ const InsertSystemEvent: LogHandlers['InsertSystemEvent'] = async (call, callbac
         return callback(null, insertSystemEventQueryReturn);
     } catch (error) {
         console.log(error)
-        return callback({ code: Status.INTERNAL }, {});
+        return callback({code: Status.INTERNAL}, {});
     }
 }
 
@@ -319,7 +276,7 @@ const InsertUserCommand: LogHandlers['InsertUserCommand'] = async (call, callbac
         return callback(null, insertCommandReturn);
     } catch (error) {
         console.log(error)
-        return callback({ code: Status.INTERNAL }, {});
+        return callback({code: Status.INTERNAL}, {});
     }
 }
 
