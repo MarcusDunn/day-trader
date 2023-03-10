@@ -7,10 +7,7 @@ services:
     environment:
       COLLECTOR_OTLP_ENABLED: true
   quote-server-adaptor:
-    # image: ghcr.io/marcusdunn/day-trader/quote-server-adaptor:latest
-    build:
-      context: .
-      dockerfile: quote-server-adaptor.Dockerfile
+    image: ghcr.io/marcusdunn/day-trader/quote-server-adaptor:latest
     environment:
       QUOTE_SERVER_URI: quoteserve.seng.uvic.ca:4444
       OTEL_EXPORTER_URI: http://jaeger:4317
@@ -54,14 +51,13 @@ services:
       POSTGRES_PASSWORD: "postgrespw"
       POSTGRES_DB: "devdb"
     restart: unless-stopped
-    volumes:
-      - transactionDB-data:/var/lib/postgresql/data
   transactionserver:
     image: ghcr.io/marcusdunn/day-trader/transaction:latest
     depends_on:
       - transactionDB
     environment:
       QuoteURI: quote-server-adaptor:50051
+      LogURI: auditserver:50051
     restart: unless-stopped
   auditDB:
     image: postgres:latest
@@ -71,8 +67,6 @@ services:
       POSTGRES_USER: "admin"
       POSTGRES_PASSWORD: "postgrespw"
       POSTGRES_DB: "devdb"
-    volumes:
-      - auditDB-data:/var/lib/postgresql/data
     restart: unless-stopped
   auditserver:
     image: ghcr.io/marcusdunn/day-trader/audit:latest
@@ -89,6 +83,3 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-volumes:
-  transactionDB-data:
-  auditDB-data:
