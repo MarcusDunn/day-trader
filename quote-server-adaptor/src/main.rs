@@ -7,7 +7,9 @@ use quote_server_adaptor::fake::FakeQuoteServer;
 use quote_server_adaptor::log_client::LogClient;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 use quote_server_adaptor::tower_otel::OtelLayer;
-use quote_server_adaptor::{InsertQuoteServerRequest, QuoteRequest, QuoteResponse};
+use quote_server_adaptor::{
+    InsertQuoteServerRequest, InsertUserCommandRequest, QuoteRequest, QuoteResponse,
+};
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::env;
@@ -203,6 +205,20 @@ impl Quote for QuoteWithCache {
         request: Request<QuoteRequest>,
     ) -> Result<Response<QuoteResponse>, Status> {
         let quote_request = request.into_inner();
+
+        let qr = quote_request.clone();
+        self.inner
+            .logger
+            .clone()
+            .insert_user_command(Request::new(InsertUserCommandRequest {
+                server: "quote_server_adaptor".to_string(),
+                command: "quote".to_string(),
+                username: qr.user_id,
+                stock_symbol: qr.stock_symbol,
+                funds: -1.0, // TODO: remove this in favor of typing the gRPC spec correctly
+            }))
+            .await?;
+
         let mut cache = self.cache.lock().await;
         return match cache.entry(quote_request.stock_symbol.clone()) {
             Entry::Vacant(v) => {
