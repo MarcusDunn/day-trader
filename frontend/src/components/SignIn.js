@@ -13,13 +13,22 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 
 export default function SignIn() {
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    try{
+      const response = await fetch("/api/login", {
+        body: JSON.stringify(data),
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        }
+      });
+      const body = await response.json();
+    }catch(error){
+      
+    }
+
   };
 
   return (

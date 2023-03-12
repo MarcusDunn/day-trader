@@ -16,7 +16,12 @@ export default async function login(req, res){
     // const response = await (await fetch(url, options)).json();
     const response = {
         status: 'ok',
-        user: "ajslkdfjkleasfehhgfbtre34asg"
+        user: "john",
+        balance: "69.42",
+        OwnedStock: [],
+        UncommitedBuy: [],
+        UncommitedSell: []
+
     }
     return res.status(200).json(response)
 }
