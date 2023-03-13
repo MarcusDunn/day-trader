@@ -16,7 +16,7 @@ opentelemetry-otlp = "0.11.0"
 tower = "0.4.13"
 hyper = "1.0.0-rc.3"
 futures = "0.3.26"
-futures-util = "0.3.26"
+futures-util = "0.3.27"
 
 [build-dependencies]
 tonic-build = "0.8.4"
