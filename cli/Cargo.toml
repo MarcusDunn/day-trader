@@ -15,7 +15,7 @@ tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
 tonic = "0.8.3"
 prost = "0.11.8"
 anyhow = "1.0.69"
-thiserror = "1.0.39"
+thiserror = "1.0.40"
 proptest-derive = "0.3.0"
 proptest = "1.0.0"
 
