@@ -40,23 +40,9 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
-      - name: debug pwd
-        run: pwd
-      - name: Format
         uses: dtolnay/rust-toolchain@stable
-        run: cargo fmt --all -- --check
-      - name: Build
-        uses: dtolnay/rust-toolchain@stable
-        run: build
-      - name: Lint
-        uses: dtolnay/rust-toolchain@stable
-        run: cargo clippy -- -D warnings
-      - name: Test
-        uses: dtolnay/rust-toolchain@stable
-        run: cargo test
+        run: |
+          cargo fmt --all -- --check
+          cargo build
+          cargo clippy -- -D warnings
+          cargo test
