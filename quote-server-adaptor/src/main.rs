@@ -1,10 +1,10 @@
 use opentelemetry::runtime::Tokio;
-use opentelemetry::sdk::{Resource};
+use opentelemetry::sdk::Resource;
 use opentelemetry::{global, KeyValue};
 use quote_server_adaptor::fake::FakeQuoteServer;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 
-use opentelemetry::sdk::trace::{Config};
+use opentelemetry::sdk::trace::Config;
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
 use std::env;
 use std::error::Error;
