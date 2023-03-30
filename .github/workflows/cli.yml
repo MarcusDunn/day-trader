@@ -30,6 +30,9 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.cli == 'true' }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
     steps:
       - uses: actions/checkout@v3
       - name: Install Protoc
@@ -37,29 +40,14 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
-      - name: Run fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --manifest-path cli/Cargo.toml --all -- --check
-      - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --manifest-path cli/Cargo.toml
-      - name: Run clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --manifest-path cli/Cargo.toml -- -D warnings
-      - name: Run test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --manifest-path cli/Cargo.toml
+          components: rustfmt,clippy
+      - run: cargo fmt --all -- --check
+        name: Run cargo fmt
+      - run: cargo build
+        name: Build
+      - run: cargo clippy -- -D warnings
+        name: Run clippy
+      - run: cargo test
+        name: Run tests

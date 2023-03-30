@@ -8,7 +8,7 @@ use tonic::{IntoRequest, Request};
 #[derive(PartialEq, Debug, clap::Args, Clone, Arbitrary)]
 pub struct LoadTestAdd {
     pub user_id: String,
-    pub amount: f32,
+    pub amount: f64,
 }
 
 impl IntoRequest<AddRequest> for LoadTestAdd {

@@ -55,10 +55,66 @@ pub enum LoadTestCommand {
 }
 
 impl LoadTestCommand {
+    pub fn user(&self) -> Option<String> {
+        match self {
+            LoadTestCommand::Add(LoadTestAdd { user_id, .. }) => Some(user_id.clone()),
+            LoadTestCommand::Quote(LoadTestUserIdStockSymbolCommand { user_id, .. }) => {
+                Some(user_id.clone())
+            }
+            LoadTestCommand::Buy(LoadTestUserIdStockSymbolAmountCommand { user_id, .. }) => {
+                Some(user_id.clone())
+            }
+            LoadTestCommand::CommitBuy(LoadTestUserIdCommand { user_id, .. }) => {
+                Some(user_id.clone())
+            }
+            LoadTestCommand::CancelBuy(LoadTestUserIdCommand { user_id, .. }) => {
+                Some(user_id.clone())
+            }
+            LoadTestCommand::Sell(LoadTestUserIdStockSymbolAmountCommand { user_id, .. }) => {
+                Some(user_id.clone())
+            }
+            LoadTestCommand::CommitSell(LoadTestUserIdCommand { user_id, .. }) => {
+                Some(user_id.clone())
+            }
+            LoadTestCommand::CancelSell(LoadTestUserIdCommand { user_id, .. }) => {
+                Some(user_id.clone())
+            }
+            LoadTestCommand::SetBuyAmount(LoadTestUserIdStockSymbolAmountCommand {
+                user_id,
+                ..
+            }) => Some(user_id.clone()),
+            LoadTestCommand::CancelSetBuy(LoadTestUserIdStockSymbolCommand { user_id, .. }) => {
+                Some(user_id.clone())
+            }
+            LoadTestCommand::SetBuyTrigger(LoadTestUserIdStockSymbolAmountCommand {
+                user_id,
+                ..
+            }) => Some(user_id.clone()),
+            LoadTestCommand::SetSellAmount(LoadTestUserIdStockSymbolAmountCommand {
+                user_id,
+                ..
+            }) => Some(user_id.clone()),
+            LoadTestCommand::SetSellTrigger(LoadTestUserIdStockSymbolAmountCommand {
+                user_id,
+                ..
+            }) => Some(user_id.clone()),
+            LoadTestCommand::CancelSetSell(LoadTestUserIdStockSymbolCommand {
+                user_id, ..
+            }) => Some(user_id.clone()),
+            LoadTestCommand::DisplaySummary(LoadTestUserIdCommand { user_id, .. }) => {
+                Some(user_id.clone())
+            }
+            LoadTestCommand::DumpLogFileName(_) => None,
+            LoadTestCommand::DumpLogUser(LoadTestDumpLogUserIdFileName { user_id, .. }) => {
+                Some(user_id.clone())
+            }
+        }
+    }
+
     pub async fn execute(self, client: &mut DayTraderServicesStack) -> Result<(), Status> {
         match self {
             LoadTestCommand::Add(add) => client
-                .transaction
+                .day_trader
                 .add(add)
                 .await
                 .map(|resp| debug!("{resp:?}")),
@@ -68,77 +124,77 @@ impl LoadTestCommand {
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::Buy(buy) => client
-                .transaction
+                .day_trader
                 .buy(buy)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::CommitBuy(commit_buy) => client
-                .transaction
+                .day_trader
                 .commit_buy(commit_buy)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::CommitSell(commit_sell) => client
-                .transaction
+                .day_trader
                 .commit_sell(commit_sell)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::CancelSell(cancel_sell) => client
-                .transaction
+                .day_trader
                 .cancel_sell(cancel_sell)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::DisplaySummary(display_summary) => client
-                .log
+                .day_trader
                 .display_summary(display_summary)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::CancelBuy(cancel_buy) => client
-                .transaction
+                .day_trader
                 .cancel_buy(cancel_buy)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::CancelSetBuy(cancel_set_buy) => client
-                .trigger
+                .day_trader
                 .cancel_set_buy(cancel_set_buy)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::SetBuyAmount(set_buy_amount) => client
-                .trigger
+                .day_trader
                 .set_buy_amount(set_buy_amount)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::Sell(sell) => client
-                .transaction
+                .day_trader
                 .sell(sell)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::CancelSetSell(cancel_set_sell) => client
-                .trigger
+                .day_trader
                 .cancel_set_sell(cancel_set_sell)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::SetSellTrigger(set_sell_trigger) => client
-                .trigger
+                .day_trader
                 .set_sell_trigger(set_sell_trigger)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::SetSellAmount(set_sell_amount) => client
-                .trigger
+                .day_trader
                 .set_sell_amount(set_sell_amount)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::DumpLogFileName(dump_log) => client
-                .log
+                .day_trader
                 .dump_log(dump_log)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::SetBuyTrigger(set_buy_trigger) => client
-                .trigger
+                .day_trader
                 .set_buy_trigger(set_buy_trigger)
                 .await
                 .map(|resp| debug!("{resp:?}")),
             LoadTestCommand::DumpLogUser(dump_log_user) => client
-                .log
+                .day_trader
                 .dump_log_user(dump_log_user)
                 .await
                 .map(|resp| debug!("{resp:?}")),

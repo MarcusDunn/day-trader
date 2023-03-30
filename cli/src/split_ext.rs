@@ -12,9 +12,9 @@ pub trait CommandParseIterExt {
         &mut self,
         arg_name: &'static str,
         position: u8,
-    ) -> Result<f32, CommandParseFailure>;
+    ) -> Result<f64, CommandParseFailure>;
     fn user_id(&mut self, position: u8) -> Result<String, CommandParseFailure>;
-    fn amount(&mut self, position: u8) -> Result<f32, CommandParseFailure>;
+    fn amount(&mut self, position: u8) -> Result<f64, CommandParseFailure>;
     fn stock_symbol(&mut self, position: u8) -> Result<String, CommandParseFailure>;
     fn file_name(&mut self, position: u8) -> Result<String, CommandParseFailure>;
     fn require_finished(&mut self, expected_count: u8) -> Result<(), CommandParseFailure>;
@@ -36,7 +36,7 @@ impl CommandParseIterExt for Split<'_, char> {
         &mut self,
         arg_name: &'static str,
         position: u8,
-    ) -> Result<f32, CommandParseFailure> {
+    ) -> Result<f64, CommandParseFailure> {
         let str = self.get_next_str(arg_name, position)?;
         str.parse().map_err(|parse| FloatParseError {
             arg_name: "amount",
@@ -49,7 +49,7 @@ impl CommandParseIterExt for Split<'_, char> {
         self.get_next_str("user_id", position).map(str::to_string)
     }
 
-    fn amount(&mut self, position: u8) -> Result<f32, CommandParseFailure> {
+    fn amount(&mut self, position: u8) -> Result<f64, CommandParseFailure> {
         self.get_next_float("amount", position)
     }
 

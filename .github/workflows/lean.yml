@@ -1,0 +1,76 @@
+on:
+  push:
+    branches: [ "main" ]
+  pull_request: { }
+  workflow_dispatch: { }
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+name: Lean CI
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      lean: ${{ steps.filter.outputs.lean }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            lean:
+              - 'lean/**'
+              - 'protos/**'
+  test:
+    name: Tests
+    needs: changes
+    if: ${{ needs.changes.outputs.lean == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lean
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: daytrader
+          POSTGRES_USER: daytrader
+          POSTGRES_DB: daytrader
+        ports:
+            - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt,clippy
+      - name: install sqlx cli
+        run: cargo install sqlx-cli
+      - name: migrate database
+        run: sqlx migrate run
+        env:
+          DATABASE_URL: postgres://daytrader:daytrader@localhost:5432
+      - run: cargo fmt --all -- --check
+        name: Run cargo fmt
+      - run: cargo build
+        name: Build
+      - run: cargo clippy -- -D warnings
+        name: Run clippy
+      - run: cargo test
+        env:
+          DATABASE_URL: postgres://daytrader:daytrader@localhost:5432
+        name: Run tests

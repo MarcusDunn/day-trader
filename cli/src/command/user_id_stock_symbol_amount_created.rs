@@ -12,7 +12,7 @@ use tonic::{IntoRequest, Request};
 pub struct LoadTestUserIdStockSymbolAmountCommand {
     pub user_id: String,
     pub stock_symbol: String,
-    pub amount: f32,
+    pub amount: f64,
 }
 
 impl IntoRequest<BuyRequest> for LoadTestUserIdStockSymbolAmountCommand {
