@@ -46,6 +46,8 @@ jobs:
           toolchain: stable
           override: true
           components: rustfmt, clippy
+      - name: debug pwd
+        run: pwd
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
         with:
