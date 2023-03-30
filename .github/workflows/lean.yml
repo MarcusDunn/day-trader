@@ -63,5 +63,5 @@ jobs:
         name: Run clippy
       - run: cargo test
         env:
-          DATABASE_URL: postgres://daytrader:daytrader@localhost:5432
+          DATABASE_URL: postgres://daytrader:daytrader@postgres:5432
         name: Run tests
