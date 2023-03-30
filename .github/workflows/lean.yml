@@ -42,9 +42,7 @@ jobs:
       - name: Check
         uses: dtolnay/rust-toolchain@stable
         with:
-          components:
-            - rustfmt
-            - clippy
+          components: rustfmt,clippy
       - run: cargo fmt --all -- --check
         name: Run cargo fmt
       - run: cargo build
