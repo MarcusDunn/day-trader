@@ -369,8 +369,7 @@ impl CachedQuote {
         user_id: &str,
         stock_symbol: &str,
     ) -> Result<f64, Status> {
-        self
-            .cache
+        self.cache
             .optionally_get_with(
                 stock_symbol.to_string(),
                 self.quote_server_quote(
