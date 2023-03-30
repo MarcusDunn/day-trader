@@ -26,7 +26,7 @@ impl TryFrom<Split<'_, char>> for LoadTestAdd {
     fn try_from(mut value: Split<char>) -> Result<Self, Self::Error> {
         let command = LoadTestAdd {
             user_id: value.user_id(0)?,
-            amount: value.amount(1)?.into(),
+            amount: value.amount(1)?,
         };
         value.require_finished(2).map(|_| command)
     }

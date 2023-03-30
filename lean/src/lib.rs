@@ -369,7 +369,7 @@ impl CachedQuote {
         user_id: &str,
         stock_symbol: &str,
     ) -> Result<f64, Status> {
-        let result = self
+        self
             .cache
             .optionally_get_with(
                 stock_symbol.to_string(),
@@ -384,9 +384,7 @@ impl CachedQuote {
                 error!("failed to get quote");
                 anyhow!("failed to get quote")
             })
-            .map_err(|err| Status::internal(format!("failed to get quote: {err}")));
-
-        result
+            .map_err(|err| Status::internal(format!("failed to get quote: {err}")))
     }
 
     #[tracing::instrument(skip_all)]

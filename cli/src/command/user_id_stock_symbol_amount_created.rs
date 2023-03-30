@@ -82,7 +82,7 @@ impl TryFrom<Split<'_, char>> for LoadTestUserIdStockSymbolAmountCommand {
         let command = Self {
             user_id: value.user_id(0)?,
             stock_symbol: value.stock_symbol(1)?,
-            amount: value.amount(2)?.into(),
+            amount: value.amount(2)?,
         };
         value.require_finished(3).map(|_| command)
     }

@@ -25,7 +25,9 @@ use tokio::io::AsyncWriteExt;
 </xsd:choice>
 </xsd:complexType>
 */
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[allow(clippy::enum_variant_names)] // we need this to match the xsd
 enum LogType {
     UserCommandType(UserCommandType),
     QuoteServerType(QuoteServerType),

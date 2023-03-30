@@ -11,7 +11,7 @@ use tonic::transport::{Channel, Server};
 use tower_http::request_id::MakeRequestUuid;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse};
 use tower_http::LatencyUnit;
-use tracing::info;
+use tracing::{info, warn};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -23,7 +23,9 @@ use lean::DayTraderImpl;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv().map_err(|e| anyhow!("failed to load dotenv: {e}"))?;
+    if let Err(err) = dotenvy::dotenv() {
+        warn!("failed to load dotenv: {err}")
+    }
 
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
