@@ -39,7 +39,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: daytrader
           POSTGRES_USER: daytrader
-          POSTGRES_DB: postgres
+          POSTGRES_DB: daytrader
         ports:
             - 5432:5432
         options: >-
