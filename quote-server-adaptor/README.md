@@ -39,3 +39,7 @@ The server expects port
       of multiple connections to the kernel. This could be looked into. Alternatives include simply starting more
       adaptors and putting a load balancer in front of them which would simplify the server but make infrastructure more
       complex.
+
+```bash
+RUST_LOG=quote_server_adaptor=info QUOTE_SERVER_URI=FAKE cargo run --release
+```

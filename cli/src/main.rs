@@ -1,3 +1,5 @@
+use std::collections::hash_map::Entry;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use clap::Parser;
 use proptest::prelude::{any_with, TestCaseError};
 use proptest::strategy::SBoxedStrategy;
@@ -6,7 +8,7 @@ use std::fs::{metadata, File};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
-use tokio::task::JoinSet;
+use tokio::task::{JoinError, JoinSet};
 use tonic::transport::{Channel, Uri};
 use tracing::{debug, error, info};
 use tracing_subscriber::EnvFilter;
@@ -28,7 +30,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let commands = command_list_from_cli_command(&args.command)?;
 
-    let channel = Channel::builder(Uri::try_from(args.services_uri)?)
+    let channel = Channel::builder(Uri::try_from(args.services_uri.clone())?)
         .connect()
         .await?;
 
@@ -66,7 +68,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     oneshot_recv.blocking_recv().expect("failed to revc")
                 })
             })
-            .await??;
+                .await??;
         }
         CommandList::List(commands, mode) => match mode {
             Mode::Sequential | Mode::Slow => {
@@ -81,7 +83,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                 .read_line(&mut input)
                                 .expect("failed to read line");
                         })
-                        .await?
+                            .await?
                     }
                     info!("Executing {command:?}");
                     match command.execute(&mut stack).await {
@@ -106,7 +108,6 @@ async fn main() -> Result<(), anyhow::Error> {
 
 #[derive(clap::Parser, Debug, PartialEq)]
 #[command(author, version, about, long_about = None)]
-
 struct CliArgs {
     /// The uri of the gRPC services.
     #[arg(default_value_t = String::from("http://localhost:80"))]
@@ -182,13 +183,17 @@ struct FuzzMany {
     pub commands: Vec<LoadTestCommandType>,
 }
 
-async fn join_all(mut join_set: JoinSet<()>) -> Result<(), anyhow::Error> {
+async fn join_all(mut join_set: JoinSet<usize>) -> Result<(), anyhow::Error> {
     let start = SystemTime::now();
     let mut count = 0;
     while let Some(result) = join_set.join_next().await {
-        count += 1;
-        if let Err(err) = result {
-            error!("Error joining task: {err}");
+        match result {
+            Ok(cnt) => {
+                count += cnt
+            }
+            Err(err) => {
+                error!("Error joining task: {err}");
+            }
         }
     }
     let elapsed_millis = start.elapsed()?.as_millis();
@@ -206,16 +211,26 @@ async fn join_all(mut join_set: JoinSet<()>) -> Result<(), anyhow::Error> {
 fn spawn_commands(
     commands: Vec<LoadTestCommand>,
     stack: DayTraderServicesStack,
-) -> Result<JoinSet<()>, anyhow::Error> {
+) -> Result<JoinSet<usize>, anyhow::Error> {
     let len = commands.len();
     let start = SystemTime::now();
     let mut join_set = JoinSet::new();
-    for command in commands {
+    let commands_by_user = commands.into_iter().map(|it| (it.user(), it)).fold(BTreeMap::new(), |mut acc, (user, cmd)| {
+        acc.entry(user)
+            .or_insert_with(Vec::new)
+            .push(cmd);
+        acc
+    });
+    for (_, cmds) in commands_by_user {
         let mut stack = stack.clone();
+        let cmds_len = cmds.len();
         join_set.spawn(async move {
-            if let Err(err) = command.execute(&mut stack).await {
-                error!("Error executing command: {err}");
+            for cmd in cmds {
+                if let Err(err) = cmd.execute(&mut stack).await {
+                    error!("Error executing command: {err}");
+                }
             }
+            cmds_len
         });
     }
     let elapsed_millis = start.elapsed()?.as_millis();

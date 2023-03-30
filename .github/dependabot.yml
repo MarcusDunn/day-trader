@@ -12,3 +12,7 @@ updates:
     directory: "cli"
     schedule:
       interval: "daily"
+  - package-ecosystem: "cargo"
+    directory: "lean"
+    schedule:
+      interval: "daily"

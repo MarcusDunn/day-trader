@@ -1,0 +1,65 @@
+on:
+  push:
+    branches: ["main"]
+  pull_request: {}
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+name: Lean CI
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      lean: ${{ steps.filter.outputs.lean }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            lean:
+              - 'lean/**'
+              - 'protos/**'
+  test:
+    name: Tests
+    needs: changes
+    if: ${{ needs.changes.outputs.lean == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+      - name: Run cargo fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --manifest-path lean/Cargo.toml --all -- --check
+      - name: build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --manifest-path lean/Cargo.toml
+      - name: Run clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --manifest-path lean/Cargo.toml -- -D warnings
+      - name: Run test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --manifest-path lean/Cargo.toml

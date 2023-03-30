@@ -12,7 +12,7 @@ use tonic::{IntoRequest, Request};
 pub struct LoadTestUserIdStockSymbolAmountCommand {
     pub user_id: String,
     pub stock_symbol: String,
-    pub amount: f32,
+    pub amount: f64,
 }
 
 impl IntoRequest<BuyRequest> for LoadTestUserIdStockSymbolAmountCommand {
@@ -82,7 +82,7 @@ impl TryFrom<Split<'_, char>> for LoadTestUserIdStockSymbolAmountCommand {
         let command = Self {
             user_id: value.user_id(0)?,
             stock_symbol: value.stock_symbol(1)?,
-            amount: value.amount(2)?,
+            amount: value.amount(2)?.into(),
         };
         value.require_finished(3).map(|_| command)
     }

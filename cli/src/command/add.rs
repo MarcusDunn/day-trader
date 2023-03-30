@@ -8,7 +8,7 @@ use tonic::{IntoRequest, Request};
 #[derive(PartialEq, Debug, clap::Args, Clone, Arbitrary)]
 pub struct LoadTestAdd {
     pub user_id: String,
-    pub amount: f32,
+    pub amount: f64,
 }
 
 impl IntoRequest<AddRequest> for LoadTestAdd {
@@ -26,7 +26,7 @@ impl TryFrom<Split<'_, char>> for LoadTestAdd {
     fn try_from(mut value: Split<char>) -> Result<Self, Self::Error> {
         let command = LoadTestAdd {
             user_id: value.user_id(0)?,
-            amount: value.amount(1)?,
+            amount: value.amount(1)?.into(),
         };
         value.require_finished(2).map(|_| command)
     }
