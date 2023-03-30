@@ -58,6 +58,12 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt,clippy
+      - name: install sqlx cli
+        run: cargo install sqlx-cli
+      - name: migrate database
+        run: sqlx migrate run
+        env:
+          DATABASE_URL: postgres://daytrader:daytrader@localhost:5432
       - run: cargo fmt --all -- --check
         name: Run cargo fmt
       - run: cargo build
