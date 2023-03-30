@@ -20,7 +20,7 @@ use tokio::sync::oneshot::Sender;
 use tokio::sync::{mpsc, oneshot};
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
-use tower_http::trace::{DefaultOnRequest, DefaultOnResponse, OnResponse};
+use tower_http::trace::{DefaultOnRequest, DefaultOnResponse};
 use tower_http::LatencyUnit;
 use tracing::{info, instrument};
 use tracing_subscriber::layer::SubscriberExt;
