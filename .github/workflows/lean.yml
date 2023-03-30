@@ -48,21 +48,15 @@ jobs:
           components: rustfmt, clippy
       - name: debug pwd
         run: pwd
-      - name: Run cargo fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-      - name: build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-      - name: Run clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -- -D warnings
-      - name: Run test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+      - name: Format
+        uses: dtolnay/rust-toolchain@stable
+        run: cargo fmt --all -- --check
+      - name: Build
+        uses: dtolnay/rust-toolchain@stable
+        run: build
+      - name: Lint
+        uses: dtolnay/rust-toolchain@stable
+        run: cargo clippy -- -D warnings
+      - name: Test
+        uses: dtolnay/rust-toolchain@stable
+        run: cargo test
