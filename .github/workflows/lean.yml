@@ -39,8 +39,12 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install stable toolchain
+      - name: Check
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components:
+            - rustfmt
+            - clippy
         run: |
           cargo fmt --all -- --check
           cargo build
