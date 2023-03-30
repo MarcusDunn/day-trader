@@ -1,5 +1,29 @@
 {
   "db": "PostgreSQL",
+  "07555ebb3fa9eed9665e3fa762fd5cdd4fc351c06a76695b561dad49129aa3f3": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "balance",
+          "ordinal": 1,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM trader WHERE user_id = 'marcus'"
+  },
   "0b5d046f13b15fb90bcdcf53ef2f3b00e2261f74a42c0ef9c2bd845e9fefc15f": {
     "describe": {
       "columns": [],
@@ -14,6 +38,57 @@
     },
     "query": "\n    UPDATE stock SET amount = amount - $1\n    WHERE \n        owner_id = $2 AND\n        stock_symbol = $3 AND\n        amount >= $1\n    "
   },
+  "17ee937be03861dd0feb1ac428c088fbe9c5cda8a68b3c0cf5adf67d3d99e0ca": {
+    "describe": {
+      "columns": [
+        {
+          "name": "amount",
+          "ordinal": 0,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT amount FROM stock WHERE owner_id = $1 AND stock_symbol = $2"
+  },
+  "1ae5372f5cbe822b36b7b869c28d67fcb74e9bcd204a1c9395a15e92a7972a05": {
+    "describe": {
+      "columns": [
+        {
+          "name": "owner_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock_symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "amount",
+          "ordinal": 2,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM stock WHERE owner_id = 'marcus' AND stock_symbol = 'AAPL'"
+  },
   "1f441590542da84b8d7f0936f0a4253a04434425554a7e08252b48ba9f1054a9": {
     "describe": {
       "columns": [],
@@ -27,6 +102,132 @@
       }
     },
     "query": "UPDATE stock SET amount = amount - $1 WHERE owner_id = $2 AND stock_symbol = $3 AND amount >= $1"
+  },
+  "2efdd49fa65e8e8ba991b033ccb0890e49c3ff62ae15c212f50444fd6faab643": {
+    "describe": {
+      "columns": [
+        {
+          "name": "timestamp",
+          "ordinal": 0,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "server",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "transaction_num",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "username",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "log",
+          "ordinal": 4,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT timestamp, server, transaction_num, username, log FROM log_entry"
+  },
+  "370eedbac5cc7d9c48bacb227b684e1f1fe627bf39dcf064c650075873e758f7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock_symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "quoted_price",
+          "ordinal": 2,
+          "type_info": "Float8"
+        },
+        {
+          "name": "amount_dollars",
+          "ordinal": 3,
+          "type_info": "Float8"
+        },
+        {
+          "name": "time_created",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM queued_sell WHERE user_id = 'marcus'"
+  },
+  "37ec927310310f75e2bf4d9309d55b0f853fe5e89b9afb630259a7d53519ca07": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock_symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "quoted_price",
+          "ordinal": 2,
+          "type_info": "Float8"
+        },
+        {
+          "name": "amount_dollars",
+          "ordinal": 3,
+          "type_info": "Float8"
+        },
+        {
+          "name": "time_created",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM queued_buy WHERE user_id = 'marcus'"
   },
   "3eb5f90d0397982e5bb58b7bb53116a855c2e8090aeef40ed17af107950adf40": {
     "describe": {
@@ -126,6 +327,18 @@
     },
     "query": "UPDATE trader SET balance = balance - $1 WHERE user_id = $2 AND balance >= $1"
   },
+  "508444ae9933be68a920c5286ca2106347888332c7b462c7978238b5abed719c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "UPDATE queued_sell SET time_created = now() - interval '5 minutes' WHERE user_id = $1"
+  },
   "592b2cf584e4e3433508fc4375666734f596e747341513c090252fecc21ef27d": {
     "describe": {
       "columns": [],
@@ -141,6 +354,69 @@
       }
     },
     "query": "\n    INSERT INTO log_entry (timestamp, server, transaction_num, username, log) \n    SELECT * FROM UNNEST ($1::timestamp[],$2::text[],$3::int[],$4::text[],$5::jsonb[])\n    "
+  },
+  "5db52dc9ca18fd9006022aa8b8d092014c0ccae7c5b424c9e4136e788b24b467": {
+    "describe": {
+      "columns": [
+        {
+          "name": "balance",
+          "ordinal": 0,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT balance FROM trader WHERE user_id = 'marcus'"
+  },
+  "604018ed6db0eaae20d84782354871ca3d48c715dc8129149723fa965a33c68d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock_symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "quoted_price",
+          "ordinal": 2,
+          "type_info": "Float8"
+        },
+        {
+          "name": "amount_dollars",
+          "ordinal": 3,
+          "type_info": "Float8"
+        },
+        {
+          "name": "time_created",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "\n            SELECT * FROM queued_sell\n            WHERE user_id = $1 AND stock_symbol = $2\n            "
   },
   "614119b1e86a7ed3a6eb4befbd250fa2e582869bcfafb72285b0ff427ce9dd34": {
     "describe": {
@@ -207,6 +483,36 @@
     },
     "query": "INSERT INTO stock (owner_id, stock_symbol, amount) VALUES ($1, $2, $3) ON CONFLICT (owner_id, stock_symbol) DO UPDATE SET amount = stock.amount + $3"
   },
+  "6a38bd73f2d06fbbd3869d0c9d82864816e41210583ceacbad6af4e92d5865f9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "owner_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock_symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "amount",
+          "ordinal": 2,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM stock WHERE owner_id = 'marcus'"
+  },
   "708bc80d9b3ee8d7e660954e7cd6dd6edaa4aac1c46b5c9b2b64800a49895480": {
     "describe": {
       "columns": [
@@ -246,6 +552,16 @@
       }
     },
     "query": "UPDATE sell_trigger SET trigger_price = $1 WHERE owner_id = $2 AND stock_symbol = $3"
+  },
+  "712ab6b9397a831489c2f91a790fb8bd70314a8c6fbd21a9139c45b1bac873d9": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "UPDATE queued_buy SET time_created = time_created - interval '6 minutes' WHERE user_id = 'marcus'"
   },
   "71c63ae06c7e2ac29c5fb821279a9fbb14c646f71408d7cd95b3822daa0a8ac3": {
     "describe": {
@@ -303,6 +619,32 @@
     },
     "query": "INSERT INTO buy_trigger (owner_id, stock_symbol, amount_dollars) VALUES ($1, $2, $3)"
   },
+  "772061fb4e6bb019303f5839ab646aa7f60fd40fa7df89c84453119da2781fc9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "balance",
+          "ordinal": 1,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT * FROM trader WHERE user_id = $1"
+  },
   "85c000be4a0b063731d85dc47cd77f0ebda937ac6ff9d5ca8485f9446cbcc682": {
     "describe": {
       "columns": [
@@ -328,6 +670,42 @@
       }
     },
     "query": "\n                        DELETE FROM buy_trigger\n                        WHERE trigger_price >= $1 RETURNING owner_id, amount_dollars\n                        "
+  },
+  "87b9ae129b4c877685899a0e1ec8a2cad6e489bb552cbaf627119bd864b559e0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock_symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "quoted_price",
+          "ordinal": 2,
+          "type_info": "Float8"
+        },
+        {
+          "name": "amount_dollars",
+          "ordinal": 3,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT user_id, stock_symbol, quoted_price, amount_dollars FROM queued_buy WHERE user_id = 'marcus'"
   },
   "89a57d157606bce9674a48092115a9ba055aa8caff90cff417a2ec7bbce01a22": {
     "describe": {
@@ -402,6 +780,45 @@
     },
     "query": "UPDATE trader SET balance = balance + $1 WHERE user_id = $2"
   },
+  "aa22559b84ccdc4aa571e55fbc51cdff1573301eb65fb1d5e3b0a561238e9706": {
+    "describe": {
+      "columns": [
+        {
+          "name": "owner_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock_symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "amount_stock",
+          "ordinal": 2,
+          "type_info": "Float8"
+        },
+        {
+          "name": "trigger_price",
+          "ordinal": 3,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT * FROM sell_trigger WHERE owner_id = $1 AND stock_symbol = $2"
+  },
   "b01118474a60d5212c0986dc18b6b7060adcf8d5c94a4883fd6cecca33809ca1": {
     "describe": {
       "columns": [
@@ -421,6 +838,78 @@
       }
     },
     "query": "DELETE FROM queued_buy WHERE user_id = $1 RETURNING amount_dollars"
+  },
+  "b769dad288cda61eb5207d93f2343d5f461a41a4199b976d474b79a69c71b4b5": {
+    "describe": {
+      "columns": [
+        {
+          "name": "owner_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock_symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "amount",
+          "ordinal": 2,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT * FROM stock WHERE owner_id = $1 AND stock_symbol = $2"
+  },
+  "c558c32fa737999143150a56e363712d501f8be5a69fbc729688a787ec0896ad": {
+    "describe": {
+      "columns": [
+        {
+          "name": "owner_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock_symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "amount_dollars",
+          "ordinal": 2,
+          "type_info": "Float8"
+        },
+        {
+          "name": "trigger_price",
+          "ordinal": 3,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT * FROM buy_trigger WHERE owner_id = $1 AND stock_symbol = $2"
   },
   "cb96b90995ac76ea0a68ff99c71866804ab99775b4424fd70dc61d26db2d7f9c": {
     "describe": {
@@ -502,6 +991,26 @@
     },
     "query": "SELECT * FROM log_entry ORDER BY timestamp ASC"
   },
+  "d04627255755f5151a83750b65c8bed9b5ba64d692e3d82764a4075140b54fed": {
+    "describe": {
+      "columns": [
+        {
+          "name": "balance",
+          "ordinal": 0,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT balance FROM trader WHERE user_id = $1"
+  },
   "e060004a9682688fd2c9c362e7d4291b42d5e24224792000635bc05aca0d4994": {
     "describe": {
       "columns": [],
@@ -544,6 +1053,50 @@
     },
     "query": "UPDATE buy_trigger SET trigger_price = $3 WHERE owner_id = $1 AND stock_symbol = $2"
   },
+  "ee894f6bcbaec2861930648b1697ee353f07783f61aa2d7e1c5ff4c76d9fc04b": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock_symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "quoted_price",
+          "ordinal": 2,
+          "type_info": "Float8"
+        },
+        {
+          "name": "amount_dollars",
+          "ordinal": 3,
+          "type_info": "Float8"
+        },
+        {
+          "name": "time_created",
+          "ordinal": 4,
+          "type_info": "Timestamp"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT * FROM queued_sell WHERE user_id = $1"
+  },
   "f45afc55b6686ff912cda716d606311cb880ca17d1de59046bbda34b1e7873ba": {
     "describe": {
       "columns": [],
@@ -558,5 +1111,51 @@
       }
     },
     "query": "INSERT INTO queued_buy (user_id, stock_symbol, quoted_price, amount_dollars)VALUES ($1, $2, $3, $4)"
+  },
+  "f700e58f011fe7265424f58080ab5d4fe33e13d5f7b260f0552d9f6eff59552d": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "UPDATE queued_buy SET time_created = now() - interval '6 minutes' WHERE user_id = 'marcus'"
+  },
+  "fee8016c8fbad3da5ebf5463b9daf8cf64fb9ed540c25cad8a6c20ee3a293b49": {
+    "describe": {
+      "columns": [
+        {
+          "name": "owner_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock_symbol",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "amount_dollars",
+          "ordinal": 2,
+          "type_info": "Float8"
+        },
+        {
+          "name": "trigger_price",
+          "ordinal": 3,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM buy_trigger WHERE owner_id = 'marcus' AND stock_symbol = 'APPL'"
   }
 }
