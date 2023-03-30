@@ -1,24 +1,15 @@
 use opentelemetry::runtime::Tokio;
-use opentelemetry::sdk::propagation::TraceContextPropagator;
-use opentelemetry::sdk::{trace, Resource};
+use opentelemetry::sdk::{Resource};
 use opentelemetry::{global, KeyValue};
 use quote_server_adaptor::fake::FakeQuoteServer;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
-use quote_server_adaptor::tower_otel::OtelLayer;
 
-use quote_server_adaptor::{
-    QuoteRequest, QuoteResponse,
-};
-use std::collections::btree_map::Entry;
-use std::collections::BTreeMap;
+use opentelemetry::sdk::trace::{Config};
+use quote_server_adaptor::{QuoteRequest, QuoteResponse};
 use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
-use std::sync::Arc;
-use std::time::Duration;
-use hyper::body::Body;
-use opentelemetry::sdk::trace::{Config, Span};
 use tokio::io::{AsyncBufRead, AsyncWriteExt};
 use tokio::io::{AsyncBufReadExt, AsyncWrite};
 use tokio::io::{AsyncRead, BufReader};
@@ -27,10 +18,10 @@ use tokio::select;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::oneshot::Sender;
 use tokio::sync::{mpsc, oneshot};
-use tonic::transport::{Server};
+use tonic::transport::Server;
 use tonic::{Request, Response, Status};
-use tower_http::LatencyUnit;
 use tower_http::trace::{DefaultOnRequest, DefaultOnResponse, OnResponse};
+use tower_http::LatencyUnit;
 use tracing::{info, instrument};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -41,18 +32,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(opentelemetry_otlp::new_exporter().tonic())
-        .with_trace_config(Config::default().with_resource(Resource::new(vec![
-            KeyValue::new("service.name", "quote-server-adaptor"),
-        ])))
+        .with_trace_config(
+            Config::default().with_resource(Resource::new(vec![KeyValue::new(
+                "service.name",
+                "quote-server-adaptor",
+            )])),
+        )
         .install_batch(Tokio)?;
 
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::fmt::layer()
                 .with_ansi(true)
-                .with_filter(
-                    EnvFilter::from_default_env(),
-                ),
+                .with_filter(EnvFilter::from_default_env()),
         )
         .with(
             tracing_opentelemetry::layer()
@@ -81,9 +73,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .parse()?;
 
     let server = Server::builder()
-        .layer(tower_http::trace::TraceLayer::new_for_grpc()
-            .on_request(DefaultOnRequest::default().level(tracing::Level::INFO))
-            .on_response(DefaultOnResponse::default().level(tracing::Level::INFO).latency_unit(LatencyUnit::Micros))
+        .layer(
+            tower_http::trace::TraceLayer::new_for_grpc()
+                .on_request(DefaultOnRequest::default().level(tracing::Level::INFO))
+                .on_response(
+                    DefaultOnResponse::default()
+                        .level(tracing::Level::INFO)
+                        .latency_unit(LatencyUnit::Micros),
+                ),
         )
         .add_service(QuoteServer::new(Quoter {
             tcp_handler_send: tcp_handler_send.clone(),
@@ -181,9 +178,9 @@ async fn get_response<W, R>(
     reader: &mut R,
     message: String,
 ) -> Result<String, &'static str>
-    where
-        W: AsyncWrite + Unpin + Debug,
-        R: AsyncBufRead + Unpin + Debug,
+where
+    W: AsyncWrite + Unpin + Debug,
+    R: AsyncBufRead + Unpin + Debug,
 {
     if (writer.write_all(message.as_bytes()).await).is_err() {
         return Err("Failed to write to socket.");
@@ -314,12 +311,12 @@ mod tests {
         let response = Quoter {
             tcp_handler_send: send,
         }
-            .quote(Request::new(QuoteRequest {
-                user_id: "marcus".to_string(),
-                stock_symbol: "TSLA".to_string(),
-            }))
-            .await
-            .unwrap();
+        .quote(Request::new(QuoteRequest {
+            user_id: "marcus".to_string(),
+            stock_symbol: "TSLA".to_string(),
+        }))
+        .await
+        .unwrap();
 
         assert_eq!(
             QuoteResponse {

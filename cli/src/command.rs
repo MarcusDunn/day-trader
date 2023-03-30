@@ -7,7 +7,6 @@ use crate::command::user_id_stock_symbol_amount_created::LoadTestUserIdStockSymb
 use crate::services::DayTraderServicesStack;
 use crate::ParseLoadTestCommandError;
 use tonic::Status;
-use tonic::transport::Channel;
 use tracing::debug;
 
 pub mod add;
@@ -58,57 +57,57 @@ pub enum LoadTestCommand {
 impl LoadTestCommand {
     pub fn user(&self) -> Option<String> {
         match self {
-            LoadTestCommand::Add(LoadTestAdd { user_id, .. }) => {
+            LoadTestCommand::Add(LoadTestAdd { user_id, .. }) => Some(user_id.clone()),
+            LoadTestCommand::Quote(LoadTestUserIdStockSymbolCommand { user_id, .. }) => {
                 Some(user_id.clone())
             }
-            LoadTestCommand::Quote(LoadTestUserIdStockSymbolCommand{ user_id, .. }) => {
+            LoadTestCommand::Buy(LoadTestUserIdStockSymbolAmountCommand { user_id, .. }) => {
                 Some(user_id.clone())
             }
-            LoadTestCommand::Buy(LoadTestUserIdStockSymbolAmountCommand{ user_id, .. }) => {
+            LoadTestCommand::CommitBuy(LoadTestUserIdCommand { user_id, .. }) => {
                 Some(user_id.clone())
             }
-            LoadTestCommand::CommitBuy(LoadTestUserIdCommand{ user_id, .. }) => {
+            LoadTestCommand::CancelBuy(LoadTestUserIdCommand { user_id, .. }) => {
                 Some(user_id.clone())
             }
-            LoadTestCommand::CancelBuy(LoadTestUserIdCommand{ user_id, .. }) => {
+            LoadTestCommand::Sell(LoadTestUserIdStockSymbolAmountCommand { user_id, .. }) => {
                 Some(user_id.clone())
-            },
-            LoadTestCommand::Sell(LoadTestUserIdStockSymbolAmountCommand{ user_id, .. }) => {
+            }
+            LoadTestCommand::CommitSell(LoadTestUserIdCommand { user_id, .. }) => {
                 Some(user_id.clone())
-            },
-            LoadTestCommand::CommitSell(LoadTestUserIdCommand{ user_id, .. }) => {
+            }
+            LoadTestCommand::CancelSell(LoadTestUserIdCommand { user_id, .. }) => {
                 Some(user_id.clone())
-            },
-            LoadTestCommand::CancelSell(LoadTestUserIdCommand{ user_id, .. }) => {
+            }
+            LoadTestCommand::SetBuyAmount(LoadTestUserIdStockSymbolAmountCommand {
+                user_id,
+                ..
+            }) => Some(user_id.clone()),
+            LoadTestCommand::CancelSetBuy(LoadTestUserIdStockSymbolCommand { user_id, .. }) => {
                 Some(user_id.clone())
-            },
-            LoadTestCommand::SetBuyAmount(LoadTestUserIdStockSymbolAmountCommand{ user_id, .. }) => {
+            }
+            LoadTestCommand::SetBuyTrigger(LoadTestUserIdStockSymbolAmountCommand {
+                user_id,
+                ..
+            }) => Some(user_id.clone()),
+            LoadTestCommand::SetSellAmount(LoadTestUserIdStockSymbolAmountCommand {
+                user_id,
+                ..
+            }) => Some(user_id.clone()),
+            LoadTestCommand::SetSellTrigger(LoadTestUserIdStockSymbolAmountCommand {
+                user_id,
+                ..
+            }) => Some(user_id.clone()),
+            LoadTestCommand::CancelSetSell(LoadTestUserIdStockSymbolCommand {
+                user_id, ..
+            }) => Some(user_id.clone()),
+            LoadTestCommand::DisplaySummary(LoadTestUserIdCommand { user_id, .. }) => {
                 Some(user_id.clone())
-            },
-            LoadTestCommand::CancelSetBuy(LoadTestUserIdStockSymbolCommand{ user_id, .. }) => {
+            }
+            LoadTestCommand::DumpLogFileName(_) => None,
+            LoadTestCommand::DumpLogUser(LoadTestDumpLogUserIdFileName { user_id, .. }) => {
                 Some(user_id.clone())
-            },
-            LoadTestCommand::SetBuyTrigger(LoadTestUserIdStockSymbolAmountCommand{ user_id, .. }) => {
-                Some(user_id.clone())
-            },
-            LoadTestCommand::SetSellAmount(LoadTestUserIdStockSymbolAmountCommand{ user_id, .. }) => {
-                Some(user_id.clone())
-            },
-            LoadTestCommand::SetSellTrigger(LoadTestUserIdStockSymbolAmountCommand{ user_id, .. }) => {
-                Some(user_id.clone())
-            },
-            LoadTestCommand::CancelSetSell(LoadTestUserIdStockSymbolCommand{ user_id, .. }) => {
-                Some(user_id.clone())
-            },
-            LoadTestCommand::DisplaySummary(LoadTestUserIdCommand{ user_id, .. }) => {
-                Some(user_id.clone())
-            },
-            LoadTestCommand::DumpLogFileName(_) => {
-                None
-            },
-            LoadTestCommand::DumpLogUser(LoadTestDumpLogUserIdFileName{ user_id, .. }) => {
-                Some(user_id.clone())
-            },
+            }
         }
     }
 

@@ -1,7 +1,6 @@
-
+use crate::protos::day_trader_client::DayTraderClient;
 use crate::protos::quote_client::QuoteClient;
 use tonic::transport::Channel;
-use crate::protos::day_trader_client::DayTraderClient;
 
 #[derive(Clone)]
 pub struct DayTraderServicesStack {

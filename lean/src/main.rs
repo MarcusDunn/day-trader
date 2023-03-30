@@ -1,5 +1,3 @@
-use std::env;
-use std::time::Duration;
 use anyhow::anyhow;
 use opentelemetry::runtime::Tokio;
 use opentelemetry::sdk::trace::Config;
@@ -7,6 +5,8 @@ use opentelemetry::sdk::trace::Sampler::TraceIdRatioBased;
 use opentelemetry::sdk::Resource;
 use opentelemetry::KeyValue;
 use sqlx::postgres::PgPoolOptions;
+use std::env;
+use std::time::Duration;
 use tonic::transport::{Channel, Server};
 use tower_http::request_id::MakeRequestUuid;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse};

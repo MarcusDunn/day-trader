@@ -1,14 +1,13 @@
-use std::collections::hash_map::Entry;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
 use clap::Parser;
 use proptest::prelude::{any_with, TestCaseError};
 use proptest::strategy::SBoxedStrategy;
 use proptest::test_runner::{Config, TestCaseResult, TestRunner};
+use std::collections::{BTreeMap};
 use std::fs::{metadata, File};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
-use tokio::task::{JoinError, JoinSet};
+use tokio::task::{JoinSet};
 use tonic::transport::{Channel, Uri};
 use tracing::{debug, error, info};
 use tracing_subscriber::EnvFilter;
@@ -68,7 +67,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     oneshot_recv.blocking_recv().expect("failed to revc")
                 })
             })
-                .await??;
+            .await??;
         }
         CommandList::List(commands, mode) => match mode {
             Mode::Sequential | Mode::Slow => {
@@ -83,7 +82,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                 .read_line(&mut input)
                                 .expect("failed to read line");
                         })
-                            .await?
+                        .await?
                     }
                     info!("Executing {command:?}");
                     match command.execute(&mut stack).await {
@@ -188,9 +187,7 @@ async fn join_all(mut join_set: JoinSet<usize>) -> Result<(), anyhow::Error> {
     let mut count = 0;
     while let Some(result) = join_set.join_next().await {
         match result {
-            Ok(cnt) => {
-                count += cnt
-            }
+            Ok(cnt) => count += cnt,
             Err(err) => {
                 error!("Error joining task: {err}");
             }
@@ -215,12 +212,13 @@ fn spawn_commands(
     let len = commands.len();
     let start = SystemTime::now();
     let mut join_set = JoinSet::new();
-    let commands_by_user = commands.into_iter().map(|it| (it.user(), it)).fold(BTreeMap::new(), |mut acc, (user, cmd)| {
-        acc.entry(user)
-            .or_insert_with(Vec::new)
-            .push(cmd);
-        acc
-    });
+    let commands_by_user = commands.into_iter().map(|it| (it.user(), it)).fold(
+        BTreeMap::new(),
+        |mut acc, (user, cmd)| {
+            acc.entry(user).or_insert_with(Vec::new).push(cmd);
+            acc
+        },
+    );
     for (_, cmds) in commands_by_user {
         let mut stack = stack.clone();
         let cmds_len = cmds.len();

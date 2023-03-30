@@ -1,7 +1,7 @@
-use std::time::Duration;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::types::time::{OffsetDateTime, PrimitiveDateTime};
 use sqlx::{PgPool, Postgres, Transaction};
+use std::time::Duration;
 
 #[derive(Debug, PartialEq)]
 pub struct QueuedBuyNoUserId {
