@@ -1,8 +1,8 @@
 on:
   push:
-    branches: ["main"]
-  pull_request: {}
-  workflow_dispatch: {}
+    branches: [ "main" ]
+  pull_request: { }
+  workflow_dispatch: { }
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -30,6 +30,9 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.lean == 'true' }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./lean
     steps:
       - uses: actions/checkout@v3
       - name: Install Protoc
@@ -47,19 +50,17 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --manifest-path lean/Cargo.toml --all -- --check
+          args: --all -- --check
       - name: build
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --manifest-path lean/Cargo.toml
       - name: Run clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --manifest-path lean/Cargo.toml -- -D warnings
+          args: -- -D warnings
       - name: Run test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --manifest-path lean/Cargo.toml

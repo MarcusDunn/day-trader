@@ -30,6 +30,9 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.quoteserveradaptor == 'true' }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./quote-server-adaptor
     steps:
       - uses: actions/checkout@v3
       - name: Install Protoc
@@ -47,19 +50,17 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --manifest-path quote-server-adaptor/Cargo.toml --all -- --check
+          args: --all -- --check
       - name: build
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --manifest-path quote-server-adaptor/Cargo.toml
       - name: Run clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --manifest-path quote-server-adaptor/Cargo.toml -- -D warnings
+          args: -- -D warnings
       - name: Run test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --manifest-path quote-server-adaptor/Cargo.toml

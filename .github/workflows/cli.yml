@@ -30,6 +30,9 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.cli == 'true' }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./cli
     steps:
       - uses: actions/checkout@v3
       - name: Install Protoc
@@ -47,19 +50,17 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --manifest-path cli/Cargo.toml --all -- --check
+          args: --all -- --check
       - name: Build
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --manifest-path cli/Cargo.toml
       - name: Run clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --manifest-path cli/Cargo.toml -- -D warnings
+          args: -- -D warnings
       - name: Run test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --manifest-path cli/Cargo.toml

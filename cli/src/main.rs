@@ -367,7 +367,7 @@ mod tests {
 
     #[test]
     fn check_can_parse_users_10() {
-        let path = PathBuf::from("workloads/10-user-workload");
+        let path = PathBuf::from("workloads/user10.txt");
         let result = parse_commands_from_file(&path).unwrap();
         assert_eq!(result.len(), 10000);
     }
