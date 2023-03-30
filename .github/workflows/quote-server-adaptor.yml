@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./quote-server-adaptor
+        working-directory: quote-server-adaptor
     steps:
       - uses: actions/checkout@v3
       - name: Install Protoc

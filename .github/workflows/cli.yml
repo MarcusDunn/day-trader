@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./cli
+        working-directory: cli
     steps:
       - uses: actions/checkout@v3
       - name: Install Protoc
