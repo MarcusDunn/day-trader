@@ -30,7 +30,7 @@ impl TryFrom<(i32, Split<'_, char>)> for LoadTestAdd {
         let command = LoadTestAdd {
             user_id: value.user_id(0)?,
             amount: value.amount(1)?,
-            request_num
+            request_num,
         };
         value.require_finished(2).map(|_| command)
     }

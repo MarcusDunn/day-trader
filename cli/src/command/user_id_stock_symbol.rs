@@ -49,7 +49,7 @@ impl TryFrom<(i32, Split<'_, char>)> for LoadTestUserIdStockSymbolCommand {
         let command = Self {
             user_id: value.user_id(0)?,
             stock_symbol: value.stock_symbol(1)?,
-            request_num
+            request_num,
         };
         value.require_finished(2).map(|_| command)
     }

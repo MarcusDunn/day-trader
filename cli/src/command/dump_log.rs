@@ -20,7 +20,10 @@ impl TryFrom<(i32, Split<'_, char>)> for DumpLog {
             .get_next_str("user_id or filename (ambiguous)", 0)?
             .to_string();
         match value.next() {
-            None => Ok(DumpLog::NoUser(LoadTestDumpLogFileName { file_name: arg1, request_num })),
+            None => Ok(DumpLog::NoUser(LoadTestDumpLogFileName {
+                file_name: arg1,
+                request_num,
+            })),
             Some(filename) => {
                 let command = DumpLog::User(LoadTestDumpLogUserIdFileName {
                     user_id: arg1,

@@ -56,7 +56,14 @@ pub struct DayTraderImpl {
 
 impl DayTraderImpl {
     #[tracing::instrument(skip_all)]
-    async fn log_cancel_set_sell_request(&self, CancelSetSellRequest { user_id, stock_symbol, request_num }: CancelSetSellRequest) {
+    async fn log_cancel_set_sell_request(
+        &self,
+        CancelSetSellRequest {
+            user_id,
+            stock_symbol,
+            request_num,
+        }: CancelSetSellRequest,
+    ) {
         let log_entry = LogEntry::new(
             request_num,
             user_id,
@@ -77,7 +84,12 @@ impl DayTraderImpl {
     #[tracing::instrument(skip_all)]
     async fn log_set_sell_trigger_request(
         &self,
-        SetSellTriggerRequest { user_id, stock_symbol, amount, request_num }: SetSellTriggerRequest,
+        SetSellTriggerRequest {
+            user_id,
+            stock_symbol,
+            amount,
+            request_num,
+        }: SetSellTriggerRequest,
     ) {
         let log_entry = LogEntry::new(
             request_num,
@@ -99,7 +111,12 @@ impl DayTraderImpl {
     #[tracing::instrument(skip_all)]
     pub async fn log_set_sell_amount_request(
         &self,
-        SetSellAmountRequest { user_id, stock_symbol, amount, request_num }: SetSellAmountRequest,
+        SetSellAmountRequest {
+            user_id,
+            stock_symbol,
+            amount,
+            request_num,
+        }: SetSellAmountRequest,
     ) {
         let log_entry = LogEntry::new(
             request_num,
@@ -121,7 +138,12 @@ impl DayTraderImpl {
     #[tracing::instrument(skip_all)]
     async fn log_set_buy_trigger_request(
         &self,
-        SetBuyTriggerRequest { user_id, stock_symbol, amount, request_num }: SetBuyTriggerRequest
+        SetBuyTriggerRequest {
+            user_id,
+            stock_symbol,
+            amount,
+            request_num,
+        }: SetBuyTriggerRequest,
     ) {
         let log_entry = LogEntry::new(
             request_num,
@@ -141,7 +163,14 @@ impl DayTraderImpl {
 
 impl DayTraderImpl {
     #[tracing::instrument(skip_all)]
-    pub async fn log_cancel_set_buy_request(&self, CancelSetBuyRequest { user_id, stock_symbol, request_num }: CancelSetBuyRequest) {
+    pub async fn log_cancel_set_buy_request(
+        &self,
+        CancelSetBuyRequest {
+            user_id,
+            stock_symbol,
+            request_num,
+        }: CancelSetBuyRequest,
+    ) {
         let log_entry = LogEntry::new(
             request_num,
             user_id,
@@ -323,7 +352,7 @@ impl DayTraderImpl {
         }: CommitBuyRequest,
     ) {
         let log_entry = LogEntry::new(
-           request_num,
+            request_num,
             user_id,
             Log::UserCommand(UserCommandLog {
                 command: CommandType::CommitBuy,
@@ -423,7 +452,12 @@ impl CachedQuote {
         self.cache
             .optionally_get_with(
                 stock_symbol.clone(),
-                self.quote_server_quote(self.log_sender.clone(), request_num, user_id, stock_symbol),
+                self.quote_server_quote(
+                    self.log_sender.clone(),
+                    request_num,
+                    user_id,
+                    stock_symbol,
+                ),
             )
             .await
             .ok_or_else(|| {
@@ -457,8 +491,7 @@ impl CachedQuote {
                 let quote_response = quote_response.into_inner();
                 let quote = quote_response.quote;
 
-                Self::log_quote_server_hit(sender, request_num, quote_response)
-                    .await;
+                Self::log_quote_server_hit(sender, request_num, quote_response).await;
 
                 Some(quote)
             }
@@ -493,7 +526,13 @@ impl CachedQuote {
     async fn log_quote_server_hit(
         sender: Sender<LogEntry>,
         request_num: i32,
-        QuoteResponse { quote, sym, user_id, timestamp, crypto_key } : QuoteResponse,
+        QuoteResponse {
+            quote,
+            sym,
+            user_id,
+            timestamp,
+            crypto_key,
+        }: QuoteResponse,
     ) {
         let log_entry = LogEntry::new(
             request_num,
@@ -528,7 +567,14 @@ impl DayTraderImpl {
     }
 
     #[tracing::instrument(skip_all)]
-    async fn log_quote_request(&self, QuoteRequest { user_id, stock_symbol, request_num }: &QuoteRequest) {
+    async fn log_quote_request(
+        &self,
+        QuoteRequest {
+            user_id,
+            stock_symbol,
+            request_num,
+        }: &QuoteRequest,
+    ) {
         let log_entry = LogEntry::new(
             *request_num,
             user_id.clone(),
@@ -589,7 +635,9 @@ impl DayTrader for DayTraderImpl {
         let add_request = request.into_inner();
         let log = self.log_add_request(add_request.clone());
 
-        let AddRequest { user_id, amount, .. } = add_request;
+        let AddRequest {
+            user_id, amount, ..
+        } = add_request;
 
         let add = add::add(&self.postgres, &user_id, amount);
 
