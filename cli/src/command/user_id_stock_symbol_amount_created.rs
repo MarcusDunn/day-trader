@@ -13,6 +13,7 @@ pub struct LoadTestUserIdStockSymbolAmountCommand {
     pub user_id: String,
     pub stock_symbol: String,
     pub amount: f64,
+    pub request_num: i32,
 }
 
 impl IntoRequest<BuyRequest> for LoadTestUserIdStockSymbolAmountCommand {
@@ -21,6 +22,7 @@ impl IntoRequest<BuyRequest> for LoadTestUserIdStockSymbolAmountCommand {
             user_id: self.user_id,
             stock_symbol: self.stock_symbol,
             amount: self.amount,
+            request_num: self.request_num,
         })
     }
 }
@@ -31,6 +33,7 @@ impl IntoRequest<SetBuyAmountRequest> for LoadTestUserIdStockSymbolAmountCommand
             user_id: self.user_id,
             stock_symbol: self.stock_symbol,
             amount: self.amount,
+            request_num: self.request_num,
         })
     }
 }
@@ -41,6 +44,7 @@ impl IntoRequest<SellRequest> for LoadTestUserIdStockSymbolAmountCommand {
             user_id: self.user_id,
             stock_symbol: self.stock_symbol,
             amount: self.amount,
+            request_num: self.request_num,
         })
     }
 }
@@ -51,6 +55,7 @@ impl IntoRequest<SetSellAmountRequest> for LoadTestUserIdStockSymbolAmountComman
             user_id: self.user_id,
             stock_symbol: self.stock_symbol,
             amount: self.amount,
+            request_num: self.request_num,
         })
     }
 }
@@ -61,6 +66,7 @@ impl IntoRequest<SetSellTriggerRequest> for LoadTestUserIdStockSymbolAmountComma
             user_id: self.user_id,
             stock_symbol: self.stock_symbol,
             amount: self.amount,
+            request_num: self.request_num,
         })
     }
 }
@@ -71,18 +77,20 @@ impl IntoRequest<SetBuyTriggerRequest> for LoadTestUserIdStockSymbolAmountComman
             user_id: self.user_id,
             stock_symbol: self.stock_symbol,
             amount: self.amount,
+            request_num: self.request_num,
         })
     }
 }
 
-impl TryFrom<Split<'_, char>> for LoadTestUserIdStockSymbolAmountCommand {
+impl TryFrom<(i32, Split<'_, char>)> for LoadTestUserIdStockSymbolAmountCommand {
     type Error = CommandParseFailure;
 
-    fn try_from(mut value: Split<'_, char>) -> Result<Self, Self::Error> {
+    fn try_from((request_num, mut value): (i32, Split<'_, char>)) -> Result<Self, Self::Error> {
         let command = Self {
             user_id: value.user_id(0)?,
             stock_symbol: value.stock_symbol(1)?,
             amount: value.amount(2)?,
+            request_num,
         };
         value.require_finished(3).map(|_| command)
     }

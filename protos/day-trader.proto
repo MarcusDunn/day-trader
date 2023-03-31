@@ -34,7 +34,7 @@ service DayTrader {
   rpc SetSellTrigger(SetSellTriggerRequest) returns (SetSellTriggerResponse);
   // Cancels the SET_SELL associated with the given stock and user
   rpc CancelSetSell(CancelSetSellRequest) returns (CancelSetSellResponse);
-  //
+
   rpc Quote(QuoteRequest) returns (QuoteRequestSimple);
 }
 
@@ -42,6 +42,7 @@ message QuoteRequestSimple {
   double price = 1;
 }
 
+// actually hits the quote server.
 service Quote {
   // Get the current quote for the stock for the specified user
   rpc Quote(QuoteRequest) returns (QuoteResponse);
@@ -50,6 +51,7 @@ service Quote {
 message AddRequest {
   string user_id = 1;
   double amount = 2;
+  int32 request_num = 3;
 }
 
 message AddResponse {
@@ -58,6 +60,7 @@ message AddResponse {
 message QuoteRequest {
   string user_id = 1;
   string stock_symbol = 2;
+  int32 request_num = 3;
 }
 
 message QuoteResponse {
@@ -72,6 +75,7 @@ message BuyRequest {
   string user_id = 1;
   string stock_symbol = 2;
   double amount = 3;
+  int32 request_num = 4;
 }
 
 message BuyResponse {
@@ -79,6 +83,7 @@ message BuyResponse {
 
 message CommitBuyRequest{
   string user_id = 1;
+  int32 request_num = 2;
 }
 
 message CommitBuyResponse {
@@ -87,6 +92,7 @@ message CommitBuyResponse {
 
 message CancelBuyRequest {
   string user_id = 1;
+  int32 request_num = 2;
 }
 message CancelBuyResponse {
 }
@@ -95,18 +101,21 @@ message SellRequest {
   string user_id = 1;
   string stock_symbol = 2;
   double amount = 3;
+  int32 request_num = 4;
 }
 message SellResponse {
 }
 
 message CommitSellRequest {
   string user_id = 1;
+  int32 request_num = 2;
 }
 message  CommitSellResponse {
 
 }
 message CancelSellRequest {
   string user_id = 1;
+  int32 request_num = 2;
 }
 message  CancelSellResponse {
 }
@@ -155,6 +164,7 @@ message SetBuyAmountRequest {
   string user_id = 1;
   string stock_symbol = 2;
   double amount = 3;
+  int32 request_num = 4;
 }
 message SetBuyAmountResponse {
 
@@ -162,6 +172,7 @@ message SetBuyAmountResponse {
 message CancelSetBuyRequest {
   string user_id = 1;
   string stock_symbol = 2;
+  int32 request_num = 3;
 }
 message  CancelSetBuyResponse {
 }
@@ -169,6 +180,7 @@ message SetBuyTriggerRequest {
   string user_id = 1;
   string stock_symbol = 2;
   double amount = 3;
+  int32 request_num = 4;
 }
 message  SetBuyTriggerResponse {
 
@@ -177,6 +189,7 @@ message SetSellAmountRequest {
   string user_id = 1;
   string stock_symbol = 2;
   double amount = 3;
+  int32 request_num = 4;
 }
 message  SetSellAmountResponse {
 
@@ -185,6 +198,7 @@ message SetSellTriggerRequest {
   string user_id = 1;
   string stock_symbol = 2;
   double amount = 3;
+  int32 request_num = 4;
 }
 message SetSellTriggerResponse {
 
@@ -192,23 +206,27 @@ message SetSellTriggerResponse {
 message CancelSetSellRequest {
   string user_id = 1;
   string stock_symbol = 2;
+  int32 request_num = 3;
 }
 message  CancelSetSellResponse {}
 message DumpLogUserRequest  {
   string user_id = 1;
   string filename = 2;
+  int32 request_num = 3;
 }
 message  DumpLogUserResponse {
   string xml = 1;
 }
 message DumpLogRequest {
   string filename = 1;
+  int32 request_num = 2;
 }
 message DumpLogResponse {
   string xml = 1;
 }
 message DisplaySummaryRequest {
   string user_id = 1;
+  int32 request_num = 3;
 }
 message DisplaySummaryResponse {
   repeated UserCommand user_commands = 1;

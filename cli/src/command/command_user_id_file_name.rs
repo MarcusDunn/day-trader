@@ -6,6 +6,7 @@ use tonic::{IntoRequest, Request};
 pub struct LoadTestDumpLogUserIdFileName {
     pub user_id: String,
     pub file_name: String,
+    pub request_num: i32,
 }
 
 impl IntoRequest<DumpLogUserRequest> for LoadTestDumpLogUserIdFileName {
@@ -13,6 +14,7 @@ impl IntoRequest<DumpLogUserRequest> for LoadTestDumpLogUserIdFileName {
         Request::new(DumpLogUserRequest {
             user_id: self.user_id,
             filename: self.file_name,
+            request_num: self.request_num,
         })
     }
 }
@@ -21,6 +23,7 @@ impl IntoRequest<DumpLogRequest> for LoadTestDumpLogUserIdFileName {
     fn into_request(self) -> Request<DumpLogRequest> {
         Request::new(DumpLogRequest {
             filename: self.file_name,
+            request_num: self.request_num,
         })
     }
 }

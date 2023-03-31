@@ -9,6 +9,7 @@ use tonic::{IntoRequest, Request};
 pub struct LoadTestUserIdStockSymbolCommand {
     pub user_id: String,
     pub stock_symbol: String,
+    pub request_num: i32,
 }
 
 impl IntoRequest<QuoteRequest> for LoadTestUserIdStockSymbolCommand {
@@ -16,6 +17,7 @@ impl IntoRequest<QuoteRequest> for LoadTestUserIdStockSymbolCommand {
         Request::new(QuoteRequest {
             user_id: self.user_id,
             stock_symbol: self.stock_symbol,
+            request_num: self.request_num,
         })
     }
 }
@@ -25,6 +27,7 @@ impl IntoRequest<CancelSetBuyRequest> for LoadTestUserIdStockSymbolCommand {
         Request::new(CancelSetBuyRequest {
             user_id: self.user_id,
             stock_symbol: self.stock_symbol,
+            request_num: self.request_num,
         })
     }
 }
@@ -34,17 +37,19 @@ impl IntoRequest<CancelSetSellRequest> for LoadTestUserIdStockSymbolCommand {
         Request::new(CancelSetSellRequest {
             user_id: self.user_id,
             stock_symbol: self.stock_symbol,
+            request_num: self.request_num,
         })
     }
 }
 
-impl TryFrom<Split<'_, char>> for LoadTestUserIdStockSymbolCommand {
+impl TryFrom<(i32, Split<'_, char>)> for LoadTestUserIdStockSymbolCommand {
     type Error = CommandParseFailure;
 
-    fn try_from(mut value: Split<'_, char>) -> Result<Self, Self::Error> {
+    fn try_from((request_num, mut value): (i32, Split<'_, char>)) -> Result<Self, Self::Error> {
         let command = Self {
             user_id: value.user_id(0)?,
             stock_symbol: value.stock_symbol(1)?,
+            request_num
         };
         value.require_finished(2).map(|_| command)
     }

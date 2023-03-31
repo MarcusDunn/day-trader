@@ -209,6 +209,7 @@ impl Quote for Quoter {
         let QuoteRequest {
             user_id,
             stock_symbol,
+            request_num: _,
         } = request.into_inner();
 
         let message = make_socket_message(user_id, &stock_symbol);
@@ -314,6 +315,7 @@ mod tests {
         .quote(Request::new(QuoteRequest {
             user_id: "marcus".to_string(),
             stock_symbol: "TSLA".to_string(),
+            request_num: 0,
         }))
         .await
         .unwrap();

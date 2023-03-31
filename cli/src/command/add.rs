@@ -9,6 +9,8 @@ use tonic::{IntoRequest, Request};
 pub struct LoadTestAdd {
     pub user_id: String,
     pub amount: f64,
+    #[arg(default_value_t = 0)]
+    pub request_num: i32,
 }
 
 impl IntoRequest<AddRequest> for LoadTestAdd {
@@ -16,17 +18,19 @@ impl IntoRequest<AddRequest> for LoadTestAdd {
         Request::new(AddRequest {
             user_id: self.user_id,
             amount: self.amount,
+            request_num: self.request_num,
         })
     }
 }
 
-impl TryFrom<Split<'_, char>> for LoadTestAdd {
+impl TryFrom<(i32, Split<'_, char>)> for LoadTestAdd {
     type Error = CommandParseFailure;
 
-    fn try_from(mut value: Split<char>) -> Result<Self, Self::Error> {
+    fn try_from((request_num, mut value): (i32, Split<char>)) -> Result<Self, Self::Error> {
         let command = LoadTestAdd {
             user_id: value.user_id(0)?,
             amount: value.amount(1)?,
+            request_num
         };
         value.require_finished(2).map(|_| command)
     }

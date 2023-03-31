@@ -1,4 +1,4 @@
-use std::num::ParseFloatError;
+use std::num::{ParseFloatError, ParseIntError};
 
 mod protos {
     tonic::include_proto!("day_trader");
@@ -21,6 +21,11 @@ pub enum ParseLoadTestCommandError {
         command: String,
         value: String,
         reason: CommandParseFailure,
+    },
+    #[error("failed to parse request number in value \"{value}\": {reason}")]
+    InvalidRequestNum {
+        value: String,
+        reason: ParseIntError,
     },
 }
 
