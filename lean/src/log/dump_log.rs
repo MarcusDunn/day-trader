@@ -301,7 +301,21 @@ mod tests {
             }),
         };
 
-        save_log_entry_bulk(&pool, &mut vec![entry1.clone(), entry2.clone()]).await?;
+        let entry1_clone = entry1.clone();
+        let entry2_clone = entry2.clone();
+
+        save_log_entry_bulk(
+            &pool,
+            &vec![entry1_clone.timestamp, entry2_clone.timestamp],
+            &vec![entry1_clone.server, entry2_clone.server],
+            &vec![entry1_clone.transaction_num, entry2_clone.transaction_num],
+            &vec![entry1_clone.username, entry2_clone.username],
+            &vec![
+                serde_json::to_value(&entry1_clone.log)?,
+                serde_json::to_value(&entry2_clone.log)?,
+            ],
+        )
+        .await?;
 
         dump_log(&pool, "log.xml").await?;
 

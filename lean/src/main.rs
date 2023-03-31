@@ -7,6 +7,7 @@ use opentelemetry::KeyValue;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::time::Duration;
+use opentelemetry_otlp::WithExportConfig;
 use tonic::transport::{Channel, Server};
 use tower_http::request_id::MakeRequestUuid;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse};
@@ -29,7 +30,10 @@ async fn main() -> anyhow::Result<()> {
 
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
-        .with_exporter(opentelemetry_otlp::new_exporter().tonic())
+        .with_exporter(opentelemetry_otlp::new_exporter()
+            .tonic()
+            .with_env()
+        )
         .with_trace_config(
             Config::default()
                 .with_sampler(TraceIdRatioBased(0.01))

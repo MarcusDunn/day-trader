@@ -5,6 +5,7 @@ use quote_server_adaptor::fake::FakeQuoteServer;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 
 use opentelemetry::sdk::trace::Config;
+use opentelemetry_otlp::WithExportConfig;
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
 use std::env;
 use std::error::Error;
@@ -31,7 +32,7 @@ use tracing_subscriber::{EnvFilter, Layer};
 async fn main() -> Result<(), Box<dyn Error>> {
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
-        .with_exporter(opentelemetry_otlp::new_exporter().tonic())
+        .with_exporter(opentelemetry_otlp::new_exporter().tonic().with_env())
         .with_trace_config(
             Config::default().with_resource(Resource::new(vec![KeyValue::new(
                 "service.name",
