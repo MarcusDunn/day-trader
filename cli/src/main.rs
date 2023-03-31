@@ -305,7 +305,7 @@ mod tests {
             Ok(LoadTestCommand::Add(LoadTestAdd {
                 user_id: "oY01WVirLr".to_string(),
                 amount: 63511.53,
-                request_num: 0,
+                request_num: 1,
             }))
         )
     }
@@ -378,7 +378,7 @@ mod tests {
         assert_eq!(
             Ok(LoadTestCommand::DumpLogFileName(LoadTestDumpLogFileName {
                 file_name: "abc.xml".to_string(),
-                request_num: 0,
+                request_num: 1,
             })),
             LoadTestCommand::try_from("[1] DUMPLOG,abc.xml")
         );
@@ -391,7 +391,7 @@ mod tests {
                 LoadTestDumpLogUserIdFileName {
                     user_id: "hello".to_string(),
                     file_name: "abc.xml".to_string(),
-                    request_num: 0,
+                    request_num: 1,
                 }
             )),
             LoadTestCommand::try_from("[1] DUMPLOG,hello,abc.xml")
