@@ -208,31 +208,36 @@ impl TryFrom<&str> for LoadTestCommand {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         use LoadTestCommand::*;
         use ParseLoadTestCommandError::*;
-        let (_, rest) = value.split_once(' ').ok_or_else(|| MissingSpace {
+        let (request_num, rest) = value.split_once(' ').ok_or_else(|| MissingSpace {
             value: value.to_string(),
+        })?;
+
+        let request_num = request_num.replace(['[', ']'], "");
+
+        let request_num: i32 = request_num.parse().map_err(|err| InvalidRequestNum {
+            value: request_num,
+            reason: err,
         })?;
         let mut iter = rest.split(',');
         Ok(
             match iter.next().ok_or_else(|| MissingCommand {
                 value: value.to_string(),
             })? {
-                "ADD" => {
-                    Add(
-                        LoadTestAdd::try_from(iter).map_err(|reason| CommandParseFailure {
+                "ADD" => Add(
+                    LoadTestAdd::try_from((request_num, iter)).map_err(|reason| {
+                        CommandParseFailure {
                             command: "ADD".to_string(),
                             value: value.to_string(),
                             reason,
-                        })?,
-                    )
-                }
+                        }
+                    })?,
+                ),
                 str @ ("QUOTE" | "CANCEL_SET_BUY" | "CANCEL_SET_SELL") => {
-                    let cmd =
-                        LoadTestUserIdStockSymbolCommand::try_from(iter).map_err(|reason| {
-                            CommandParseFailure {
-                                command: str.to_string(),
-                                value: value.to_string(),
-                                reason,
-                            }
+                    let cmd = LoadTestUserIdStockSymbolCommand::try_from((request_num, iter))
+                        .map_err(|reason| CommandParseFailure {
+                            command: str.to_string(),
+                            value: value.to_string(),
+                            reason,
                         })?;
                     match str {
                         "QUOTE" => Quote(cmd),
@@ -243,13 +248,12 @@ impl TryFrom<&str> for LoadTestCommand {
                 }
                 str @ ("BUY" | "SELL" | "SET_BUY_AMOUNT" | "SET_SELL_TRIGGER"
                 | "SET_SELL_AMOUNT" | "SET_BUY_TRIGGER") => {
-                    let cmd = LoadTestUserIdStockSymbolAmountCommand::try_from(iter).map_err(
-                        |reason| CommandParseFailure {
+                    let cmd = LoadTestUserIdStockSymbolAmountCommand::try_from((request_num, iter))
+                        .map_err(|reason| CommandParseFailure {
                             command: str.to_string(),
                             value: value.to_string(),
                             reason,
-                        },
-                    )?;
+                        })?;
                     match str {
                         "BUY" => Buy(cmd),
                         "SET_BUY_AMOUNT" => SetBuyAmount(cmd),
@@ -262,13 +266,14 @@ impl TryFrom<&str> for LoadTestCommand {
                 }
                 str @ ("COMMIT_BUY" | "COMMIT_SELL" | "CANCEL_SELL" | "DISPLAY_SUMMARY"
                 | "CANCEL_BUY") => {
-                    let cmd = LoadTestUserIdCommand::try_from(iter).map_err(|reason| {
-                        CommandParseFailure {
-                            command: str.to_string(),
-                            value: value.to_string(),
-                            reason,
-                        }
-                    })?;
+                    let cmd =
+                        LoadTestUserIdCommand::try_from((request_num, iter)).map_err(|reason| {
+                            CommandParseFailure {
+                                command: str.to_string(),
+                                value: value.to_string(),
+                                reason,
+                            }
+                        })?;
                     match str {
                         "COMMIT_BUY" => CommitBuy(cmd),
                         "COMMIT_SELL" => CommitSell(cmd),
@@ -279,10 +284,12 @@ impl TryFrom<&str> for LoadTestCommand {
                     }
                 }
                 "DUMPLOG" => {
-                    let cmd = DumpLog::try_from(iter).map_err(|reason| CommandParseFailure {
-                        command: "DUMPLOG".to_string(),
-                        value: value.to_string(),
-                        reason,
+                    let cmd = DumpLog::try_from((request_num, iter)).map_err(|reason| {
+                        CommandParseFailure {
+                            command: "DUMPLOG".to_string(),
+                            value: value.to_string(),
+                            reason,
+                        }
                     })?;
                     match cmd {
                         DumpLog::User(user) => DumpLogUser(user),

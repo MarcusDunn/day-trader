@@ -1,0 +1,26 @@
+version: '3.8.0'
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: "daytrader"
+      POSTGRES_PASSWORD: "daytrader"
+    command:
+      - postgres -N 5000 # run with 5000 max connections
+  lean:
+    image: ghcr.io/marcusdunn/day-trader/lean
+    environment:
+      DATABASE_URL: postgres://daytrader:daytrader@postgres:5432/daytrader
+      QUOTE_CLIENT_ADDR: http://0.0.0.0:50051
+      SERVER_ADDR: 0.0.0.0:8000
+      RUST_LOG: "none,legacy: info"
+      DATABASE_MAX_CONNECTIONS: 4800
+      TRIGGER_CHANNEL_SIZE: 10000
+
+

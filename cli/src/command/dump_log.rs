@@ -12,19 +12,23 @@ pub enum DumpLog {
     NoUser(LoadTestDumpLogFileName),
 }
 
-impl TryFrom<Split<'_, char>> for DumpLog {
+impl TryFrom<(i32, Split<'_, char>)> for DumpLog {
     type Error = CommandParseFailure;
 
-    fn try_from(mut value: Split<'_, char>) -> Result<Self, Self::Error> {
+    fn try_from((request_num, mut value): (i32, Split<'_, char>)) -> Result<Self, Self::Error> {
         let arg1 = value
             .get_next_str("user_id or filename (ambiguous)", 0)?
             .to_string();
         match value.next() {
-            None => Ok(DumpLog::NoUser(LoadTestDumpLogFileName { file_name: arg1 })),
+            None => Ok(DumpLog::NoUser(LoadTestDumpLogFileName {
+                file_name: arg1,
+                request_num,
+            })),
             Some(filename) => {
                 let command = DumpLog::User(LoadTestDumpLogUserIdFileName {
                     user_id: arg1,
                     file_name: filename.to_string(),
+                    request_num,
                 });
                 value.require_finished(2).map(|_| command)
             }
@@ -35,12 +39,14 @@ impl TryFrom<Split<'_, char>> for DumpLog {
 #[derive(Clone, Debug, clap::Args, PartialEq, Arbitrary)]
 pub struct LoadTestDumpLogFileName {
     pub file_name: String,
+    pub request_num: i32,
 }
 
 impl IntoRequest<DumpLogRequest> for LoadTestDumpLogFileName {
     fn into_request(self) -> Request<DumpLogRequest> {
         Request::new(DumpLogRequest {
             filename: self.file_name,
+            request_num: self.request_num,
         })
     }
 }
