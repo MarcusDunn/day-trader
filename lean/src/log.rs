@@ -34,18 +34,53 @@ impl Logger {
         let bulk_insert_size = std::env::var("BULK_INSERT_SIZE")
             .unwrap_or_else(|_| "10000".to_string())
             .parse()?;
-        let mut log_entries: Vec<LogEntry> = Vec::with_capacity(bulk_insert_size);
+
+        let mut timestamp: Vec<PrimitiveDateTime> = Vec::with_capacity(bulk_insert_size);
+        let mut server: Vec<String> = Vec::with_capacity(bulk_insert_size);
+        let mut transaction_num: Vec<i32> = Vec::with_capacity(bulk_insert_size);
+        let mut username: Vec<String> = Vec::with_capacity(bulk_insert_size);
+        let mut log: Vec<JsonValue> = Vec::with_capacity(bulk_insert_size);
+
         loop {
             // reuse the connection if there is more than bulk_insert_size items in the queue
             let mut connection: Option<PoolConnection<Postgres>> = None;
 
-            while let Some(entry) = self.receiver.recv().await {
-                log_entries.push(entry);
+            loop {
+                tokio::select! {
+                    maybe_next = self.receiver.recv() => {
+                        match maybe_next {
+                            Some(entry) => {
+                                timestamp.push(entry.timestamp);
+                                server.push(entry.server);
+                                transaction_num.push(entry.transaction_num);
+                                username.push(entry.username);
+                                log.push(serde_json::to_value(&entry.log)?);
 
-                if log_entries.len() >= bulk_insert_size {
-                    info!("flushing {} log entries to the database", log_entries.len());
-                    self.flush_log_buffer(&mut log_entries, &mut connection)
-                        .await?;
+                                if timestamp.len() >= bulk_insert_size {
+                                    info!("flushing {} log entries to the database due to a full buffer", timestamp.len());
+                                    self.flush_log_buffer(&mut connection, &timestamp, &server, &transaction_num, &username, &log)
+                                        .await?;
+                                }
+                                continue;
+                            }
+                            None => {
+                                break;
+                            }
+                        }
+                    }
+                    _ = tokio::time::sleep(std::time::Duration::from_secs(1)) => {
+                        if !timestamp.is_empty() {
+                            info!("flushing {} log entries to the database due to 1 second of inactivity", timestamp.len());
+                            self.flush_log_buffer(&mut connection, &timestamp, &server, &transaction_num, &username, &log)
+                                .await?;
+                            timestamp.clear();
+                            server.clear();
+                            transaction_num.clear();
+                            username.clear();
+                            log.clear();
+                        }
+                        break;
+                    }
                 }
             }
 
@@ -56,19 +91,21 @@ impl Logger {
     #[tracing::instrument(skip_all)]
     async fn flush_log_buffer(
         &mut self,
-        log_entries: &mut Vec<LogEntry>,
         connection: &mut Option<PoolConnection<Postgres>>,
+        timestamp: &Vec<PrimitiveDateTime>,
+        server: &Vec<String>,
+        transaction_num: &Vec<i32>,
+        username: &Vec<String>,
+        log: &Vec<JsonValue>,
     ) -> anyhow::Result<()> {
         let mut conn = match connection.take() {
             None => self.pool.acquire().await?,
             Some(c) => c,
         };
 
-        save_log_entry_bulk(&mut conn, log_entries).await?;
+        save_log_entry_bulk(&mut conn, timestamp, server, transaction_num, username, log).await?;
 
         *connection = Some(conn);
-
-        log_entries.clear();
 
         Ok(())
     }
@@ -77,22 +114,12 @@ impl Logger {
 #[tracing::instrument(skip_all)]
 async fn save_log_entry_bulk(
     pool: impl PgExecutor<'_>,
-    log_entries: &mut Vec<LogEntry>,
+    timestamp: &Vec<PrimitiveDateTime>,
+    server: &Vec<String>,
+    transaction_num: &Vec<i32>,
+    username: &Vec<String>,
+    log: &Vec<JsonValue>,
 ) -> anyhow::Result<()> {
-    let mut timestamp: Vec<PrimitiveDateTime> = Vec::with_capacity(log_entries.len());
-    let mut server: Vec<String> = Vec::with_capacity(log_entries.len());
-    let mut transaction_num: Vec<i32> = Vec::with_capacity(log_entries.len());
-    let mut username: Vec<String> = Vec::with_capacity(log_entries.len());
-    let mut log: Vec<JsonValue> = Vec::with_capacity(log_entries.len());
-
-    for entry in log_entries.drain(..) {
-        timestamp.push(entry.timestamp);
-        server.push(entry.server);
-        transaction_num.push(entry.transaction_num);
-        username.push(entry.username);
-        log.push(serde_json::to_value(&entry.log)?);
-    }
-
     sqlx::query!(
         "
     INSERT INTO log_entry (timestamp, server, transaction_num, username, log) 
@@ -142,9 +169,22 @@ mod tests {
             }),
         };
 
-        save_log_entry_bulk(&pool, &mut vec![entry1.clone(), entry2.clone()])
-            .await
-            .expect("failed to save log entries");
+        let entry1_clone = entry1.clone();
+        let entry2_clone = entry2.clone();
+
+        save_log_entry_bulk(
+            &pool,
+            &vec![entry1_clone.timestamp, entry2_clone.timestamp],
+            &vec![entry1_clone.server, entry2_clone.server],
+            &vec![entry1_clone.transaction_num, entry2_clone.transaction_num],
+            &vec![entry1_clone.username, entry2_clone.username],
+            &vec![
+                serde_json::to_value(&entry1_clone.log)?,
+                serde_json::to_value(&entry2_clone.log)?,
+            ],
+        )
+        .await
+        .expect("failed to save log entries");
 
         let entries = sqlx::query_as!(
             DbLogEntry,
@@ -263,7 +303,6 @@ pub struct SystemEventLog {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-
 pub struct ErrorEventLog {
     pub command: CommandType,
     pub stock_symbol: Option<String>,
@@ -280,6 +319,7 @@ pub struct DebugLog {
     pub funds: Option<f64>,
     pub debug_message: Option<String>,
 }
+
 pub use dump_log::dump_log;
 
 mod dump_log;
