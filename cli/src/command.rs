@@ -212,7 +212,7 @@ impl TryFrom<&str> for LoadTestCommand {
             value: value.to_string(),
         })?;
 
-        let request_num = request_num.replace(&['[', ']'], "");
+        let request_num = request_num.replace(['[', ']'], "");
 
         let request_num: i32 = request_num.parse().map_err(|err| InvalidRequestNum {
             value: request_num,
