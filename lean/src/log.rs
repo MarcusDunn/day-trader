@@ -60,6 +60,11 @@ impl Logger {
                                     info!("flushing {} log entries to the database due to a full buffer", timestamp.len());
                                     self.flush_log_buffer(&mut connection, &timestamp, &server, &transaction_num, &username, &log)
                                         .await?;
+                                    timestamp.clear();
+                                    server.clear();
+                                    transaction_num.clear();
+                                    username.clear();
+                                    log.clear();
                                 }
                                 continue;
                             }
@@ -83,8 +88,6 @@ impl Logger {
                     }
                 }
             }
-
-            drop(connection);
         }
     }
 
