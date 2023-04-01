@@ -1195,7 +1195,7 @@ impl DayTrader for DayTraderImpl {
         let ((), quote) = tokio::join!(log, quote);
 
         match quote {
-            Ok(quote) => Ok(Response::new(QuoteRequestSimple { price: quote.price })),
+            Ok(quote) => Ok(Response::new(QuoteRequestSimple { price: quote })),
             Err(e) => {
                 self.report_error(
                     0,
