@@ -623,14 +623,15 @@ impl DayTrader for DayTraderImpl {
 
         self.log_dump_log_request(&dump_log_request).await;
 
-        let DumpLogRequest { filename, request_num } = dump_log_request;
+        let DumpLogRequest {
+            filename,
+            request_num,
+        } = dump_log_request;
 
         match log::dump_log(&self.postgres, &filename.clone()).await {
-            Ok(()) => {
-                Ok(Response::new(DumpLogResponse {
-                    xml: "check the file system".to_string(),
-                }))
-            }
+            Ok(()) => Ok(Response::new(DumpLogResponse {
+                xml: "check the file system".to_string(),
+            })),
             Err(e) => {
                 self.report_error(
                     request_num,
@@ -641,7 +642,8 @@ impl DayTrader for DayTraderImpl {
                         funds: None,
                         error_message: Some(e.to_string()),
                     },
-                ).await;
+                )
+                .await;
                 error!("failed to dump log: {e}");
                 Err(Status::internal("failed to dump log".to_string()))
             }
@@ -670,9 +672,7 @@ impl DayTrader for DayTraderImpl {
         let ((), add) = tokio::join!(log, add);
 
         match add {
-            Ok(()) => {
-                Ok(Response::new(AddResponse {}))
-            }
+            Ok(()) => Ok(Response::new(AddResponse {})),
             Err(e) => {
                 self.report_error(
                     0,
@@ -683,7 +683,8 @@ impl DayTrader for DayTraderImpl {
                         funds: Some(amount),
                         error_message: Some(e.to_string()),
                     },
-                ).await;
+                )
+                .await;
                 Err(Status::internal(format!("failed to add funds: {}", e)))
             }
         }
@@ -725,9 +726,7 @@ impl DayTrader for DayTraderImpl {
         let ((), init_buy) = tokio::join!(log, init_buy);
 
         match init_buy {
-            Ok(()) => {
-                Ok(Response::new(BuyResponse {}))
-            }
+            Ok(()) => Ok(Response::new(BuyResponse {})),
             Err(e) => {
                 self.report_error(
                     request_num,
@@ -738,7 +737,8 @@ impl DayTrader for DayTraderImpl {
                         funds: Some(amount),
                         error_message: Some(e.to_string()),
                     },
-                ).await;
+                )
+                .await;
                 Err(Status::internal(format!("failed to buy: {}", e)))
             }
         }
@@ -758,9 +758,7 @@ impl DayTrader for DayTraderImpl {
         let ((), commit_buy) = tokio::join!(log, commit_buy);
 
         match commit_buy {
-            Ok(()) => {
-                Ok(Response::new(CommitBuyResponse {}))
-            }
+            Ok(()) => Ok(Response::new(CommitBuyResponse {})),
             Err(e) => {
                 self.report_error(
                     0,
@@ -771,7 +769,8 @@ impl DayTrader for DayTraderImpl {
                         funds: None,
                         error_message: Some(e.to_string()),
                     },
-                ).await;
+                )
+                .await;
                 Err(Status::internal(format!("failed to commit buy: {}", e)))
             }
         }
@@ -791,9 +790,7 @@ impl DayTrader for DayTraderImpl {
         let ((), cancel) = tokio::join!(log, cancel);
 
         match cancel {
-            Ok(()) => {
-                Ok(Response::new(CancelBuyResponse {}))
-            }
+            Ok(()) => Ok(Response::new(CancelBuyResponse {})),
             Err(e) => {
                 self.report_error(
                     0,
@@ -804,7 +801,8 @@ impl DayTrader for DayTraderImpl {
                         funds: None,
                         error_message: Some(e.to_string()),
                     },
-                ).await;
+                )
+                .await;
                 Err(Status::internal(format!("failed to cancel buy: {}", e)))
             }
         }
@@ -846,9 +844,7 @@ impl DayTrader for DayTraderImpl {
         let ((), init_sell) = tokio::join!(log, init_sell);
 
         match init_sell {
-            Ok(()) => {
-                Ok(Response::new(SellResponse {}))
-            }
+            Ok(()) => Ok(Response::new(SellResponse {})),
             Err(e) => {
                 self.report_error(
                     request_num,
@@ -859,7 +855,8 @@ impl DayTrader for DayTraderImpl {
                         funds: Some(amount),
                         error_message: Some(e.to_string()),
                     },
-                ).await;
+                )
+                .await;
                 Err(Status::internal(format!("failed to sell: {}", e)))
             }
         }
@@ -879,9 +876,7 @@ impl DayTrader for DayTraderImpl {
         let ((), commit_sell) = tokio::join!(log, commit_sell);
 
         match commit_sell {
-            Ok(()) => {
-                Ok(Response::new(CommitSellResponse {}))
-            }
+            Ok(()) => Ok(Response::new(CommitSellResponse {})),
             Err(e) => {
                 self.report_error(
                     0,
@@ -892,7 +887,8 @@ impl DayTrader for DayTraderImpl {
                         funds: None,
                         error_message: Some(e.to_string()),
                     },
-                ).await;
+                )
+                .await;
                 Err(Status::internal(format!("failed to commit sell: {}", e)))
             }
         }
@@ -912,9 +908,7 @@ impl DayTrader for DayTraderImpl {
         let ((), cancel_sell) = tokio::join!(log, cancel_sell);
 
         match cancel_sell {
-            Ok(()) => {
-                Ok(Response::new(CancelSellResponse {}))
-            }
+            Ok(()) => Ok(Response::new(CancelSellResponse {})),
             Err(e) => {
                 self.report_error(
                     0,
@@ -925,7 +919,8 @@ impl DayTrader for DayTraderImpl {
                         funds: None,
                         error_message: Some(e.to_string()),
                     },
-                ).await;
+                )
+                .await;
                 Err(Status::internal(format!("failed to cancel sell: {}", e)))
             }
         }
@@ -953,9 +948,7 @@ impl DayTrader for DayTraderImpl {
         let ((), set_buy_amount) = tokio::join!(log, set_buy_amount);
 
         match set_buy_amount {
-            Ok(()) => {
-                Ok(Response::new(SetBuyAmountResponse {}))
-            }
+            Ok(()) => Ok(Response::new(SetBuyAmountResponse {})),
             Err(e) => {
                 self.report_error(
                     0,
@@ -966,7 +959,8 @@ impl DayTrader for DayTraderImpl {
                         funds: Some(amount),
                         error_message: Some(e.to_string()),
                     },
-                ).await;
+                )
+                .await;
                 Err(Status::internal(format!("failed to set buy amount: {}", e)))
             }
         }
@@ -992,9 +986,7 @@ impl DayTrader for DayTraderImpl {
         let ((), cancel_set_buy) = tokio::join!(log, cancel_set_buy);
 
         match cancel_set_buy {
-            Ok(()) => {
-                Ok(Response::new(CancelSetBuyResponse {}))
-            }
+            Ok(()) => Ok(Response::new(CancelSetBuyResponse {})),
             Err(e) => {
                 self.report_error(
                     0,
@@ -1005,7 +997,8 @@ impl DayTrader for DayTraderImpl {
                         funds: None,
                         error_message: Some(e.to_string()),
                     },
-                ).await;
+                )
+                .await;
                 Err(Status::internal(format!("failed to cancel set buy: {}", e)))
             }
         }
@@ -1033,9 +1026,7 @@ impl DayTrader for DayTraderImpl {
         let ((), set_buy_trigger) = tokio::join!(log, set_buy_trigger);
 
         match set_buy_trigger {
-            Ok(()) => {
-                Ok(Response::new(SetBuyTriggerResponse {}))
-            }
+            Ok(()) => Ok(Response::new(SetBuyTriggerResponse {})),
             Err(e) => {
                 self.report_error(
                     0,
@@ -1046,8 +1037,12 @@ impl DayTrader for DayTraderImpl {
                         funds: Some(amount),
                         error_message: Some(e.to_string()),
                     },
-                ).await;
-                Err(Status::internal(format!("failed to set buy trigger: {}", e)))
+                )
+                .await;
+                Err(Status::internal(format!(
+                    "failed to set buy trigger: {}",
+                    e
+                )))
             }
         }
     }
@@ -1074,9 +1069,7 @@ impl DayTrader for DayTraderImpl {
         let ((), set_sell_amount) = tokio::join!(log, set_sell_amount);
 
         match set_sell_amount {
-            Ok(()) => {
-                Ok(Response::new(SetSellAmountResponse {}))
-            }
+            Ok(()) => Ok(Response::new(SetSellAmountResponse {})),
             Err(e) => {
                 self.report_error(
                     0,
@@ -1087,8 +1080,12 @@ impl DayTrader for DayTraderImpl {
                         funds: Some(amount),
                         error_message: Some(e.to_string()),
                     },
-                ).await;
-                Err(Status::internal(format!("failed to set sell amount: {}", e)))
+                )
+                .await;
+                Err(Status::internal(format!(
+                    "failed to set sell amount: {}",
+                    e
+                )))
             }
         }
     }
@@ -1115,9 +1112,7 @@ impl DayTrader for DayTraderImpl {
         let ((), set_sell_trigger) = tokio::join!(log, set_sell_trigger);
 
         match set_sell_trigger {
-            Ok(()) => {
-                Ok(Response::new(SetSellTriggerResponse {}))
-            }
+            Ok(()) => Ok(Response::new(SetSellTriggerResponse {})),
             Err(e) => {
                 self.report_error(
                     0,
@@ -1128,8 +1123,12 @@ impl DayTrader for DayTraderImpl {
                         funds: Some(amount),
                         error_message: Some(e.to_string()),
                     },
-                ).await;
-                Err(Status::internal(format!("failed to set sell trigger: {}", e)))
+                )
+                .await;
+                Err(Status::internal(format!(
+                    "failed to set sell trigger: {}",
+                    e
+                )))
             }
         }
     }
@@ -1154,9 +1153,7 @@ impl DayTrader for DayTraderImpl {
         let ((), cancel_set_sell) = tokio::join!(log, cancel_set_sell);
 
         match cancel_set_sell {
-            Ok(()) => {
-                Ok(Response::new(CancelSetSellResponse {}))
-            }
+            Ok(()) => Ok(Response::new(CancelSetSellResponse {})),
             Err(e) => {
                 self.report_error(
                     0,
@@ -1167,8 +1164,12 @@ impl DayTrader for DayTraderImpl {
                         funds: None,
                         error_message: Some(e.to_string()),
                     },
-                ).await;
-                Err(Status::internal(format!("failed to cancel set sell: {}", e)))
+                )
+                .await;
+                Err(Status::internal(format!(
+                    "failed to cancel set sell: {}",
+                    e
+                )))
             }
         }
     }
@@ -1194,9 +1195,7 @@ impl DayTrader for DayTraderImpl {
         let ((), quote) = tokio::join!(log, quote);
 
         match quote {
-            Ok(quote) => {
-                Ok(Response::new(QuoteRequestSimple { price: quote.price }))
-            }
+            Ok(quote) => Ok(Response::new(QuoteRequestSimple { price: quote.price })),
             Err(e) => {
                 self.report_error(
                     0,
@@ -1207,7 +1206,8 @@ impl DayTrader for DayTraderImpl {
                         funds: None,
                         error_message: Some(e.to_string()),
                     },
-                ).await;
+                )
+                .await;
                 Err(Status::internal(format!("failed to get quote: {}", e)))
             }
         }
