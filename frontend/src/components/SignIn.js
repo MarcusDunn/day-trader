@@ -11,15 +11,37 @@ import Box from '@mui/material/Box';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
+import { useState } from 'react';
 
 export default function SignIn() {
-  const handleSubmit = (event) => {
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const body = {
+      username: data.get('email')
+    }
+    try{
+      const response = await fetch('/api/login', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      })
+      const responseParsed = await response.json();
+      if (responseParsed.status) {
+        localStorage.setItem('jwt', responseParsed.user);
+        setError("");
+      }else{
+        setError("Invalid username or password, please try again");
+      }
+    }catch(error){
+      console.log("error:",error);
+      setError("Invalid username or password, please try again");
+      return;
+    }
   };
 
   return (
@@ -59,6 +81,12 @@ export default function SignIn() {
             id="password"
             autoComplete="current-password"
           />
+          <Typography
+            variant='subtitle2'
+            color="error"
+          >
+            {error}
+          </Typography>
           <Button
             type="submit"
             fullWidth

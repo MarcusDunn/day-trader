@@ -13,11 +13,24 @@ import Navigation from '../src/components/Navigation';
 const clientSideEmotionCache = createEmotionCache();
 
 const ThemeContext = createContext({theme: {}});
-export const useMyTheme = ()=>useContext(ThemeContext);
+const UserContext = createContext({});
+
+export const useMyTheme = () => useContext(ThemeContext);
 
 export default function MyApp(props) {
   const [myTheme, setMyTheme] = useState(createTheme(lightTheme));
   const [theme, setTheme] = useState(createTheme(lightTheme));
+  const [user, setUser] = useState({});
+  useEffect(()=> {
+    const jwt = localStorage.getItem('jwt');
+    if (jwt && jwt !== 'undefined') {
+      setUser(jwt);
+    } else {
+      setUser({});
+    }
+  },[])
+  console.log("User:", user);
+
   useEffect(()=> {
       setTheme(createTheme(myTheme));
   },[myTheme])
@@ -26,19 +39,21 @@ export default function MyApp(props) {
   
 
   return (
-    <ThemeContext.Provider value={{theme, setMyTheme}}>
-      <CacheProvider value={emotionCache}>
-        <Head>
-          <meta name="viewport" content="initial-scale=1, width=device-width" />
-        </Head>
-        <ThemeProvider theme={theme}>
-          {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-          <CssBaseline />
-          <Navigation />
-          <Component {...pageProps} />
-        </ThemeProvider>
-      </CacheProvider>
-    </ThemeContext.Provider>
+    <UserContext.Provider value={{theme, setMyTheme}}>
+      <ThemeContext.Provider value={{theme, setMyTheme}}>
+        <CacheProvider value={emotionCache}>
+          <Head>
+            <meta name="viewport" content="initial-scale=1, width=device-width" />
+          </Head>
+          <ThemeProvider theme={theme}>
+            {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
+            <CssBaseline />
+            <Navigation />
+            <Component {...pageProps} />
+          </ThemeProvider>
+        </CacheProvider>
+      </ThemeContext.Provider>
+    </UserContext.Provider>
   );
 }
 
