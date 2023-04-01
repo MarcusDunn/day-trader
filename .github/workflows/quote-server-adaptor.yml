@@ -43,6 +43,15 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt,clippy
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - run: cargo fmt --all -- --check
         name: Run cargo fmt
       - run: cargo build
