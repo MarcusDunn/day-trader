@@ -62,7 +62,7 @@ async fn main() -> anyhow::Result<()> {
         .map_err(|e| anyhow!("failed to parse DATABASE_CONNECTION_TIMEOUT_SECONDS: {e}"))?;
 
     let database_min_connections = env::var("DATABASE_MIN_CONNECTIONS")
-        .map_err(|e| database_max_connections.to_string())?
+        .unwrap_or_else(|_| database_max_connections.to_string())
         .parse::<u32>()
         .map_err(|e| anyhow!("failed to parse DATABASE_MIN_CONNECTIONS: {e}"))?;
 

@@ -1180,7 +1180,8 @@ impl DayTrader for DayTraderImpl {
         request: Request<QuoteRequest>,
     ) -> Result<Response<QuoteRequestSimple>, Status> {
         let quote_request = request.into_inner();
-        let log = self.log_quote_request(&quote_request);
+        let cloned = quote_request.clone();
+        let log = self.log_quote_request(&cloned);
 
         let QuoteRequest {
             user_id,
@@ -1201,7 +1202,7 @@ impl DayTrader for DayTraderImpl {
                     0,
                     ErrorEventLog {
                         command: CommandType::Quote,
-                        stock_symbol: Some(stock_symbol),
+                        stock_symbol: Some(stock_symbol.clone()),
                         filename: None,
                         funds: None,
                         error_message: Some(e.to_string()),
