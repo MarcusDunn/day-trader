@@ -32,7 +32,7 @@ pub mod proto {
     tonic::include_proto!("day_trader");
 }
 
-use crate::log::{CommandType, Log, LogEntry, QuoteServerLog, UserCommandLog};
+use crate::log::{CommandType, ErrorEventLog, Log, LogEntry, QuoteServerLog, UserCommandLog};
 use crate::trigger::{Triggerer, UpdatedPrice};
 use log::Logger;
 
@@ -448,7 +448,7 @@ impl CachedQuote {
         request_num: i32,
         user_id: String,
         stock_symbol: String,
-    ) -> Result<f64, Status> {
+    ) -> anyhow::Result<f64> {
         self.cache
             .optionally_get_with(
                 stock_symbol.clone(),
@@ -464,7 +464,6 @@ impl CachedQuote {
                 error!("failed to get quote");
                 anyhow!("failed to get quote")
             })
-            .map_err(|err| Status::internal(format!("failed to get quote: {err}")))
     }
 
     #[tracing::instrument(skip_all)]
@@ -552,6 +551,20 @@ impl CachedQuote {
 }
 
 impl DayTraderImpl {
+    async fn report_error(&self, request_num: i32, error_event_log: ErrorEventLog) {
+        let log_entry = LogEntry::new(
+            request_num,
+            "legacy".to_string(),
+            Log::ErrorMessages(error_event_log),
+        );
+
+        if let Err(err) = self.log_sender.send(log_entry).await {
+            error!("failed to send log entry: {err}");
+        }
+    }
+}
+
+impl DayTraderImpl {
     pub fn new(postgres: PgPool, quote: QuoteClient<Channel>) -> Self {
         let (logger, log_sender) = Logger::new(postgres.clone());
         let (triggerer, quote_update_sender) = Triggerer::new(postgres.clone());
@@ -610,16 +623,29 @@ impl DayTrader for DayTraderImpl {
 
         self.log_dump_log_request(&dump_log_request).await;
 
-        log::dump_log(&self.postgres, &dump_log_request.filename)
-            .await
-            .map_err(|err| {
-                error!("failed to dump log: {}", err);
-                Status::internal(err.to_string())
-            })?;
+        let DumpLogRequest { filename, request_num } = dump_log_request;
 
-        Ok(Response::new(DumpLogResponse {
-            xml: "check the file system".to_string(),
-        }))
+        match log::dump_log(&self.postgres, &filename.clone()).await {
+            Ok(()) => {
+                Ok(Response::new(DumpLogResponse {
+                    xml: "check the file system".to_string(),
+                }))
+            }
+            Err(e) => {
+                self.report_error(
+                    request_num,
+                    ErrorEventLog {
+                        command: CommandType::DumpLog,
+                        stock_symbol: None,
+                        filename: Some(filename),
+                        funds: None,
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                error!("failed to dump log: {e}");
+                Err(Status::internal("failed to dump log".to_string()))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_display_summary")]
@@ -643,12 +669,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), add) = tokio::join!(log, add);
 
-        add.map_err(|err| {
-            error!("failed to add user: {}", err);
-            Status::internal(err.to_string())
-        })?;
-
-        Ok(Response::new(AddResponse {}))
+        match add {
+            Ok(()) => {
+                Ok(Response::new(AddResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::Add,
+                        stock_symbol: None,
+                        filename: None,
+                        funds: Some(amount),
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to add funds: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_buy")]
@@ -686,9 +724,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), init_buy) = tokio::join!(log, init_buy);
 
-        init_buy?;
-
-        Ok(Response::new(BuyResponse {}))
+        match init_buy {
+            Ok(()) => {
+                Ok(Response::new(BuyResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    request_num,
+                    ErrorEventLog {
+                        command: CommandType::Buy,
+                        stock_symbol: Some(stock_symbol),
+                        filename: None,
+                        funds: Some(amount),
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to buy: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_commit_buy")]
@@ -704,12 +757,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), commit_buy) = tokio::join!(log, commit_buy);
 
-        commit_buy.map_err(|err| {
-            error!("failed to commit buy: {}", err);
-            Status::internal(err.to_string())
-        })?;
-
-        Ok(Response::new(CommitBuyResponse {}))
+        match commit_buy {
+            Ok(()) => {
+                Ok(Response::new(CommitBuyResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::CommitBuy,
+                        stock_symbol: None,
+                        filename: None,
+                        funds: None,
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to commit buy: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_cancel_buy")]
@@ -725,12 +790,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), cancel) = tokio::join!(log, cancel);
 
-        cancel.map_err(|err| {
-            error!("failed to cancel buy: {}", err);
-            Status::internal(err.to_string())
-        })?;
-
-        Ok(Response::new(CancelBuyResponse {}))
+        match cancel {
+            Ok(()) => {
+                Ok(Response::new(CancelBuyResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::CancelBuy,
+                        stock_symbol: None,
+                        filename: None,
+                        funds: None,
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to cancel buy: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_sell")]
@@ -768,9 +845,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), init_sell) = tokio::join!(log, init_sell);
 
-        init_sell?;
-
-        Ok(Response::new(SellResponse {}))
+        match init_sell {
+            Ok(()) => {
+                Ok(Response::new(SellResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    request_num,
+                    ErrorEventLog {
+                        command: CommandType::Sell,
+                        stock_symbol: Some(stock_symbol),
+                        filename: None,
+                        funds: Some(amount),
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to sell: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_commit_sell")]
@@ -786,12 +878,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), commit_sell) = tokio::join!(log, commit_sell);
 
-        commit_sell.map_err(|err| {
-            error!("failed to commit sell: {}", err);
-            Status::internal(err.to_string())
-        })?;
-
-        Ok(Response::new(CommitSellResponse {}))
+        match commit_sell {
+            Ok(()) => {
+                Ok(Response::new(CommitSellResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::CommitSell,
+                        stock_symbol: None,
+                        filename: None,
+                        funds: None,
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to commit sell: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_cancel_sell")]
@@ -807,12 +911,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), cancel_sell) = tokio::join!(log, cancel_sell);
 
-        cancel_sell.map_err(|err| {
-            error!("failed to cancel sell: {}", err);
-            Status::internal(err.to_string())
-        })?;
-
-        Ok(Response::new(CancelSellResponse {}))
+        match cancel_sell {
+            Ok(()) => {
+                Ok(Response::new(CancelSellResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::CancelSell,
+                        stock_symbol: None,
+                        filename: None,
+                        funds: None,
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to cancel sell: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_set_buy_amount")]
@@ -836,12 +952,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), set_buy_amount) = tokio::join!(log, set_buy_amount);
 
-        set_buy_amount.map_err(|err| {
-            error!("failed to set buy amount: {}", err);
-            Status::internal(err.to_string())
-        })?;
-
-        Ok(Response::new(SetBuyAmountResponse {}))
+        match set_buy_amount {
+            Ok(()) => {
+                Ok(Response::new(SetBuyAmountResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::SetBuyAmount,
+                        stock_symbol: Some(stock_symbol),
+                        filename: None,
+                        funds: Some(amount),
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to set buy amount: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_cancel_set_buy")]
@@ -863,12 +991,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), cancel_set_buy) = tokio::join!(log, cancel_set_buy);
 
-        cancel_set_buy.map_err(|err| {
-            error!("failed to cancel set buy: {}", err);
-            Status::internal(err.to_string())
-        })?;
-
-        Ok(Response::new(CancelSetBuyResponse {}))
+        match cancel_set_buy {
+            Ok(()) => {
+                Ok(Response::new(CancelSetBuyResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::CancelSetBuy,
+                        stock_symbol: Some(stock_symbol),
+                        filename: None,
+                        funds: None,
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to cancel set buy: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_set_buy_trigger")]
@@ -892,12 +1032,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), set_buy_trigger) = tokio::join!(log, set_buy_trigger);
 
-        set_buy_trigger.map_err(|err| {
-            error!("failed to set buy trigger: {}", err);
-            Status::internal(err.to_string())
-        })?;
-
-        Ok(Response::new(SetBuyTriggerResponse {}))
+        match set_buy_trigger {
+            Ok(()) => {
+                Ok(Response::new(SetBuyTriggerResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::SetBuyTrigger,
+                        stock_symbol: Some(stock_symbol),
+                        filename: None,
+                        funds: Some(amount),
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to set buy trigger: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_set_sell_amount")]
@@ -921,12 +1073,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), set_sell_amount) = tokio::join!(log, set_sell_amount);
 
-        set_sell_amount.map_err(|err| {
-            error!("failed to set sell amount: {}", err);
-            Status::internal(err.to_string())
-        })?;
-
-        Ok(Response::new(SetSellAmountResponse {}))
+        match set_sell_amount {
+            Ok(()) => {
+                Ok(Response::new(SetSellAmountResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::SetSellAmount,
+                        stock_symbol: Some(stock_symbol),
+                        filename: None,
+                        funds: Some(amount),
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to set sell amount: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_set_sell_trigger")]
@@ -950,12 +1114,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), set_sell_trigger) = tokio::join!(log, set_sell_trigger);
 
-        set_sell_trigger.map_err(|err| {
-            error!("failed to set sell trigger: {}", err);
-            Status::internal(err.to_string())
-        })?;
-
-        Ok(Response::new(SetSellTriggerResponse {}))
+        match set_sell_trigger {
+            Ok(()) => {
+                Ok(Response::new(SetSellTriggerResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::SetSellTrigger,
+                        stock_symbol: Some(stock_symbol),
+                        filename: None,
+                        funds: Some(amount),
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to set sell trigger: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_cancel_set_sell")]
@@ -977,12 +1153,24 @@ impl DayTrader for DayTraderImpl {
 
         let ((), cancel_set_sell) = tokio::join!(log, cancel_set_sell);
 
-        cancel_set_sell.map_err(|err| {
-            error!("failed to cancel set sell: {}", err);
-            Status::internal(err.to_string())
-        })?;
-
-        Ok(Response::new(CancelSetSellResponse {}))
+        match cancel_set_sell {
+            Ok(()) => {
+                Ok(Response::new(CancelSetSellResponse {}))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::CancelSetSell,
+                        stock_symbol: Some(stock_symbol),
+                        filename: None,
+                        funds: None,
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to cancel set sell: {}", e)))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_quote")]
@@ -991,7 +1179,7 @@ impl DayTrader for DayTraderImpl {
         request: Request<QuoteRequest>,
     ) -> Result<Response<QuoteRequestSimple>, Status> {
         let quote_request = request.into_inner();
-        self.log_quote_request(&quote_request).await;
+        let log = self.log_quote_request(&quote_request);
 
         let QuoteRequest {
             user_id,
@@ -1001,13 +1189,27 @@ impl DayTrader for DayTraderImpl {
 
         let quote = self
             .quote
-            .get_quote_maybe_cached(request_num, user_id, stock_symbol)
-            .await
-            .map_err(|err| {
-                error!("failed to get quote: {}", err);
-                Status::internal(err.to_string())
-            })?;
+            .get_quote_maybe_cached(request_num, user_id, stock_symbol.clone());
 
-        Ok(Response::new(QuoteRequestSimple { price: quote }))
+        let ((), quote) = tokio::join!(log, quote);
+
+        match quote {
+            Ok(quote) => {
+                Ok(Response::new(QuoteRequestSimple { price: quote.price }))
+            }
+            Err(e) => {
+                self.report_error(
+                    0,
+                    ErrorEventLog {
+                        command: CommandType::Quote,
+                        stock_symbol: Some(stock_symbol),
+                        filename: None,
+                        funds: None,
+                        error_message: Some(e.to_string()),
+                    },
+                ).await;
+                Err(Status::internal(format!("failed to get quote: {}", e)))
+            }
+        }
     }
 }

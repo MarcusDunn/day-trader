@@ -56,14 +56,25 @@ async fn main() -> anyhow::Result<()> {
         .parse::<u32>()
         .map_err(|e| anyhow!("failed to parse DATABASE_MAX_CONNECTIONS: {e}"))?;
 
+    let database_connection_timeout_seconds = env::var("DATABASE_CONNECTION_TIMEOUT_SECONDS")
+        .map_err(|e| anyhow!("failed to get DATABASE_CONNECTION_TIMEOUT_SECONDS from env: {e}"))?
+        .parse::<u64>()
+        .map_err(|e| anyhow!("failed to parse DATABASE_CONNECTION_TIMEOUT_SECONDS: {e}"))?;
+
+    let database_min_connections = env::var("DATABASE_MIN_CONNECTIONS")
+        .map_err(|e| database_max_connections.to_string())?
+        .parse::<u32>()
+        .map_err(|e| anyhow!("failed to parse DATABASE_MIN_CONNECTIONS: {e}"))?;
+
     info!(
         "establishing {database_max_connections} connections to database (this may take some time)"
     );
 
     let pool = PgPoolOptions::new()
-        .acquire_timeout(Duration::from_secs(30))
+        .acquire_timeout(Duration::from_secs(database_connection_timeout_seconds))
+        .test_before_acquire(false)
         .max_connections(database_max_connections)
-        .min_connections(database_max_connections)
+        .min_connections(database_min_connections)
         .connect(
             &env::var("DATABASE_URL")
                 .map_err(|e| anyhow!("failed to get DATABASE_URL from env: {e}"))?,
