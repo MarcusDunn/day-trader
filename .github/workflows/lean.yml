@@ -41,7 +41,7 @@ jobs:
           POSTGRES_USER: daytrader
           POSTGRES_DB: daytrader
         ports:
-            - 5432:5432
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -68,6 +68,8 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: install sqlx cli
         run: cargo install sqlx-cli
+        # we may error on cache hit as it will already be installed, we'll fail later if something actually goes wrong
+        continue-on-error: true
       - name: migrate database
         run: sqlx migrate run
         env:
