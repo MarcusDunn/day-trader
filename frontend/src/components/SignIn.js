@@ -30,6 +30,7 @@ export default function SignIn() {
       if (responseParsed.status) {
         localStorage.setItem('jwt', responseParsed.user);
         setError("");
+        window.location.href = "/";
       }else{
         setError("Invalid username or password, please try again");
       }

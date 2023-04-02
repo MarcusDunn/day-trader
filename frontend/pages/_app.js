@@ -20,13 +20,13 @@ export const useMyTheme = () => useContext(ThemeContext);
 export default function MyApp(props) {
   const [myTheme, setMyTheme] = useState(createTheme(lightTheme));
   const [theme, setTheme] = useState(createTheme(lightTheme));
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState(undefined);
   useEffect(()=> {
     const jwt = localStorage.getItem('jwt');
     if (jwt && jwt !== 'undefined') {
       setUser(jwt);
     } else {
-      setUser({});
+      setUser(undefined);
     }
   },[])
   console.log("User:", user);
