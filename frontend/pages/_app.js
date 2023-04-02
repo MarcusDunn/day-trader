@@ -13,7 +13,7 @@ import Navigation from '../src/components/Navigation';
 const clientSideEmotionCache = createEmotionCache();
 
 const ThemeContext = createContext({theme: {}});
-const UserContext = createContext({});
+export const UserContext = createContext({});
 
 export const useMyTheme = () => useContext(ThemeContext);
 
@@ -39,7 +39,7 @@ export default function MyApp(props) {
   
 
   return (
-    <UserContext.Provider value={{theme, setMyTheme}}>
+    <UserContext.Provider value={{user}}>
       <ThemeContext.Provider value={{theme, setMyTheme}}>
         <CacheProvider value={emotionCache}>
           <Head>

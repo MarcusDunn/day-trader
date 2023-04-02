@@ -17,7 +17,7 @@ function stock({ stock }) {
 export async function getServerSideProps({ query }) {
     const { id } = query
     try{
-        const res = await fetch(`http://localhost:3000/api/stocks/`.concat(id));
+        const res = await fetch(`/api/stocks/`.concat(id));
         const data = await res.json()
         return { props: { stock: data } }
     }catch(error){

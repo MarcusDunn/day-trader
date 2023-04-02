@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react'
-import { AppBar, Box, Button, ButtonBase, Link, Toolbar, Typography, useTheme } from '@mui/material'
+import React, { useState, useEffect, useContext } from 'react'
+import { AppBar, Avatar, Box, Button, ButtonBase, Link, Toolbar, Typography, useTheme } from '@mui/material'
+import { UserContext } from '../../pages/_app';
 
 function Navigation() {
+    const { user } = useContext(UserContext);
+    console.log(user);
     const theme = useTheme()
     const [scrolled, setScrolled] = useState(false)
 
@@ -16,6 +19,11 @@ function Navigation() {
         window.removeEventListener('scroll', handleScroll)
         }
     }, [])
+
+    const openAvatarMenu = () => {
+        console.log("Hola")
+    }
+
 
     return (
         <AppBar
@@ -37,34 +45,48 @@ function Navigation() {
                         </Typography>
                     </ButtonBase>
                 </Box>
-                <nav>
-                    <ButtonBase
-                        href="/pricing"
-                        sx={{ my: 1, mx: 1.5 }}
-                    >
-                        <Typography className="font-medium" color={scrolled ? 'inherit' : 'text'} >Pricing</Typography>
-                    </ButtonBase>
-                    <ButtonBase
-                        href="/stocks"
-                        sx={{ my: 1, mx: 1.5 }}
-                    >
-                        <Typography className="font-medium" color={scrolled ? 'inherit' : 'text'} >Stocks</Typography>
-                    </ButtonBase>
-                    <ButtonBase
-                        href="/dashboard"
-                        sx={{ my: 1, mx: 1.5 }}
-                    >
-                        <Typography className="font-medium" color={scrolled ? 'inherit' : 'text'} >Dashboard</Typography>
-                    </ButtonBase>
-                </nav>
-                <Button 
-                    href="/login" 
-                    color="secondary"
-                    variant="outlined" 
-                    sx={{ my: 1, mx: 1.5 }}
-                >
-                    Login
-                </Button>
+                {
+                    !user ?
+                    <nav>
+                        <ButtonBase
+                            href="/pricing"
+                            sx={{ my: 1, mx: 1.5 }}
+                            >
+                            <Typography className="font-medium" color={scrolled ? 'inherit' : 'text'} >Pricing</Typography>
+                        </ButtonBase>
+                        <ButtonBase
+                            href="/stocks"
+                            sx={{ my: 1, mx: 1.5 }}
+                            >
+                            <Typography className="font-medium" color={scrolled ? 'inherit' : 'text'} >Stocks</Typography>
+                        </ButtonBase>
+                    </nav>
+                    :
+                    <nav>
+                        <ButtonBase
+                            href="/dashboard"
+                            sx={{ my: 1, mx: 1.5 }}
+                        >
+                            <Typography className="font-medium" color={scrolled ? 'inherit' : 'text'} >Dashboard</Typography>
+                        </ButtonBase>
+                    </nav>
+                }
+                {
+                    user ?
+                        <Avatar className="mx-3 my-2"sx={{ bgcolor: theme.palette.secondary.main, height: 35, width: 35 }} onClick={openAvatarMenu}>{
+                            user[0] ? user[0].toUpperCase() : user[0]
+                            }
+                        </Avatar>
+                        :
+                        <Button 
+                            href="/login" 
+                            color="secondary"
+                            variant="outlined" 
+                            sx={{ my: 1, mx: 1.5 }}
+                        >
+                            Login
+                        </Button>
+                }
             </Toolbar>
         </AppBar>
     )
