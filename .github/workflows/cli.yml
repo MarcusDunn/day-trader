@@ -54,8 +54,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - run: cargo fmt --all -- --check
         name: Run cargo fmt
-      - run: cargo build
-        name: Build
       - run: cargo clippy -- -D warnings
         name: Run clippy
       - run: cargo test
