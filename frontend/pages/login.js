@@ -3,7 +3,7 @@ import SignIn from '../src/components/SignIn'
 import { UserContext } from './_app';
 
 function login() {
-    const { user } = useContext(UserContext);
+    const user = useContext(UserContext).user;
     useEffect(() => {
         if(user){
             window.location.href = "/"

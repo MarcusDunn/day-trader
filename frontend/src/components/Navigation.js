@@ -19,7 +19,7 @@ import Settings from '@mui/icons-material/Settings';
 import Logout from '@mui/icons-material/Logout';
 
 function Navigation() {
-  const { user } = useContext(UserContext);
+  const user = useContext(UserContext).user;
   const theme = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);

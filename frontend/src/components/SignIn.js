@@ -19,7 +19,7 @@ export default function SignIn() {
       username: data.get('email')
     }
     try{
-      const response = await fetch('/api/login', {
+      const response = await fetch('/api/user/login', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

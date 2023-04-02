@@ -1,10 +1,10 @@
-import { Box, Button, Container, Typography, useTheme } from '@mui/material'
+import { Box, Button, Container, Typography } from '@mui/material'
 import React, { useContext } from 'react'
 import { UserContext } from '../../../pages/_app';
 
 function Hero() {
-    const user = useContext(UserContext);
-    const theme = useTheme();
+    const user = useContext(UserContext).user;
+
     return (
         <Box
             className="w-full h-screen backdrop-blur"

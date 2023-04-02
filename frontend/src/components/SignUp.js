@@ -16,7 +16,7 @@ export default function SignUp() {
       username: data.get('email')
     }
     try{
-      const response = await fetch('/api/signup', {
+      const response = await fetch('/api/user/signup', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

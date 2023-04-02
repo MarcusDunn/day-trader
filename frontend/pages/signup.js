@@ -3,7 +3,7 @@ import SignUp from '../src/components/SignUp'
 import { UserContext } from './_app';
 
 function signup() {
-    const { user } = useContext(UserContext);
+    const user = useContext(UserContext).user;
     useEffect(() => {
         if(user){
             window.location.href = "/"
