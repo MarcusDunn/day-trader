@@ -94,7 +94,7 @@ function Navigation() {
           <React.Fragment>
             <Avatar
               className="mx-3 my-2"
-              sx={{ bgcolor: theme.palette.secondary.main, height: 35, width: 35 }}
+              sx={{ bgcolor: theme.palette.secondary.main, height: 35, width: 35, cursor: 'pointer', }}
               onClick={openAvatarMenu}
             >
               {user[0] ? user[0].toUpperCase() : user[0]}
