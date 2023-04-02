@@ -29,7 +29,6 @@ export default function MyApp(props) {
       setUser(undefined);
     }
   },[])
-  console.log("User:", user);
 
   useEffect(()=> {
       setTheme(createTheme(myTheme));
