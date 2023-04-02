@@ -62,12 +62,15 @@ async fn main() -> anyhow::Result<()> {
         .map_err(|e| anyhow!("failed to parse DATABASE_CONNECTION_TIMEOUT_SECONDS: {e}"))?;
 
     let database_min_connections = env::var("DATABASE_MIN_CONNECTIONS")
-        .unwrap_or_else(|_| database_max_connections.to_string())
+        .unwrap_or_else(|_| {
+            info!("DATABASE_MIN_CONNECTIONS not set, defaulting to DATABASE_MAX_CONNECTIONS");
+            database_max_connections.to_string()
+        })
         .parse::<u32>()
         .map_err(|e| anyhow!("failed to parse DATABASE_MIN_CONNECTIONS: {e}"))?;
 
     info!(
-        "establishing {database_max_connections} connections to database (this may take some time)"
+        "establishing {database_max_connections} connections to database. This may take some time but will time out in {database_connection_timeout_seconds} seconds."
     );
 
     let pool = PgPoolOptions::new()
