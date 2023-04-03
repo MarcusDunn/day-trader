@@ -116,11 +116,12 @@ impl Quoter {
             _ => Self::Real(UVicQuoter {
                 quote_server_addr: addr,
                 hackery_levels: env::var("HACKERY_LEVELS")
-                    .map(|hackery_levels| hackery_levels
-                        .parse()
-                        .expect("failed to parse HACKERY_LEVELS")
-                    )
-                    .unwrap_or(5)
+                    .map(|hackery_levels| {
+                        hackery_levels
+                            .parse()
+                            .expect("failed to parse HACKERY_LEVELS")
+                    })
+                    .unwrap_or(5),
             }),
         }
     }
@@ -193,7 +194,9 @@ impl Quote for UVicQuoter {
             let stock_symbol = stock_symbol.clone();
             let quoter = self.clone();
             join_set.spawn(async move {
-                quoter.connect_and_query_uvic_quote_server(user_id, &stock_symbol).await
+                quoter
+                    .connect_and_query_uvic_quote_server(user_id, &stock_symbol)
+                    .await
             });
         }
 
@@ -216,7 +219,11 @@ impl UVicQuoter {
     }
 
     #[instrument(skip_all)]
-    async fn connect_and_query_uvic_quote_server(&self, user_id: String, stock_symbol: &str) -> Result<String, Status> {
+    async fn connect_and_query_uvic_quote_server(
+        &self,
+        user_id: String,
+        stock_symbol: &str,
+    ) -> Result<String, Status> {
         let mut stream = self.connect().await.map_err(|e| {
             Status::internal(format!(
                 "failed to connect to {}: {e}",
@@ -233,8 +240,8 @@ impl UVicQuoter {
             &mut reader,
             make_socket_message(user_id, stock_symbol),
         )
-            .await
-            .map_err(|e| Status::internal(format!("failed to get response: {e}")))?;
+        .await
+        .map_err(|e| Status::internal(format!("failed to get response: {e}")))?;
 
         Ok(response)
     }
