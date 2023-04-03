@@ -551,12 +551,13 @@ impl CachedQuote {
 }
 
 impl DayTraderImpl {
-    async fn report_error(&self, request_num: i32, username: String, error_event_log: ErrorEventLog) {
-        let log_entry = LogEntry::new(
-            request_num,
-            username,
-            Log::ErrorMessages(error_event_log),
-        );
+    async fn report_error(
+        &self,
+        request_num: i32,
+        username: String,
+        error_event_log: ErrorEventLog,
+    ) {
+        let log_entry = LogEntry::new(request_num, username, Log::ErrorMessages(error_event_log));
 
         if let Err(err) = self.log_sender.send(log_entry).await {
             error!("failed to send log entry: {err}");
@@ -834,8 +835,7 @@ impl DayTrader for DayTraderImpl {
                 .get_quote_maybe_cached(request_num, user_id.clone(), stock_symbol.clone())
                 .await?;
 
-            sell::init_sell(&self.postgres, &user_id, &stock_symbol, quote, amount)
-                .await?;
+            sell::init_sell(&self.postgres, &user_id, &stock_symbol, quote, amount).await?;
 
             Ok::<(), anyhow::Error>(())
         };
@@ -1197,9 +1197,9 @@ impl DayTrader for DayTraderImpl {
             request_num,
         } = quote_request;
 
-        let quote = self
-            .quote
-            .get_quote_maybe_cached(request_num, user_id.clone(), stock_symbol.clone());
+        let quote =
+            self.quote
+                .get_quote_maybe_cached(request_num, user_id.clone(), stock_symbol.clone());
 
         let ((), quote) = tokio::join!(log, quote);
 
