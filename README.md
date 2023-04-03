@@ -3,6 +3,8 @@
 
 This is an implementation of a scalable day trading application for UVic's Scalable Systems offering (SENG 468).
 
+With an AMD Ryzen 9 3900X with 32GB of ram running `docker compose -f v2.docker-compose.yml up` and then running the CLI on the largest load test file one can get thier hands on it pushes past 20 000 requests per second without fully loading the CPU!
+
 ## Architecture
 
 ```mermaid
