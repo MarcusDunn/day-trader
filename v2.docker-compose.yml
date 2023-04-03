@@ -8,7 +8,7 @@ services:
       COLLECTOR_OTLP_ENABLED: true
   postgres:
     image: postgres:latest
-    shm_size: 10g
+    shm_size: 14g
     environment:
       POSTGRES_USER: "daytrader"
       POSTGRES_PASSWORD: "daytrader"
@@ -19,10 +19,8 @@ services:
       timeout: 5s
       retries: 5
   lean:
-    shm_size: 6g
-    build:
-      context: .
-      dockerfile: lean.Dockerfile
+    shm_size: 4g
+    image: ghcr.io/marcusdunn/day-trader/lean
     environment:
       DATABASE_URL: postgres://daytrader:daytrader@postgres:5432/daytrader
       QUOTE_CLIENT_ADDR: http://quote-server-adaptor:50051
@@ -31,7 +29,7 @@ services:
       DATABASE_MAX_CONNECTIONS: 5000
       TRIGGER_CHANNEL_SIZE: 10000
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
-      DATABASE_CONNECTION_TIMEOUT_SECONDS: 120
+      DATABASE_CONNECTION_TIMEOUT_SECONDS: 5
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,4 +45,3 @@ services:
       QUOTE_SERVER_URI: FAKE
       RUST_LOG: "none,quote_server_adaptor=info"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
-
