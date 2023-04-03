@@ -1,10 +1,10 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use opentelemetry::runtime::Tokio;
 use opentelemetry::sdk::trace::Config;
 use opentelemetry::sdk::trace::Sampler::TraceIdRatioBased;
 use opentelemetry::sdk::Resource;
 use opentelemetry::KeyValue;
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{TonicExporterBuilder, WithExportConfig};
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::time::Duration;
@@ -28,13 +28,22 @@ async fn main() -> anyhow::Result<()> {
         warn!("failed to load dotenv: {err}")
     }
 
+    let trace_id_ratio = env::var("TRACE_ID_RATIO")
+        .unwrap_or_else(|_| String::from("1"))
+        .parse()
+        .map_err(|e| anyhow!("failed to parse TRACE_ID_RATIO: {e}"))?;
+
+    if !(0_f64..=1_f64).contains(&trace_id_ratio) {
+        bail!("Invalid TRACE_ID_RATIO (must be in [0..1])")
+    }
+
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(opentelemetry_otlp::new_exporter().tonic().with_env())
         .with_trace_config(
             Config::default()
-                .with_sampler(TraceIdRatioBased(0.01))
-                .with_resource(Resource::new(vec![KeyValue::new("service.name", "legacy")])),
+                .with_sampler(TraceIdRatioBased(trace_id_ratio))
+                .with_resource(Resource::new(vec![KeyValue::new("service.name", "lean")])),
         )
         .install_batch(Tokio)?;
 
@@ -57,28 +66,23 @@ async fn main() -> anyhow::Result<()> {
         .map_err(|e| anyhow!("failed to parse DATABASE_MAX_CONNECTIONS: {e}"))?;
 
     let database_connection_timeout_seconds = env::var("DATABASE_CONNECTION_TIMEOUT_SECONDS")
-        .map_err(|e| anyhow!("failed to get DATABASE_CONNECTION_TIMEOUT_SECONDS from env: {e}"))?
+        .unwrap_or_else(|_| String::from("30"))
         .parse::<u64>()
         .map_err(|e| anyhow!("failed to parse DATABASE_CONNECTION_TIMEOUT_SECONDS: {e}"))?;
 
-    let database_min_connections = env::var("DATABASE_MIN_CONNECTIONS")
-        .unwrap_or_else(|_| database_max_connections.to_string())
-        .parse::<u32>()
-        .map_err(|e| anyhow!("failed to parse DATABASE_MIN_CONNECTIONS: {e}"))?;
+    let test_before_acquire = env::var("TEST_BEFORE_ACQUIRE")
+        .unwrap_or_else(|_| String::from("true"))
+        .parse()
+        .map_err(|e| anyhow!("failed to parse TEST_BEFORE_ACQUIRE: {e}"))?;
 
-    info!(
-        "establishing {database_max_connections} connections to database (this may take some time)"
-    );
+    let database_url = &env::var("DATABASE_URL")
+        .map_err(|e| anyhow!("failed to get DATABASE_URL from env: {e}"))?;
 
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_secs(database_connection_timeout_seconds))
-        .test_before_acquire(false)
+        .test_before_acquire(test_before_acquire)
         .max_connections(database_max_connections)
-        .min_connections(database_min_connections)
-        .connect(
-            &env::var("DATABASE_URL")
-                .map_err(|e| anyhow!("failed to get DATABASE_URL from env: {e}"))?,
-        )
+        .connect(database_url)
         .await
         .map_err(|e| anyhow!("failed to connect to postgres: {e}"))?;
 

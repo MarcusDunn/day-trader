@@ -551,10 +551,10 @@ impl CachedQuote {
 }
 
 impl DayTraderImpl {
-    async fn report_error(&self, request_num: i32, error_event_log: ErrorEventLog) {
+    async fn report_error(&self, request_num: i32, username: String, error_event_log: ErrorEventLog) {
         let log_entry = LogEntry::new(
             request_num,
-            "legacy".to_string(),
+            username,
             Log::ErrorMessages(error_event_log),
         );
 
@@ -635,6 +635,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     request_num,
+                    String::from("ADMIN"),
                     ErrorEventLog {
                         command: CommandType::DumpLog,
                         stock_symbol: None,
@@ -676,6 +677,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    user_id,
                     ErrorEventLog {
                         command: CommandType::Add,
                         stock_symbol: None,
@@ -730,6 +732,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     request_num,
+                    user_id,
                     ErrorEventLog {
                         command: CommandType::Buy,
                         stock_symbol: Some(stock_symbol),
@@ -753,7 +756,8 @@ impl DayTrader for DayTraderImpl {
 
         let log = self.log_commit_buy_request(commit_buy_request.clone());
 
-        let commit_buy = buy::commit_buy(&self.postgres, &commit_buy_request.user_id);
+        let user_id = commit_buy_request.user_id.clone();
+        let commit_buy = buy::commit_buy(&self.postgres, &user_id);
 
         let ((), commit_buy) = tokio::join!(log, commit_buy);
 
@@ -762,6 +766,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    commit_buy_request.user_id,
                     ErrorEventLog {
                         command: CommandType::CommitBuy,
                         stock_symbol: None,
@@ -785,7 +790,8 @@ impl DayTrader for DayTraderImpl {
 
         let log = self.log_cancel_buy_request(&cancel_buy_request);
 
-        let cancel = buy::cancel_buy(&self.postgres, &cancel_buy_request.user_id);
+        let user_id = cancel_buy_request.user_id.clone();
+        let cancel = buy::cancel_buy(&self.postgres, &user_id);
 
         let ((), cancel) = tokio::join!(log, cancel);
 
@@ -794,6 +800,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    cancel_buy_request.user_id,
                     ErrorEventLog {
                         command: CommandType::CancelBuy,
                         stock_symbol: None,
@@ -825,20 +832,12 @@ impl DayTrader for DayTraderImpl {
             let quote = self
                 .quote
                 .get_quote_maybe_cached(request_num, user_id.clone(), stock_symbol.clone())
-                .await
-                .map_err(|err| {
-                    error!("failed to get quote: {}", err);
-                    Status::internal(err.to_string())
-                })?;
+                .await?;
 
             sell::init_sell(&self.postgres, &user_id, &stock_symbol, quote, amount)
-                .await
-                .map_err(|err| {
-                    error!("failed to sell: {}", err);
-                    Status::internal(err.to_string())
-                })?;
+                .await?;
 
-            Ok::<(), Status>(())
+            Ok::<(), anyhow::Error>(())
         };
 
         let ((), init_sell) = tokio::join!(log, init_sell);
@@ -848,6 +847,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     request_num,
+                    user_id,
                     ErrorEventLog {
                         command: CommandType::Sell,
                         stock_symbol: Some(stock_symbol),
@@ -871,7 +871,7 @@ impl DayTrader for DayTraderImpl {
 
         let log = self.log_commit_sell_request(commit_sell_request.clone());
 
-        let commit_sell = sell::commit_sell(&self.postgres, commit_sell_request.user_id);
+        let commit_sell = sell::commit_sell(&self.postgres, commit_sell_request.user_id.clone());
 
         let ((), commit_sell) = tokio::join!(log, commit_sell);
 
@@ -880,6 +880,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    commit_sell_request.user_id,
                     ErrorEventLog {
                         command: CommandType::CommitSell,
                         stock_symbol: None,
@@ -903,7 +904,7 @@ impl DayTrader for DayTraderImpl {
 
         let log = self.log_cancel_sell_request(cancel_sell_request.clone());
 
-        let cancel_sell = sell::cancel_sell(&self.postgres, cancel_sell_request.user_id);
+        let cancel_sell = sell::cancel_sell(&self.postgres, cancel_sell_request.user_id.clone());
 
         let ((), cancel_sell) = tokio::join!(log, cancel_sell);
 
@@ -912,6 +913,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    cancel_sell_request.user_id,
                     ErrorEventLog {
                         command: CommandType::CancelSell,
                         stock_symbol: None,
@@ -952,6 +954,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    user_id,
                     ErrorEventLog {
                         command: CommandType::SetBuyAmount,
                         stock_symbol: Some(stock_symbol),
@@ -990,6 +993,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    user_id,
                     ErrorEventLog {
                         command: CommandType::CancelSetBuy,
                         stock_symbol: Some(stock_symbol),
@@ -1030,6 +1034,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    user_id,
                     ErrorEventLog {
                         command: CommandType::SetBuyTrigger,
                         stock_symbol: Some(stock_symbol),
@@ -1073,6 +1078,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    user_id,
                     ErrorEventLog {
                         command: CommandType::SetSellAmount,
                         stock_symbol: Some(stock_symbol),
@@ -1116,6 +1122,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    user_id,
                     ErrorEventLog {
                         command: CommandType::SetSellTrigger,
                         stock_symbol: Some(stock_symbol),
@@ -1157,6 +1164,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    user_id,
                     ErrorEventLog {
                         command: CommandType::CancelSetSell,
                         stock_symbol: Some(stock_symbol),
@@ -1191,7 +1199,7 @@ impl DayTrader for DayTraderImpl {
 
         let quote = self
             .quote
-            .get_quote_maybe_cached(request_num, user_id, stock_symbol.clone());
+            .get_quote_maybe_cached(request_num, user_id.clone(), stock_symbol.clone());
 
         let ((), quote) = tokio::join!(log, quote);
 
@@ -1200,6 +1208,7 @@ impl DayTrader for DayTraderImpl {
             Err(e) => {
                 self.report_error(
                     0,
+                    user_id,
                     ErrorEventLog {
                         command: CommandType::Quote,
                         stock_symbol: Some(stock_symbol.clone()),
