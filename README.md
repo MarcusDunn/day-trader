@@ -87,6 +87,13 @@ With an AMD Ryzen 9 3900X with 32GB of ram running `docker compose -f v2.docker-
 ### A Set of Spans for a Single Request
 ![image](https://user-images.githubusercontent.com/51931484/229443750-e391558f-401d-43ac-850a-be3d9c606357.png)
 
+### Output of `docker container stats` mid loadtest
+![image](https://user-images.githubusercontent.com/51931484/229545287-00942609-3f02-4a1d-8ec6-c62c612e3ef5.png)
+
+### Output of `htop` mid loadtest
+![image](https://user-images.githubusercontent.com/51931484/229545477-48294fb1-9ca1-441d-97fb-4eb4a4503428.png)
+
+
 ## Sample Logs
 ```xml
   <UserCommandType>
