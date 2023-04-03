@@ -6,12 +6,13 @@ use crate::log::{
 };
 
 use anyhow::anyhow;
+use futures::stream::BoxStream;
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use time::PrimitiveDateTime;
 use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncWriteExt, BufWriter};
 
 /*
 <xsd:complexType name="LogType">
@@ -227,11 +228,21 @@ pub async fn dump_log(pool: &PgPool, filename: &str) -> anyhow::Result<()> {
     let file = File::create(filename)
         .await
         .map_err(|e| anyhow!("failed to create file: {e}"))?;
-    let mut file = tokio::io::BufWriter::new(file);
+    let mut file = BufWriter::new(file);
 
     let mut rows =
         sqlx::query_as!(DbLogEntry, "SELECT * FROM log_entry ORDER BY timestamp ASC").fetch(pool);
 
+    write_entries(&mut file, &mut rows).await?;
+
+    Ok(())
+}
+
+#[tracing::instrument(skip(file, rows))]
+pub(super) async fn write_entries(
+    file: &mut BufWriter<File>,
+    rows: &mut BoxStream<'_, sqlx::Result<DbLogEntry>>,
+) -> anyhow::Result<()> {
     file.write_all(b"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r")
         .await?;
     file.write_all(b"<log>").await?;
