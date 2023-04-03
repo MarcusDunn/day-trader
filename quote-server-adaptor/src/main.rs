@@ -17,6 +17,7 @@ use tokio::io::BufReader;
 use tokio::io::{AsyncBufRead, AsyncWriteExt};
 use tokio::io::{AsyncBufReadExt, AsyncWrite};
 use tokio::net::TcpStream;
+use tokio::task::JoinSet;
 use tonic::transport::Server;
 use tonic::{async_trait, Request, Response, Status};
 use tower_http::trace::{DefaultOnRequest, DefaultOnResponse};
@@ -114,6 +115,12 @@ impl Quoter {
             "FAKE" => Self::Fake(FakeQuoteServer),
             _ => Self::Real(UVicQuoter {
                 quote_server_addr: addr,
+                hackery_levels: env::var("HACKERY_LEVELS")
+                    .map(|hackery_levels| hackery_levels
+                        .parse()
+                        .expect("failed to parse HACKERY_LEVELS")
+                    )
+                    .unwrap_or(5)
             }),
         }
     }
@@ -160,8 +167,10 @@ impl Quote for FakeQuoteServer {
     }
 }
 
+#[derive(Clone)]
 struct UVicQuoter {
     quote_server_addr: String,
+    hackery_levels: u8,
 }
 
 #[async_trait]
@@ -177,13 +186,22 @@ impl Quote for UVicQuoter {
             ..
         } = request.into_inner();
 
-        let response = tokio::select! {
-            resp = self.connect_and_query_uvic_quote_server(user_id.clone(), &stock_symbol) => resp,
-            resp = self.connect_and_query_uvic_quote_server(user_id.clone(), &stock_symbol) => resp,
-            resp = self.connect_and_query_uvic_quote_server(user_id.clone(), &stock_symbol) => resp,
-            resp = self.connect_and_query_uvic_quote_server(user_id.clone(), &stock_symbol) => resp,
-            resp = self.connect_and_query_uvic_quote_server(user_id.clone(), &stock_symbol) => resp,
-        }?;
+        let mut join_set = JoinSet::new();
+
+        for _ in 0..self.hackery_levels {
+            let user_id = user_id.clone();
+            let stock_symbol = stock_symbol.clone();
+            let quoter = self.clone();
+            join_set.spawn(async move {
+                quoter.connect_and_query_uvic_quote_server(user_id, &stock_symbol).await
+            });
+        }
+
+        let response = join_set
+            .join_next()
+            .await
+            .expect("at least 1 request should be sent")
+            .map_err(|e| Status::internal(format!("failed to join: {e}")))??;
 
         Ok(Response::new(
             response_from_quote_server_string(&response).map_err(Status::internal)?,
