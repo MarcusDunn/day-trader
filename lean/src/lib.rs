@@ -55,6 +55,32 @@ pub struct DayTraderImpl {
 }
 
 impl DayTraderImpl {
+    pub async fn log_dump_log_user_request(
+        &self,
+        DumpLogUserRequest {
+            user_id,
+            filename,
+            request_num,
+        }: &DumpLogUserRequest,
+    ) {
+        let log_entry = LogEntry::new(
+            *request_num,
+            user_id.clone(),
+            Log::UserCommand(UserCommandLog {
+                command: CommandType::DumpLog,
+                stock_symbol: None,
+                funds: None,
+                filename: Some(filename.clone()),
+            }),
+        );
+
+        if let Err(err) = self.log_sender.send(log_entry).await {
+            error!("failed to send log entry: {err}");
+        }
+    }
+}
+
+impl DayTraderImpl {
     #[tracing::instrument(skip_all)]
     async fn log_cancel_set_sell_request(
         &self,
@@ -610,9 +636,38 @@ impl DayTrader for DayTraderImpl {
     #[tracing::instrument(skip_all, name = "grpc_dump_log_user")]
     async fn dump_log_user(
         &self,
-        _request: Request<DumpLogUserRequest>,
+        request: Request<DumpLogUserRequest>,
     ) -> Result<Response<DumpLogUserResponse>, Status> {
-        Err(Status::unimplemented("not implemented".to_string()))
+        let dump_log_user_request = request.into_inner();
+
+        self.log_dump_log_user_request(&dump_log_user_request).await;
+
+        let DumpLogUserRequest {
+            filename,
+            request_num,
+            user_id,
+        } = dump_log_user_request;
+
+        match log::dump_log_user(&self.postgres, &filename.clone(), &user_id.clone()).await {
+            Ok(()) => Ok(Response::new(DumpLogUserResponse {
+                xml: "check the file system".to_string(),
+            })),
+            Err(e) => {
+                self.report_error(
+                    request_num,
+                    user_id,
+                    ErrorEventLog {
+                        command: CommandType::DumpLog,
+                        stock_symbol: None,
+                        filename: Some(filename),
+                        funds: None,
+                        error_message: Some(e.to_string()),
+                    },
+                )
+                .await;
+                Err(Status::internal(format!("failed to dump log: {e}")))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_dump_log")]
