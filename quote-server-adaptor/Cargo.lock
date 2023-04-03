@@ -747,7 +747,7 @@ dependencies = [
  "opentelemetry",
  "prost",
  "tonic 0.8.3",
- "tonic-build",
+ "tonic-build 0.8.4",
 ]
 
 [[package]]
@@ -963,7 +963,7 @@ dependencies = [
  "rand",
  "tokio",
  "tonic 0.9.1",
- "tonic-build",
+ "tonic-build 0.9.1",
  "tower",
  "tower-http",
  "tracing",
@@ -1318,6 +1318,19 @@ name = "tonic-build"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5bf5e9b9c0f7e0a7c027dcfaba7b2c60816c7049171f679d99ee2ff65d0de8c4"
+dependencies = [
+ "prettyplease",
+ "proc-macro2",
+ "prost-build",
+ "quote",
+ "syn 1.0.107",
+]
+
+[[package]]
+name = "tonic-build"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f60a933bbea70c95d633c04c951197ddf084958abaa2ed502a3743bdd8d8dd7"
 dependencies = [
  "prettyplease",
  "proc-macro2",
