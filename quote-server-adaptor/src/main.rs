@@ -177,6 +177,28 @@ impl Quote for UVicQuoter {
             ..
         } = request.into_inner();
 
+        let response = tokio::select! {
+            resp = self.connect_and_query_uvic_quote_server(user_id.clone(), &stock_symbol) => resp,
+            resp = self.connect_and_query_uvic_quote_server(user_id.clone(), &stock_symbol) => resp,
+            resp = self.connect_and_query_uvic_quote_server(user_id.clone(), &stock_symbol) => resp,
+            resp = self.connect_and_query_uvic_quote_server(user_id.clone(), &stock_symbol) => resp,
+            resp = self.connect_and_query_uvic_quote_server(user_id.clone(), &stock_symbol) => resp,
+        }?;
+
+        Ok(Response::new(
+            response_from_quote_server_string(&response).map_err(Status::internal)?,
+        ))
+    }
+}
+
+impl UVicQuoter {
+    #[tracing::instrument(skip_all)]
+    async fn connect(&self) -> std::io::Result<TcpStream> {
+        TcpStream::connect(&self.quote_server_addr).await
+    }
+
+    #[instrument(skip_all)]
+    async fn connect_and_query_uvic_quote_server(&self, user_id: String, stock_symbol: &str) -> Result<String, Status> {
         let mut stream = self.connect().await.map_err(|e| {
             Status::internal(format!(
                 "failed to connect to {}: {e}",
@@ -191,21 +213,12 @@ impl Quote for UVicQuoter {
         let response = get_response(
             &mut writer,
             &mut reader,
-            make_socket_message(user_id, &stock_symbol),
+            make_socket_message(user_id, stock_symbol),
         )
-        .await
-        .map_err(|e| Status::internal(format!("failed to get response: {e}")))?;
+            .await
+            .map_err(|e| Status::internal(format!("failed to get response: {e}")))?;
 
-        Ok(Response::new(
-            response_from_quote_server_string(&response).map_err(Status::internal)?,
-        ))
-    }
-}
-
-impl UVicQuoter {
-    #[tracing::instrument(skip_all)]
-    async fn connect(&self) -> std::io::Result<TcpStream> {
-        TcpStream::connect(&self.quote_server_addr).await
+        Ok(response)
     }
 }
 
