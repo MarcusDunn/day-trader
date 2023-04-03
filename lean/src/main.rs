@@ -4,7 +4,7 @@ use opentelemetry::sdk::trace::Config;
 use opentelemetry::sdk::trace::Sampler::TraceIdRatioBased;
 use opentelemetry::sdk::Resource;
 use opentelemetry::KeyValue;
-use opentelemetry_otlp::{WithExportConfig};
+use opentelemetry_otlp::WithExportConfig;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::time::Duration;
