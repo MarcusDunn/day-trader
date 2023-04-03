@@ -1,10 +1,10 @@
 import { Typography } from '@mui/material'
 import React from 'react'
 
-function SingleStockBody({ stock }) {
+function SingleStockBody({ stock, userInfo }) {
   return (
     <div className="text-center">
-      Put buttons to buy, sell, and set buys/sells
+      Display what stock user owns and triggers on
     </div>
   )
 }

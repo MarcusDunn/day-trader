@@ -31,6 +31,7 @@ function Balance() {
     try {
       const response_parsed = await (await fetch(url)).json();
       setBalance(response_parsed.balance);
+      console.log("GetBalance",response_parsed.balance)
     } catch (error) {
       console.log(error);
     }
@@ -64,7 +65,7 @@ function Balance() {
 
   useEffect(() => {
     getBalance();
-  }, []);
+  }, [user]);
 
   const modalBody = (
     <Box

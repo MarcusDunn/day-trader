@@ -1,17 +1,49 @@
 import { Button, Container, Typography } from '@mui/material'
-import React from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import StockHeader from '../../src/components/stocks/StockHeader'
 import SingleStockBody from '../../src/components/stocks/SingleStockBody'
+import { UserContext } from '../_app';
+import BuySellStockMenu from '../../src/components/stocks/BuySellStockMenu';
 
 function stock({ stock }) {
-    console.log("stock",stock)
+    const user = useContext(UserContext).user;
+    const [userInfo, setUserInfo] = useState({});
+
+    const getUserInfo = async () => {
+        if (!user) {
+          return;
+        }
+        const url = '/api/user/'.concat(user);
+        try {
+          const response_parsed = await (await fetch(url)).json();
+          setUserInfo(response_parsed);
+        } catch (error) {
+          console.log(error);
+        }
+    };
+
+    useEffect(() => {
+        getUserInfo()
+    }, [user]);
+
     return (
         stock.name !== "NOTFOUND" ? 
             <main>
                 <StockHeader stock={stock} />
-                <Container maxWidth="md" className="my-20">
-                    <SingleStockBody stock={stock} />
-                </Container>
+                {
+                    user ?
+                    <Container maxWidth="md" className="my-20">
+                        <BuySellStockMenu stock={stock} userInfo={userInfo} />
+                        <SingleStockBody stock={stock} userInfo={userInfo} />
+                    </Container>
+                        :
+                    <Container maxWidth="md" className="my-20 m-auto text-center">
+                        <Typography variant="h4" className="my-8">
+                            Login to Buy and Sell Stocks
+                        </Typography>
+                        <Button variant="outlined" color="secondary" href="/login">Login</Button>
+                    </Container>
+                }
             </main>
         :
             <main>
