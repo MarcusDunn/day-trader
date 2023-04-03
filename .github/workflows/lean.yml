@@ -41,13 +41,12 @@ jobs:
           POSTGRES_USER: daytrader
           POSTGRES_DB: daytrader
         ports:
-            - 5432:5432
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
       - uses: actions/checkout@v3
       - name: Install Protoc
@@ -58,16 +57,25 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt,clippy
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: install sqlx cli
         run: cargo install sqlx-cli
+        # we may error on cache hit as it will already be installed, we'll fail later if something actually goes wrong
+        continue-on-error: true
       - name: migrate database
         run: sqlx migrate run
         env:
           DATABASE_URL: postgres://daytrader:daytrader@localhost:5432
       - run: cargo fmt --all -- --check
         name: Run cargo fmt
-      - run: cargo build
-        name: Build
       - run: cargo clippy -- -D warnings
         name: Run clippy
       - run: cargo test
