@@ -3,7 +3,7 @@ const response = {
     stock: [
         {
             "name": "ABC",
-            "stock": 420.69,
+            "stock": 55.69,
         },
         {
             "name": "ASH",
@@ -18,7 +18,7 @@ const response = {
         {
             "name": "ABC",
             "triggerAmount": 500.00,
-            "sharesToSell": 300.0,
+            "sharesToSell": 22.0,
         },
         {
             "name": "ASH",
@@ -35,7 +35,7 @@ const response = {
         {
             "name": "ABC",
             "triggerAmount": 500.00,
-            "buyAmount": 300.0,
+            "buyAmount": 22.0,
         },
         {
             "name": "ASH",

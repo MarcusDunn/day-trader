@@ -8,6 +8,7 @@ import {lightTheme, darkTheme } from '../src/theme'
 import '../src/globals.css'
 import createEmotionCache from '../src/createEmotionCache';
 import Navigation from '../src/components/Navigation';
+import Copyright from '../src/components/Copyright';
 
 // Client-side cache, shared for the whole session of the user in the browser.
 const clientSideEmotionCache = createEmotionCache();
@@ -49,6 +50,7 @@ export default function MyApp(props) {
             <CssBaseline />
             <Navigation />
             <Component {...pageProps} />
+            <Copyright />
           </ThemeProvider>
         </CacheProvider>
       </ThemeContext.Provider>
