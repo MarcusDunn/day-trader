@@ -1,5 +1,8 @@
-import { Box, Button, Divider, Paper, Typography } from '@mui/material';
+import { Box, Button, Dialog, Divider, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react'
+import TradeModal from './TradeModal';
+import SellTriggerModal from './SELLTriggerModal';
+import BuyTriggerModal from './BuyTriggerModal';
 
 function getSellTrigger(stock, userInfo){
   if(!userInfo.SellTriggers){
@@ -39,6 +42,33 @@ function SingleStockBody({ stock, userInfo }) {
   const [ownedStock, setOwnedStock] = useState({});
   const [sellTrigger, setSellTrigger] = useState({});
   const [buyTrigger, setBuyTrigger] = useState({});
+  const [openTradeModal, setOpenTradeModal] = useState(false);
+  const [openSellTriggerModal, setOpenSellTriggerModal] = useState(false);
+  const [openBuyTriggerModal, setOpenBuyTriggerModal] = useState(false);
+
+  // Add these functions
+  const handleOpenTradeModal = () => {
+    setOpenTradeModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenTradeModal(false);
+  };
+
+  const handleOpenSellTriggerModal = () => {
+    setOpenSellTriggerModal(true);
+  };
+
+  const handleCloseSellTriggerModal = () => {
+    setOpenSellTriggerModal(false);
+  };
+  const handleOpenBuyTriggerModal = () => {
+    setOpenBuyTriggerModal(true);
+  };
+
+  const handleCloseBuyTriggerModal = () => {
+    setOpenBuyTriggerModal(false);
+  };
   
   useEffect(()=>{
     setSellTrigger(getSellTrigger(stock, userInfo))
@@ -70,14 +100,18 @@ function SingleStockBody({ stock, userInfo }) {
   const OwnedStockJSX = () => {
       const subtitle = ownedStock.stock ? `$${(ownedStock.stock*stock.price).toFixed(2)} of ${stock.name}` : "No stock owned"
       const value = ownedStock.stock ? `${ownedStock.stock} Shares` : ""
-      const button = <Button variant="outlined" primary="outlined">Trade {stock.name}</Button>
+      const button = (
+        <Button variant="outlined" primary="outlined" onClick={handleOpenTradeModal}>
+          Trade {stock.name}
+        </Button>
+      );
       return StockInfo("Owned Shares", subtitle, value, button)
   }
   
   const BuyTriggerJSX = () => {
       const subtitle = buyTrigger.triggerAmount ? `Buying at $${buyTrigger.triggerAmount.toFixed(2)}` : "No owned buy triggers"
       const value = buyTrigger.triggerAmount ? `${buyTrigger.buyAmount.toFixed(2)} shares` : ""
-      const button = <Button variant="outlined" primary="outlined">Buy Triggers</Button>
+      const button = <Button variant="outlined" primary="outlined" onClick={handleOpenBuyTriggerModal}>Buy Triggers</Button>
       return StockInfo("Buy Triggers", subtitle, value, button)
   }
   
@@ -85,7 +119,7 @@ function SingleStockBody({ stock, userInfo }) {
   const SellTriggerJSX = () => {
       const subtitle = sellTrigger.triggerAmount ? `Selling at $${sellTrigger.triggerAmount.toFixed(2)}` : "No owned sell triggers"
       const value = sellTrigger.triggerAmount ? `${sellTrigger.sharesToSell.toFixed(2)} shares` : ""
-      const button = <Button variant="outlined" primary="outlined">Sell Triggers</Button>
+      const button = <Button variant="outlined" primary="outlined" onClick={handleOpenSellTriggerModal}>Sell Triggers</Button>
       return StockInfo("Sell Triggers", subtitle, value, button)
   }
   
@@ -96,6 +130,24 @@ function SingleStockBody({ stock, userInfo }) {
       <SellTriggerJSX />
       <Divider orientation="vertical" flexItem />
       <BuyTriggerJSX />
+      <Dialog
+        open={openTradeModal}
+        onClose={handleCloseModal}
+      >
+        <TradeModal stock={stock} userInfo={userInfo} handleClose={handleCloseModal} />
+      </Dialog>
+      <Dialog
+        open={openSellTriggerModal}
+        onClose={handleCloseSellTriggerModal}
+      >
+        <SellTriggerModal stock={stock} userInfo={userInfo} handleClose={handleCloseSellTriggerModal} trigger={sellTrigger} />
+      </Dialog>
+      <Dialog
+        open={openBuyTriggerModal}
+        onClose={handleCloseBuyTriggerModal}
+      >
+        <BuyTriggerModal stock={stock} userInfo={userInfo} handleClose={handleCloseBuyTriggerModal} trigger={buyTrigger}/>
+      </Dialog>
     </div>
   )
 }

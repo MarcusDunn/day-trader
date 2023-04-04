@@ -4,6 +4,7 @@ import StockHeader from '../../src/components/stocks/StockHeader'
 import SingleStockBody from '../../src/components/stocks/SingleStockBody'
 import { UserContext } from '../_app';
 import TradeModal from '../../src/components/stocks/TradeModal';
+import BuyTriggerModal from '../../src/components/stocks/BuyTriggerModal';
 
 function stock({ stock }) {
     const user = useContext(UserContext).user;
@@ -34,9 +35,6 @@ function stock({ stock }) {
                     user ?
                     <div>
                         <Container maxWidth="lg" className="mt-20">
-                            <Container maxWidth="sm" className="mt-20">
-                                <TradeModal userInfo={userInfo} stock={stock} handleClose={() => {console.log("handleClose")}}/>
-                            </Container>
                             <SingleStockBody className="my-12" stock={stock} userInfo={userInfo} />
                         </Container>
                         <Container maxWidth="md" className="my-20 text-center">

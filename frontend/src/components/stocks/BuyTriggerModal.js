@@ -1,25 +1,18 @@
 import {
-  Box,
   Button,
   TextField,
   Typography,
-  Select,
-  MenuItem,
   FormControl,
-  InputLabel,
   DialogContent,
   DialogActions,
 } from "@mui/material";
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../../pages/_app";
-import useInterval from "../../utils/useInterval";
 
-function TradeModal({ stock, userInfo, handleClose }) {
+function BuyTriggerModal({ stock, userInfo, handleClose, trigger }) {
   const user = useContext(UserContext).user;
-  const tick_time = 59;
-  const [timer, setTimer] = useState(tick_time);
-  const [action, setAction] = useState("buy");
   const [amount, setAmount] = useState(0.0);
+  const [triggerVal, setTriggerVal] = useState(0.0);
   const [actionResponse, setActionResponse] = useState({});
   const [readyToCommit, setReadyToCommit] = useState(false);
   const [error, setError] = useState("");
@@ -28,17 +21,16 @@ function TradeModal({ stock, userInfo, handleClose }) {
     return <></>;
   }
 
-  useInterval(() => {
-    if (readyToCommit && timer > 0) {
-      setTimer(timer - 1);
-    } else if (timer === 0) {
-      setTimer(tick_time);
-      setReadyToCommit(false);
+  useEffect(()=> {
+    if(trigger){
+      setAmount(trigger.buyAmount)
+      setTriggerVal(trigger.triggerAmount)
     }
-  }, 1000);
+  }, [trigger])
+
 
   const executeAction = async () => {
-    const url = `/api/stocks/${action}`;
+    const url = `/api/stocks/buytrigger`;
     const body = {
       username: user,
       stock: stock.name,
@@ -59,25 +51,23 @@ function TradeModal({ stock, userInfo, handleClose }) {
         setActionResponse(response_parsed);
       } else {
         setError(
-          `Unsuccessful ${
-            action.charAt(0).toUpperCase() + action.slice(1)
-          } Attempt`
+          `Unsuccessful Set Buy Amount Attempt`
         );
       }
     } catch (error) {
       console.log(error);
       setError(
-        `Unsuccessful ${
-          action.charAt(0).toUpperCase() + action.slice(1)
-        } Attempt`
+        `Unsuccessful Set Buy Amount Attempt`
       );
     }
   };
 
-  const CommitAction = async () => {
-    const url = `/api/stocks/${action}/commit`;
+  const CommitActionTrigger = async () => {
+    const url = `/api/stocks/buytrigger/settrigger`;
     const body = {
       username: userInfo.username,
+      stock: stock.name,
+      amount: triggerVal,
     };
     const fetchArgs = {
       method: "POST",
@@ -88,29 +78,27 @@ function TradeModal({ stock, userInfo, handleClose }) {
     };
     try {
       const response_parsed = await (await fetch(url, fetchArgs)).json();
+      console.log(response_parsed);
       if (response_parsed.success == true) {
         handleClose();
       } else {
         setError(
-          `Unsuccessful Commit ${
-            action.charAt(0).toUpperCase() + action.slice(1)
-          } Attempt`
+          `Unsuccessful Commit Buy Trigger Attempt`
         );
       }
     } catch (error) {
       console.log(error);
       setError(
-        `Unsuccessful Commit ${
-          action.charAt(0).toUpperCase() + action.slice(1)
-        } Attempt`
+        `Unsuccessful Commit Buy Trigger Attempt`
       );
     }
   };
 
   const CancelAction = async () => {
-    const url = `/api/stocks/${action}/cancel`;
+    const url = `/api/stocks/buytrigger/cancel`;
     const body = {
       username: userInfo.username,
+      stock_symbol: stock.name,
     };
     const fetchArgs = {
       method: "POST",
@@ -123,26 +111,24 @@ function TradeModal({ stock, userInfo, handleClose }) {
       const response_parsed = await (await fetch(url, fetchArgs)).json();
       if (response_parsed.success == true) {
         setReadyToCommit(false);
-        setTimer(tick_time);
       } else {
         setError(
-          `Unsuccessful Cancel ${
-            action.charAt(0).toUpperCase() + action.slice(1)
-          } Attempt`
+          `Unsuccessful Delete Trigger Attempt`
         );
       }
     } catch (error) {
       console.log(error);
       setError(
-        `Unsuccessful Cancel ${
-          action.charAt(0).toUpperCase() + action.slice(1)
-        } Attempt`
+        `Unsuccessful Delete Trigger Attempt`
       );
     }
   };
 
   const handleAmountChange = (event) => {
     setAmount(Number(event.target.value));
+  };
+  const handleTriggerValChange = (event) => {
+    setTriggerVal(Number(event.target.value));
   };
 
   return (
@@ -151,18 +137,16 @@ function TradeModal({ stock, userInfo, handleClose }) {
         <div>
           <DialogContent sx={{width: 450}}>
             <Typography variant="h5" className="mb-6">
-              Commit {stock.name}{" "}
-              {action.charAt(0).toUpperCase() + action.slice(1)}
+              Set Buy Trigger
             </Typography>
-            <Typography
-              variant="p"
-              display={"block"}
-              className="text-lg"
-              gutterBottom
-            >
-              Commit {action}ing {actionResponse.shares.toFixed(2)} shares at $
-              {(amount / actionResponse.shares).toFixed(2)}/share
-            </Typography>
+            <TextField
+                type="number"
+                inputProps={{}}
+                label="Trigger Amount ($)"
+                value={triggerVal}
+                onChange={handleTriggerValChange}
+                fullWidth
+            />
             <Typography
               variant="subtitle2"
               display={"block"}
@@ -170,9 +154,6 @@ function TradeModal({ stock, userInfo, handleClose }) {
               gutterBottom
             >
               {error}
-            </Typography>
-            <Typography variant="subtitle2" display={"block"} gutterBottom>
-              Time remaining: {timer} seconds
             </Typography>
           </DialogContent>
           <DialogActions>
@@ -182,15 +163,15 @@ function TradeModal({ stock, userInfo, handleClose }) {
               color="primary"
               onClick={CancelAction}
             >
-              Cancel
+              Delete
             </Button>
             <Button
               className="mr-4"
               variant="outlined"
               color="secondary"
-              onClick={CommitAction}
+              onClick={CommitActionTrigger}
             >
-              Commit {action.charAt(0).toUpperCase() + action.slice(1)}
+              Set Buy Trigger
             </Button>
           </DialogActions>
         </div>
@@ -198,25 +179,13 @@ function TradeModal({ stock, userInfo, handleClose }) {
         <div>
           <DialogContent sx={{width: 450}}>
             <Typography variant="h5" className="mb-6">
-              {action.charAt(0).toUpperCase() + action.slice(1)} {stock.name}
+              Set Buy Amount on Trigger - {stock.name}
             </Typography>
             <FormControl className="w-full">
-              <div className="mb-6">
-                <InputLabel id="action-select-label">Action</InputLabel>
-                <Select
-                  fullWidth
-                  labelId="action-select-label"
-                  value={action}
-                  onChange={(e) => setAction(e.target.value)}
-                >
-                  <MenuItem value="buy">Buy</MenuItem>
-                  <MenuItem value="sell">Sell</MenuItem>
-                </Select>
-              </div>
               <TextField
                 type="number"
                 inputProps={{}}
-                label="Amount ($)"
+                label="Set Buy Amount ($)"
                 value={amount}
                 onChange={handleAmountChange}
                 fullWidth
@@ -248,7 +217,7 @@ function TradeModal({ stock, userInfo, handleClose }) {
               onClick={executeAction}
               disabled={amount <= 0.0}
             >
-              {action.charAt(0).toUpperCase() + action.slice(1)} {stock.name}
+              Set Buy Amount
             </Button>
           </DialogActions>
         </div>
@@ -257,4 +226,4 @@ function TradeModal({ stock, userInfo, handleClose }) {
   );
 }
 
-export default TradeModal;
+export default BuyTriggerModal;
