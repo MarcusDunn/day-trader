@@ -20,7 +20,7 @@ anyhow = "1.0.70"
 serde = { version = "1.0.159", features = ["derive"] }
 thiserror = "1.0.40"
 serde_json = { version = "1.0.95", features = ["raw_value"] }
-moka = { version = "0.10.1", features = ["future"] }
+moka = { version = "0.10.2", features = ["future"] }
 console-subscriber = "0.1.8"
 futures = "0.3"
 tracing-opentelemetry = "0.18.0"
