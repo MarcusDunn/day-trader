@@ -1,6 +1,8 @@
+import { CancelBuy } from "../../../../clients/DayTraderClient"
+
 export default async function cancelBuy(req, res){
     const username = req.body.username
-    const request_num = req.body.request_num
+    // const response = await CancelBuy(username, -1);
     const response = {
         success: true,
     }

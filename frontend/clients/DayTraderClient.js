@@ -18,9 +18,9 @@ export function Add(userId, amount, requestNum) {
     })
 }
 
-export function Buy(userId, amount, amount, requestNum) {
+export function Buy(userId, stockSymbol, amount, requestNum) {
     return new Promise((accept, reject) => {
-        new DayTraderClient.Buy({userId, amount, amount, requestNum}, (err, value) => {
+        new DayTraderClient.Buy({userId, stockSymbol, amount, requestNum}, (err, value) => {
             if (err != null) {
                 accept(value)
             } else {

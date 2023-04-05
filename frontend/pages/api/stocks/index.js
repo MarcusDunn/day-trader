@@ -1,3 +1,5 @@
+import { GetAllStocks } from "../../../clients/DayTraderClient"
+
 export default async function getStocks(req, res){
     const response = {
         "stocks": [
@@ -99,6 +101,6 @@ export default async function getStocks(req, res){
             }
         ]
     }
-    // GetAllStocks Request
+    // const response = await GetAllStocks();
     return res.status(200).json(response)
 }

@@ -1,3 +1,5 @@
+import { Quote } from "../../../clients/DayTraderClient";
+
 const stocks = {
     "ABC": {
         "name": "ABC",
@@ -100,5 +102,8 @@ const stocks = {
 export default async function getStocks(req, res){
     const username = req.body.username;
     const stock = req.query.id.toUpperCase()
-    return stocks[id] ? res.status(200).json(stocks[id]) : res.status(404).json({name: "NOTFOUND"})
+    const response = stocks[id] ? stocks[id] : {name: "NOTFOUND"}
+    // const stock = req.query.id.toLowerCase()
+    // const response = await Quote(username, stock, -1);
+    return res.status(200).json(response)
 }
