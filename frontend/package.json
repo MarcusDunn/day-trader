@@ -15,15 +15,16 @@
     "@emotion/react": "latest",
     "@emotion/server": "latest",
     "@emotion/styled": "latest",
+    "@grpc/grpc-js": "latest",
+    "@grpc/proto-loader": "latest",
     "@mui/icons-material": "latest",
     "@mui/material": "latest",
+    "grpc": "^1.24.11",
     "next": "latest",
     "prop-types": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "react-material-ui-carousel": "^3.4.2",
-    "@grpc/grpc-js": "latest",
-    "@grpc/proto-loader": "latest"
+    "react-material-ui-carousel": "^3.4.2"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.8",
