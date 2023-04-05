@@ -1,11 +1,11 @@
-// import { GetUserInfo } from "../../../clients/DayTraderClient";
+import { GetUserInfo } from "../../../clients/DayTraderClient";
 
 const response = {
     balance: 523.45,
     stock: [
         {
             "name": "ABC",
-            "stock": 55.69,
+            "stock": 55.51,
         },
         {
             "name": "ASH",
@@ -13,7 +13,7 @@ const response = {
         },
         {
             "name": "DFE",
-            "stock": 69.3,
+            "stock": 51.3,
         },
     ],
     SellTriggers: [
@@ -55,6 +55,6 @@ const response = {
 export default async function getuser(req, res){
     const userId = req.query.userId;
     // GetUserInfo
-    // const response = await GetUserInfo(userId);
+    const response = await GetUserInfo(userId);
     return res.status(200).json(response)
 }
