@@ -98,6 +98,7 @@ const stocks = {
 }
 
 export default async function getStocks(req, res){
-    const id = req.query.id.toUpperCase()
+    const username = req.body.username;
+    const stock = req.query.id.toUpperCase()
     return stocks[id] ? res.status(200).json(stocks[id]) : res.status(404).json({name: "NOTFOUND"})
 }

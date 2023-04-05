@@ -1,4 +1,6 @@
 export default async function cancelBuy(req, res){
+    const username = req.body.username
+    const request_num = req.body.request_num
     const response = {
         success: true,
     }

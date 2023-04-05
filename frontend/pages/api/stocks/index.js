@@ -99,6 +99,6 @@ export default async function getStocks(req, res){
             }
         ]
     }
-      
+    // GetAllStocks Request
     return res.status(200).json(response)
 }
