@@ -9,7 +9,7 @@ const DayTraderClient = new definitions.day_trader.DayTrader(process.env.transac
 export function Add(userId, amount, requestNum) {
     return new Promise((accept, reject) => {
         new DayTraderClient.Add({userId, amount, requestNum}, (err, value) => {
-            if (err != null) {
+            if (err == null) {
                 accept(value)
             } else {
                 reject(err)
@@ -18,10 +18,11 @@ export function Add(userId, amount, requestNum) {
     })
 }
 
+
 // export function Buy(userId, stockSymbol, amount, requestNum) {
 //     return new Promise((accept, reject) => {
 //         new DayTraderClient.Buy({userId, stockSymbol, amount, requestNum}, (err, value) => {
-//             if (err != null) {
+//             if (err == null) {
 //                 accept(value)
 //             } else {
 //                 reject(err)
@@ -33,7 +34,7 @@ export function Add(userId, amount, requestNum) {
 // export function CommitBuy(userId, requestNum) {
 //     return new Promise((accept, reject) => {
 //         new DayTraderClient.CommitBuy({userId, requestNum}, (err, value) => {
-//             if (err != null) {
+//             if (err == null) {
 //                 accept(value)
 //             } else {
 //                 reject(err)
@@ -45,7 +46,7 @@ export function Add(userId, amount, requestNum) {
 // export function CancelBuy(userId, requestNum) {
 //     return new Promise((accept, reject) => {
 //         new DayTraderClient.CancelBuy({userId, requestNum}, (err, value) => {
-//             if (err != null) {
+//             if (err == null) {
 //                 accept(value)
 //             } else {
 //                 reject(err)
@@ -57,7 +58,7 @@ export function Add(userId, amount, requestNum) {
 // export function Sell(userId, stockSymbol, amount, requestNum) {
 //     return new Promise((accept, reject) => {
 //         new DayTraderClient.Sell({userId, amount, stockSymbol, requestNum}, (err, value) => {
-//             if (err != null) {
+//             if (err == null) {
 //                 accept(value)
 //             } else {
 //                 reject(err)
@@ -69,7 +70,7 @@ export function Add(userId, amount, requestNum) {
 // export function CommitSell(userId, requestNum) {
 //     return new Promise((accept, reject) => {
 //         new DayTraderClient.CommitSell({userId, requestNum}, (err, value) => {
-//             if (err != null) {
+//             if (err == null) {
 //                 accept(value)
 //             } else {
 //                 reject(err)
@@ -81,7 +82,7 @@ export function Add(userId, amount, requestNum) {
 // export function CancelSell(userId, requestNum) {
 //     return new Promise((accept, reject) => {
 //         new DayTraderClient.CancelSell({userId, requestNum}, (err, value) => {
-//             if (err != null) {
+//             if (err == null) {
 //                 accept(value)
 //             } else {
 //                 reject(err)

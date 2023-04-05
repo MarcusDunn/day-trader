@@ -5,7 +5,7 @@ export default async function getStocks(req, res){
         "stocks": [
             {
                 name: "ABC",
-                price: 420.69,
+                price: 432.59,
                 change: -10.25,
                 percentChange: -2.38
             },
