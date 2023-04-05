@@ -820,7 +820,6 @@ impl DayTrader for DayTraderImpl {
 
         let ((), commit_buy) = tokio::join!(log, commit_buy);
 
-
         match commit_buy {
             Ok(()) => Ok(Response::new(CommitBuyResponse { success: true })),
             Err(e) => {
@@ -933,7 +932,7 @@ impl DayTrader for DayTraderImpl {
         let commit_sell = sell::commit_sell(&self.postgres, commit_sell_request.user_id.clone());
 
         let ((), commit_sell) = tokio::join!(log, commit_sell);
-        
+
         match commit_sell {
             Ok(()) => Ok(Response::new(CommitSellResponse { success: true })),
             Err(e) => {
@@ -1007,7 +1006,6 @@ impl DayTrader for DayTraderImpl {
             trigger::set_buy_amount(&self.postgres, &user_id, &stock_symbol, amount);
 
         let ((), set_buy_amount) = tokio::join!(log, set_buy_amount);
-
 
         match set_buy_amount {
             Ok(()) => Ok(Response::new(SetBuyAmountResponse { success: true })),
@@ -1176,8 +1174,6 @@ impl DayTrader for DayTraderImpl {
             trigger::set_sell_trigger(&self.postgres, &user_id, &stock_symbol, amount);
 
         let ((), set_sell_trigger) = tokio::join!(log, set_sell_trigger);
-
-
 
         match set_sell_trigger {
             Ok(()) => Ok(Response::new(SetSellTriggerResponse { success: true })),
