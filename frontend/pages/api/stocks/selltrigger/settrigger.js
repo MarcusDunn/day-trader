@@ -1,5 +1,6 @@
 import { SetSellTrigger } from "../../../../clients/DayTraderClient";
 
+
 export default async function setSellTrigger(req, res){
     const username = req.body.username;
     const stock_symbol = req.body.stock;

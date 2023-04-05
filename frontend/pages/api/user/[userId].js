@@ -55,6 +55,6 @@ const response = {
 export default async function getuser(req, res){
     const userId = req.query.userId;
     // GetUserInfo
-    // const response = await GetUserInfo(userId);
+    const response = await GetUserInfo(userId);
     return res.status(200).json(response)
 }

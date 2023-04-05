@@ -1,9 +1,11 @@
 import * as grpc from '@grpc/grpc-js';
 import {loadSync} from "@grpc/proto-loader";
 
-const def = loadSync(__dirname + "../proto/day-trader")
+const def = loadSync("./day-trader.proto")
+console.log(def);
 const definitions = grpc.loadPackageDefinition(def)
-const DayTraderClient = new definitions.day_trader.DayTraderClient(process.env.transactionURI || 'http://lean:8000', grpc.credentials.createInsecure());
+console.log(definitions);
+const DayTraderClient = new definitions.day_trader.DayTrader(process.env.transactionURI || 'http://lean:8000', grpc.credentials.createInsecure());
 
 
 export function Add(userId, amount, requestNum) {
@@ -54,9 +56,9 @@ export function CancelBuy(userId, requestNum) {
     })
 }
 
-export function Sell(userId, amount, amount, requestNum) {
+export function Sell(userId, stockSymbol, amount, requestNum) {
     return new Promise((accept, reject) => {
-        new DayTraderClient.Sell({userId, amount, amount, requestNum}, (err, value) => {
+        new DayTraderClient.Sell({userId, amount, stockSymbol, requestNum}, (err, value) => {
             if (err != null) {
                 accept(value)
             } else {
@@ -69,18 +71,6 @@ export function Sell(userId, amount, amount, requestNum) {
 export function CommitSell(userId, requestNum) {
     return new Promise((accept, reject) => {
         new DayTraderClient.CommitSell({userId, requestNum}, (err, value) => {
-            if (err != null) {
-                accept(value)
-            } else {
-                reject(err)
-            }
-        })
-    })
-}
-
-export function CancelSell(userId, requestNum) {
-    return new Promise((accept, reject) => {
-        new DayTraderClient.CancelSell({userId, requestNum}, (err, value) => {
             if (err != null) {
                 accept(value)
             } else {

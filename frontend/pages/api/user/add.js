@@ -1,5 +1,6 @@
 import { Add } from "../../../clients/DayTraderClient";
 
+
 export default async function addBalance(req, res){
     const userId = req.body.username;
     const amount = req.body.amount;

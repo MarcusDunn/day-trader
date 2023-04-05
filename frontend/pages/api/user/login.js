@@ -1,4 +1,5 @@
-import { Login } from "../../../clients/DayTraderClient"
+import { Login } from "../../../clients/DayTraderClient";
+
 
 export default async function login(req, res){
     // const response = await Login(req.body.username);

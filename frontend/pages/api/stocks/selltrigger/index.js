@@ -1,5 +1,6 @@
 import { SetSellAmount } from "../../../../clients/DayTraderClient";
 
+
 export default async function setSellAmount(req, res){
     const username = req.body.username;
     const stock_symbol = req.body.stock;

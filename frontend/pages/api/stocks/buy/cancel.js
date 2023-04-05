@@ -1,4 +1,4 @@
-import { CancelBuy } from "../../../../clients/DayTraderClient"
+import { CancelBuy } from "../../../../clients/DayTraderClient";
 
 export default async function cancelBuy(req, res){
     const username = req.body.username

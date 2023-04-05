@@ -1,4 +1,4 @@
-import { GetAllStocks } from "../../../clients/DayTraderClient"
+import { GetAllStocks } from "../../../clients/DayTraderClient";
 
 export default async function getStocks(req, res){
     const response = {
