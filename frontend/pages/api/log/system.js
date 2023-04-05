@@ -1,4 +1,4 @@
-import { DumpLog } from "../../../clients/DayTraderClient";
+// import { DumpLog } from "../../../clients/DayTraderClient";
 
 
 export default async function dumplog(req, res){
