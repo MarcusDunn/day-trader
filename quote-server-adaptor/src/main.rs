@@ -1,26 +1,25 @@
 use opentelemetry::runtime::Tokio;
 use opentelemetry::sdk::Resource;
 use opentelemetry::{global, KeyValue};
-use quote_server_adaptor::fake::FakeQuoteServer;
-use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 
 use opentelemetry::sdk::trace::Config;
 use opentelemetry_otlp::WithExportConfig;
+use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
+use rand::distributions::Alphanumeric;
+use rand::Rng;
 use std::env;
 use std::error::Error;
 use std::fmt::Debug;
 use std::mem::size_of;
+use std::time::{SystemTime, UNIX_EPOCH};
+use tokio::io::BufReader;
 use tokio::io::{AsyncBufRead, AsyncWriteExt};
 use tokio::io::{AsyncBufReadExt, AsyncWrite};
-use tokio::io::{AsyncRead, BufReader};
 use tokio::net::TcpStream;
-use tokio::select;
-use tokio::sync::mpsc::Receiver;
-use tokio::sync::oneshot::Sender;
-use tokio::sync::{mpsc, oneshot};
+use tokio::task::JoinSet;
 use tonic::transport::Server;
-use tonic::{Request, Response, Status};
+use tonic::{async_trait, Request, Response, Status};
 use tower_http::trace::{DefaultOnRequest, DefaultOnResponse};
 use tower_http::LatencyUnit;
 use tracing::{info, instrument};
@@ -56,18 +55,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     info!("starting");
 
-    let (tcp_handler_send, mut tcp_handler_recv) =
-        mpsc::channel::<(String, Sender<Result<String, &'static str>>)>(32);
+    let quote_server_addr =
+        env::var("QUOTE_SERVER_URI").expect("QUOTE_SERVER_URI environment variable should be set.");
 
-    let socket_handler = tokio::spawn(async move {
-        let quote_server_addr = env::var("QUOTE_SERVER_URI")
-            .expect("QUOTE_SERVER_URI environment variable should be set.");
-        if quote_server_addr == "FAKE" {
-            run_fake_quote_server(&mut tcp_handler_recv).await;
-        } else {
-            run_quote_server(&mut tcp_handler_recv, &quote_server_addr).await;
-        }
-    });
+    let quoter = Quoter::from_addr(quote_server_addr);
 
     let addr = env::var("SERVER_ADDR")
         .unwrap_or_else(|_| String::from("0.0.0.0:50051"))
@@ -83,36 +74,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         .latency_unit(LatencyUnit::Micros),
                 ),
         )
-        .add_service(QuoteServer::new(Quoter {
-            tcp_handler_send: tcp_handler_send.clone(),
-        }))
+        .add_service(QuoteServer::new(quoter))
         .serve_with_shutdown(addr, async {
             tokio::signal::ctrl_c().await.unwrap();
             info!("received shutdown signal")
         });
     info!("listening on {addr}");
 
-    let exit_result = select! {
-        socket_handler_result = socket_handler => {
-            match socket_handler_result {
-                Err(err) => {
-                    Err(err.into())
-                },
-                Ok(()) => {
-                    Err("Socket handler exited successfully. (It should never exit)".into())
-                },
-            }
-        }
-        server_result = server => {
-            match server_result {
-                Err(err) => {
-                    Err(err.into())
-                }
-                Ok(()) => {
-                    Err("Server exited successfully.".into())
-                }
-            }
-        }
+    let exit_result = match server.await {
+        Err(err) => Err(err.into()),
+        Ok(()) => Err("Server exited successfully.".into()),
     };
 
     global::shutdown_tracer_provider();
@@ -120,57 +91,160 @@ async fn main() -> Result<(), Box<dyn Error>> {
     exit_result
 }
 
-async fn run_quote_server(
-    tcp_handler_recv: &mut Receiver<(String, Sender<Result<String, &str>>)>,
-    quote_server_addr: &String,
-) -> ! {
-    loop {
-        let mut stream = TcpStream::connect(&quote_server_addr)
+enum Quoter {
+    Real(UVicQuoter),
+    Fake(FakeQuoteServer),
+}
+
+#[async_trait]
+impl Quote for Quoter {
+    async fn quote(
+        &self,
+        request: Request<QuoteRequest>,
+    ) -> Result<Response<QuoteResponse>, Status> {
+        match self {
+            Quoter::Real(real) => real.quote(request).await,
+            Quoter::Fake(fake) => fake.quote(request).await,
+        }
+    }
+}
+
+impl Quoter {
+    fn from_addr(addr: String) -> Quoter {
+        match addr.as_str() {
+            "FAKE" => Self::Fake(FakeQuoteServer),
+            _ => Self::Real(UVicQuoter {
+                quote_server_addr: addr,
+                hackery_levels: env::var("HACKERY_LEVELS")
+                    .map(|hackery_levels| {
+                        hackery_levels
+                            .parse()
+                            .expect("failed to parse HACKERY_LEVELS")
+                    })
+                    .unwrap_or(5),
+            }),
+        }
+    }
+}
+
+struct FakeQuoteServer;
+
+#[async_trait]
+impl Quote for FakeQuoteServer {
+    #[instrument(skip_all)]
+    async fn quote(
+        &self,
+        request: Request<QuoteRequest>,
+    ) -> Result<Response<QuoteResponse>, Status> {
+        let QuoteRequest {
+            user_id,
+            stock_symbol,
+            ..
+        } = request.into_inner();
+        let mut rng = rand::thread_rng();
+        let quote = rng.gen_range(50_f64..300_f64);
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time went backwards")
+            .as_millis();
+
+        let timestamp = u64::try_from(timestamp).map_err(|e| {
+            Status::internal(format!("failed to convert timestamp to 64 bits: {e}"))
+        })?;
+
+        let crypto_key = rng
+            .sample_iter(Alphanumeric)
+            .take(57)
+            .map(char::from)
+            .collect::<String>();
+
+        Ok(Response::new(QuoteResponse {
+            quote,
+            sym: stock_symbol,
+            user_id,
+            timestamp,
+            crypto_key,
+        }))
+    }
+}
+
+#[derive(Clone)]
+struct UVicQuoter {
+    quote_server_addr: String,
+    hackery_levels: u8,
+}
+
+#[async_trait]
+impl Quote for UVicQuoter {
+    #[instrument(skip(self))]
+    async fn quote(
+        &self,
+        request: Request<QuoteRequest>,
+    ) -> Result<Response<QuoteResponse>, Status> {
+        let QuoteRequest {
+            user_id,
+            stock_symbol,
+            ..
+        } = request.into_inner();
+
+        let mut join_set = JoinSet::new();
+
+        for _ in 0..self.hackery_levels {
+            let user_id = user_id.clone();
+            let stock_symbol = stock_symbol.clone();
+            let quoter = self.clone();
+            join_set.spawn(async move {
+                quoter
+                    .connect_and_query_uvic_quote_server(user_id, &stock_symbol)
+                    .await
+            });
+        }
+
+        let response = join_set
+            .join_next()
             .await
-            .unwrap_or_else(|err| panic!("The passed in quote server URI [{quote_server_addr}] should be possible to connect to: {err}"));
+            .expect("at least 1 request should be sent")
+            .map_err(|e| Status::internal(format!("failed to join: {e}")))??;
+
+        Ok(Response::new(
+            response_from_quote_server_string(&response).map_err(Status::internal)?,
+        ))
+    }
+}
+
+impl UVicQuoter {
+    #[tracing::instrument(skip_all)]
+    async fn connect(&self) -> std::io::Result<TcpStream> {
+        TcpStream::connect(&self.quote_server_addr).await
+    }
+
+    #[instrument(skip_all)]
+    async fn connect_and_query_uvic_quote_server(
+        &self,
+        user_id: String,
+        stock_symbol: &str,
+    ) -> Result<String, Status> {
+        let mut stream = self.connect().await.map_err(|e| {
+            Status::internal(format!(
+                "failed to connect to {}: {e}",
+                self.quote_server_addr
+            ))
+        })?;
 
         let (reader, mut writer) = stream.split();
 
         let mut reader = BufReader::new(reader);
 
-        handle_socket(tcp_handler_recv, &mut writer, &mut reader).await;
-    }
-}
-
-async fn run_fake_quote_server(
-    tcp_handler_recv: &mut Receiver<(String, Sender<Result<String, &str>>)>,
-) -> ! {
-    let mut quote_server = FakeQuoteServer::default();
-    let mut writer = quote_server.clone();
-    let mut reader = BufReader::new(&mut quote_server);
-    info!("running a fake quote server");
-    loop {
-        handle_socket(tcp_handler_recv, &mut writer, &mut reader).await
-    }
-}
-
-#[instrument(skip_all)]
-async fn handle_socket<T, G>(
-    tcp_handler_recv: &mut Receiver<(String, Sender<Result<String, &str>>)>,
-    mut writer: &mut T,
-    mut reader: &mut BufReader<G>,
-) where
-    T: AsyncWrite + Debug + Unpin,
-    G: AsyncRead + Debug + Unpin,
-{
-    let (send, respond) = tcp_handler_recv
-        .recv()
+        let response = get_response(
+            &mut writer,
+            &mut reader,
+            make_socket_message(user_id, stock_symbol),
+        )
         .await
-        .expect("The send side of the tcp_handler should never be closed.");
+        .map_err(|e| Status::internal(format!("failed to get response: {e}")))?;
 
-    let response = get_response(&mut writer, &mut reader, send).await;
-
-    match respond.send(response) {
-        Ok(()) => {}
-        Err(err) => {
-            println!("Failed to send {err:?} to oneshot channel.")
-        }
-    };
+        Ok(response)
+    }
 }
 
 #[instrument(skip(writer, reader))]
@@ -192,50 +266,6 @@ where
         return Err("Failed to read from socket.");
     }
     Ok(line)
-}
-
-#[derive(Debug)]
-struct Quoter {
-    tcp_handler_send: mpsc::Sender<(String, Sender<Result<String, &'static str>>)>,
-}
-
-#[tonic::async_trait]
-impl Quote for Quoter {
-    async fn quote(
-        &self,
-        request: Request<QuoteRequest>,
-    ) -> Result<Response<QuoteResponse>, Status> {
-        let (send, recv) = oneshot::channel::<Result<String, &'static str>>();
-
-        let QuoteRequest {
-            user_id,
-            stock_symbol,
-            request_num: _,
-        } = request.into_inner();
-
-        let message = make_socket_message(user_id, &stock_symbol);
-        self.tcp_handler_send
-            .send((message, send))
-            .await
-            .map_err(|err| {
-                Status::internal(format!(
-                    "Error while sending request to mpsc channel: {err}"
-                ))
-            })?;
-
-        let line = recv
-            .await
-            .expect("The send end of the oneshot should never be closed.")
-            .map_err(|err| {
-                Status::internal(format!(
-                    "Error while receiving a message from oneshot channel {err}"
-                ))
-            })?;
-
-        let response = response_from_quote_server_string(&line).map_err(Status::internal)?;
-
-        Ok(Response::new(response))
-    }
 }
 
 fn make_socket_message(mut user_id: String, stock_symbol: &str) -> String {
@@ -284,81 +314,4 @@ fn response_from_quote_server_string(line: &str) -> Result<QuoteResponse, String
         timestamp,
         crypto_key,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn check_make_socket_message() {
-        assert_eq!(
-            "hello,world\n",
-            make_socket_message("hello".to_string(), "world")
-        )
-    }
-
-    #[tokio::test]
-    async fn check_quoter_success() {
-        let (send, mut recv) = mpsc::channel::<(String, Sender<Result<String, &str>>)>(32);
-
-        tokio::spawn(async move {
-            let (str, sender) = recv.recv().await.unwrap();
-            assert_eq!(str, "marcus,TSLA\n");
-            sender
-                .send(Ok("100.0,TSLA,marcus,1675326735,webfweiof".to_string()))
-                .unwrap();
-        });
-
-        let response = Quoter {
-            tcp_handler_send: send,
-        }
-        .quote(Request::new(QuoteRequest {
-            user_id: "marcus".to_string(),
-            stock_symbol: "TSLA".to_string(),
-            request_num: 0,
-        }))
-        .await
-        .unwrap();
-
-        assert_eq!(
-            QuoteResponse {
-                quote: 100.0,
-                sym: "TSLA".to_string(),
-                user_id: "marcus".to_string(),
-                timestamp: 1675326735,
-                crypto_key: "webfweiof".to_string(),
-            },
-            response.into_inner()
-        );
-    }
-
-    #[tokio::test]
-    async fn check_handle_message_success() {
-        let mut writer = Vec::new();
-        let reader = Vec::from("response");
-        let message = make_socket_message("marcus".to_string(), "TSLA");
-
-        let response = get_response(&mut writer, &mut BufReader::new(reader.as_slice()), message)
-            .await
-            .unwrap();
-
-        assert_eq!("response", response)
-    }
-
-    #[test]
-    fn check_response_from_string() {
-        let response =
-            response_from_quote_server_string("100.0,TSLA,marcus,1675326735,webfweiof").unwrap();
-        assert_eq!(
-            QuoteResponse {
-                quote: 100.0,
-                sym: "TSLA".to_string(),
-                user_id: "marcus".to_string(),
-                timestamp: 1675326735,
-                crypto_key: "webfweiof".to_string(),
-            },
-            response
-        )
-    }
 }

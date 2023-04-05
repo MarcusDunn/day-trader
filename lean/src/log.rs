@@ -326,3 +326,7 @@ pub struct DebugLog {
 pub use dump_log::dump_log;
 
 mod dump_log;
+
+pub use dump_log_user::dump_log_user;
+
+mod dump_log_user;
