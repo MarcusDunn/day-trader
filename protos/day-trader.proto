@@ -80,7 +80,7 @@ message GetUserInfoRequest {
 }
 
 message GetUserInfoResponse {
-  string balance = 1;
+  double balance = 1;
   repeated Stock stock = 2;
   repeated SellTrigger SellTriggers = 3;
   repeated BuyTrigger BuyTriggers = 4;
@@ -181,7 +181,6 @@ message OwnedStock {
 }
 
 message BuyTrigger {
-  int32 id = 1;
   string username = 2;
   string stock = 3;
   double trigger_amount = 4;
@@ -189,7 +188,6 @@ message BuyTrigger {
 }
 
 message SellTrigger {
-  int32 id = 1;
   string username = 2;
   string stock = 3;
   double trigger_amount = 4;

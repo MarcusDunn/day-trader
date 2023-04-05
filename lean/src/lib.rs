@@ -7,15 +7,18 @@ use tracing::{error, warn};
 
 use crate::proto::day_trader_server::DayTrader;
 use crate::proto::quote_client::QuoteClient;
+
 use crate::proto::{
-    AddRequest, AddResponse, BuyRequest, BuyResponse, CancelBuyRequest, CancelBuyResponse,
-    CancelSellRequest, CancelSellResponse, CancelSetBuyRequest, CancelSetBuyResponse,
-    CancelSetSellRequest, CancelSetSellResponse, CommitBuyRequest, CommitBuyResponse,
-    CommitSellRequest, CommitSellResponse, DisplaySummaryRequest, DisplaySummaryResponse,
-    DumpLogRequest, DumpLogResponse, DumpLogUserRequest, DumpLogUserResponse, QuoteRequest,
-    QuoteRequestSimple, QuoteResponse, SellRequest, SellResponse, SetBuyAmountRequest,
+    AddRequest, AddResponse, BuyRequest, BuyResponse, BuyTrigger, CancelBuyRequest,
+    CancelBuyResponse, CancelSellRequest, CancelSellResponse, CancelSetBuyRequest,
+    CancelSetBuyResponse, CancelSetSellRequest, CancelSetSellResponse, CommitBuyRequest,
+    CommitBuyResponse, CommitSellRequest, CommitSellResponse, DisplaySummaryRequest,
+    DisplaySummaryResponse, DumpLogRequest, DumpLogResponse, DumpLogUserRequest,
+    DumpLogUserResponse, GetAllStocksRequest, GetAllStocksResponse, GetUserInfoRequest,
+    GetUserInfoResponse, LoginRequest, LoginResponse, QuoteRequest, QuoteRequestSimple,
+    QuoteResponse, SellRequest, SellResponse, SellTrigger, SetBuyAmountRequest,
     SetBuyAmountResponse, SetBuyTriggerRequest, SetBuyTriggerResponse, SetSellAmountRequest,
-    SetSellAmountResponse, SetSellTriggerRequest, SetSellTriggerResponse,
+    SetSellAmountResponse, SetSellTriggerRequest, SetSellTriggerResponse, Stock,
 };
 
 #[tracing::instrument(skip_all)]
@@ -648,7 +651,7 @@ impl DayTrader for DayTraderImpl {
             Status::internal(err.to_string())
         })?;
 
-        Ok(Response::new(AddResponse {}))
+        Ok(Response::new(AddResponse { success: true }))
     }
 
     #[tracing::instrument(skip_all, name = "grpc_buy")]
@@ -688,7 +691,7 @@ impl DayTrader for DayTraderImpl {
 
         init_buy?;
 
-        Ok(Response::new(BuyResponse {}))
+        Ok(Response::new(BuyResponse { success: true }))
     }
 
     #[tracing::instrument(skip_all, name = "grpc_commit_buy")]
@@ -709,7 +712,7 @@ impl DayTrader for DayTraderImpl {
             Status::internal(err.to_string())
         })?;
 
-        Ok(Response::new(CommitBuyResponse {}))
+        Ok(Response::new(CommitBuyResponse { success: true }))
     }
 
     #[tracing::instrument(skip_all, name = "grpc_cancel_buy")]
@@ -730,7 +733,7 @@ impl DayTrader for DayTraderImpl {
             Status::internal(err.to_string())
         })?;
 
-        Ok(Response::new(CancelBuyResponse {}))
+        Ok(Response::new(CancelBuyResponse { success: true }))
     }
 
     #[tracing::instrument(skip_all, name = "grpc_sell")]
@@ -770,7 +773,7 @@ impl DayTrader for DayTraderImpl {
 
         init_sell?;
 
-        Ok(Response::new(SellResponse {}))
+        Ok(Response::new(SellResponse { success: true }))
     }
 
     #[tracing::instrument(skip_all, name = "grpc_commit_sell")]
@@ -791,7 +794,7 @@ impl DayTrader for DayTraderImpl {
             Status::internal(err.to_string())
         })?;
 
-        Ok(Response::new(CommitSellResponse {}))
+        Ok(Response::new(CommitSellResponse { success: true }))
     }
 
     #[tracing::instrument(skip_all, name = "grpc_cancel_sell")]
@@ -812,7 +815,7 @@ impl DayTrader for DayTraderImpl {
             Status::internal(err.to_string())
         })?;
 
-        Ok(Response::new(CancelSellResponse {}))
+        Ok(Response::new(CancelSellResponse { success: true }))
     }
 
     #[tracing::instrument(skip_all, name = "grpc_set_buy_amount")]
@@ -841,7 +844,7 @@ impl DayTrader for DayTraderImpl {
             Status::internal(err.to_string())
         })?;
 
-        Ok(Response::new(SetBuyAmountResponse {}))
+        Ok(Response::new(SetBuyAmountResponse { success: true }))
     }
 
     #[tracing::instrument(skip_all, name = "grpc_cancel_set_buy")]
@@ -897,7 +900,7 @@ impl DayTrader for DayTraderImpl {
             Status::internal(err.to_string())
         })?;
 
-        Ok(Response::new(SetBuyTriggerResponse {}))
+        Ok(Response::new(SetBuyTriggerResponse { success: true }))
     }
 
     #[tracing::instrument(skip_all, name = "grpc_set_sell_amount")]
@@ -926,7 +929,7 @@ impl DayTrader for DayTraderImpl {
             Status::internal(err.to_string())
         })?;
 
-        Ok(Response::new(SetSellAmountResponse {}))
+        Ok(Response::new(SetSellAmountResponse { success: true }))
     }
 
     #[tracing::instrument(skip_all, name = "grpc_set_sell_trigger")]
@@ -955,7 +958,7 @@ impl DayTrader for DayTraderImpl {
             Status::internal(err.to_string())
         })?;
 
-        Ok(Response::new(SetSellTriggerResponse {}))
+        Ok(Response::new(SetSellTriggerResponse { success: true }))
     }
 
     #[tracing::instrument(skip_all, name = "grpc_cancel_set_sell")]
@@ -983,6 +986,107 @@ impl DayTrader for DayTraderImpl {
         })?;
 
         Ok(Response::new(CancelSetSellResponse {}))
+    }
+
+    #[tracing::instrument(skip_all, name = "grpc_get_all_stocks")]
+    async fn get_all_stocks(
+        &self,
+        _: Request<GetAllStocksRequest>,
+    ) -> Result<Response<GetAllStocksResponse>, Status> {
+        Ok(Response::new(GetAllStocksResponse {
+            stocks: self
+                .quote
+                .cache
+                .into_iter()
+                .map(|(symbol, price)| Stock {
+                    name: symbol.to_string(),
+                    price,
+                })
+                .collect(),
+        }))
+    }
+
+    #[tracing::instrument(skip_all, name = "grpc_get_user_info")]
+    async fn get_user_info(
+        &self,
+        request: Request<GetUserInfoRequest>,
+    ) -> Result<Response<GetUserInfoResponse>, Status> {
+        let GetUserInfoRequest { user_id } = request.into_inner();
+
+        let stock = async {
+            sqlx::query_as!(
+                Stock,
+                "SELECT stock_symbol as name, amount as price FROM stock WHERE owner_id = $1",
+                &user_id
+            )
+            .fetch_all(&self.postgres)
+            .await
+        };
+        let balance = async {
+            sqlx::query!("SELECT balance FROM trader WHERE user_id = $1", &user_id)
+                .fetch_optional(&self.postgres)
+                .await
+        };
+        let buy_triggers = async {
+            sqlx::query_as!(
+                BuyTrigger,
+                r#"
+                SELECT
+                    owner_id as username,
+                    stock_symbol as stock,
+                    amount_dollars as buy_amount,
+                    trigger_price as "trigger_amount!"
+                FROM buy_trigger
+                WHERE owner_id = $1 AND trigger_price IS NOT NULL
+                "#,
+                &user_id
+            )
+            .fetch_all(&self.postgres)
+            .await
+        };
+        let sell_triggers = async {
+            sqlx::query_as!(
+                SellTrigger,
+                r#"
+                SELECT
+                    owner_id as username,
+                    stock_symbol as stock,
+                    amount_stock as shares_to_sell,
+                    trigger_price as "trigger_amount!"
+                FROM sell_trigger
+                WHERE owner_id = $1 AND trigger_price IS NOT NULL
+                "#,
+                &user_id
+            )
+            .fetch_all(&self.postgres)
+            .await
+        };
+
+        let (stock, balance, buy_triggers, sell_triggers) =
+            tokio::try_join!(stock, balance, buy_triggers, sell_triggers)
+                .map_err(|err| Status::internal(format!("failed to get user info: {err}")))?;
+
+        let Some(balance) = balance else {
+            return Err(Status::not_found(format!("user {user_id} not found")))
+        };
+
+        Ok(Response::new(GetUserInfoResponse {
+            balance: balance.balance,
+            buy_triggers,
+            sell_triggers,
+            stock,
+        }))
+    }
+
+    #[tracing::instrument(skip_all, name = "grpc_login")]
+    async fn login(
+        &self,
+        request: Request<LoginRequest>,
+    ) -> Result<Response<LoginResponse>, Status> {
+        return Ok(Response::new(LoginResponse {
+            success: true,
+            user_id: request.into_inner().user_id,
+        }));
     }
 
     #[tracing::instrument(skip_all, name = "grpc_quote")]
