@@ -1,8 +1,10 @@
-import { Box, Button, Container, Typography, useTheme } from '@mui/material'
-import React from 'react'
+import { Box, Button, Container, Typography } from '@mui/material'
+import React, { useContext } from 'react'
+import { UserContext } from '../../../pages/_app';
 
 function Hero() {
-    const theme = useTheme();
+    const user = useContext(UserContext).user;
+
     return (
         <Box
             className="w-full h-screen backdrop-blur"
@@ -29,13 +31,23 @@ function Hero() {
                     >
                         Experience lightning-fast trades and unparalleled quality with Swift Trader, designed to help you make informed decisions and maximize your profits with ease.
                     </Typography>
-                    <Button
-                        variant="contained"
-                        href="/signup"
-                        color="primary"
-                    >
-                        Sign Up Today
-                    </Button>
+                    {user ?
+                        <Button
+                            variant="contained"
+                            href="/dashboard"
+                            color="secondary"
+                        >
+                            Dashboard
+                        </Button>
+                        :
+                        <Button
+                            variant="contained"
+                            href="/signup"
+                            color="primary"
+                        >
+                            Sign Up Today
+                        </Button>
+                    }
                 </div>
             </Container>
 

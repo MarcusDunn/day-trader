@@ -2,7 +2,9 @@
 
 
 export interface SellResponse {
+  'success'?: (boolean);
 }
 
 export interface SellResponse__Output {
+  'success': (boolean);
 }

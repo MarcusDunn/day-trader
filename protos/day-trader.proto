@@ -34,6 +34,12 @@ service DayTrader {
   rpc SetSellTrigger(SetSellTriggerRequest) returns (SetSellTriggerResponse);
   // Cancels the SET_SELL associated with the given stock and user
   rpc CancelSetSell(CancelSetSellRequest) returns (CancelSetSellResponse);
+  // Get all stocks from cache
+  rpc GetAllStocks(GetAllStocksRequest) returns (GetAllStocksResponse);
+  // Get User Info
+  rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
+  // login
+  rpc Login(LoginRequest) returns (LoginResponse);
 
   rpc Quote(QuoteRequest) returns (QuoteRequestSimple);
 }
@@ -48,6 +54,38 @@ service Quote {
   rpc Quote(QuoteRequest) returns (QuoteResponse);
 }
 
+message GetAllStocksRequest {
+}
+
+message Stock {
+  string name = 1;
+  double price = 2;
+}
+
+message GetAllStocksResponse {
+  repeated Stock stocks = 1;
+}
+
+message LoginRequest {
+  string user_id = 1;
+}
+
+message LoginResponse {
+  string user_id = 1;
+  bool success = 2;
+}
+
+message GetUserInfoRequest {
+  string user_id = 1;
+}
+
+message GetUserInfoResponse {
+  double balance = 1;
+  repeated Stock stock = 2;
+  repeated SellTrigger SellTriggers = 3;
+  repeated BuyTrigger BuyTriggers = 4;
+}
+
 message AddRequest {
   string user_id = 1;
   double amount = 2;
@@ -55,6 +93,7 @@ message AddRequest {
 }
 
 message AddResponse {
+  bool success = 1;
 }
 
 message QuoteRequest {
@@ -79,6 +118,7 @@ message BuyRequest {
 }
 
 message BuyResponse {
+  bool success = 1;
 }
 
 message CommitBuyRequest{
@@ -87,7 +127,7 @@ message CommitBuyRequest{
 }
 
 message CommitBuyResponse {
-
+  bool success = 1;
 }
 
 message CancelBuyRequest {
@@ -95,6 +135,7 @@ message CancelBuyRequest {
   int32 request_num = 2;
 }
 message CancelBuyResponse {
+  bool success = 1;
 }
 
 message SellRequest {
@@ -104,6 +145,7 @@ message SellRequest {
   int32 request_num = 4;
 }
 message SellResponse {
+  bool success = 1;
 }
 
 message CommitSellRequest {
@@ -111,13 +153,14 @@ message CommitSellRequest {
   int32 request_num = 2;
 }
 message  CommitSellResponse {
-
+  bool success = 1;
 }
 message CancelSellRequest {
   string user_id = 1;
   int32 request_num = 2;
 }
 message  CancelSellResponse {
+  bool success = 1;
 }
 message GetUserRequest {
   string user_id = 1;
@@ -138,7 +181,6 @@ message OwnedStock {
 }
 
 message BuyTrigger {
-  int32 id = 1;
   string username = 2;
   string stock = 3;
   double trigger_amount = 4;
@@ -146,7 +188,6 @@ message BuyTrigger {
 }
 
 message SellTrigger {
-  int32 id = 1;
   string username = 2;
   string stock = 3;
   double trigger_amount = 4;
@@ -167,8 +208,9 @@ message SetBuyAmountRequest {
   int32 request_num = 4;
 }
 message SetBuyAmountResponse {
-
+  bool success = 1;
 }
+
 message CancelSetBuyRequest {
   string user_id = 1;
   string stock_symbol = 2;
@@ -183,7 +225,7 @@ message SetBuyTriggerRequest {
   int32 request_num = 4;
 }
 message  SetBuyTriggerResponse {
-
+  bool success = 1;
 }
 message SetSellAmountRequest {
   string user_id = 1;
@@ -192,7 +234,7 @@ message SetSellAmountRequest {
   int32 request_num = 4;
 }
 message  SetSellAmountResponse {
-
+  bool success = 1;
 }
 message SetSellTriggerRequest {
   string user_id = 1;
@@ -201,7 +243,7 @@ message SetSellTriggerRequest {
   int32 request_num = 4;
 }
 message SetSellTriggerResponse {
-
+  bool success = 1;
 }
 message CancelSetSellRequest {
   string user_id = 1;
@@ -226,7 +268,7 @@ message DumpLogResponse {
 }
 message DisplaySummaryRequest {
   string user_id = 1;
-  int32 request_num = 3;
+  int32 request_num = 2;
 }
 message DisplaySummaryResponse {
   repeated UserCommand user_commands = 1;

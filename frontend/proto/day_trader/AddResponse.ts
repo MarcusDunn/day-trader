@@ -2,7 +2,9 @@
 
 
 export interface AddResponse {
+  'success'?: (boolean);
 }
 
 export interface AddResponse__Output {
+  'success': (boolean);
 }

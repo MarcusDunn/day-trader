@@ -2,7 +2,9 @@
 
 
 export interface CommitBuyResponse {
+  'success'?: (boolean);
 }
 
 export interface CommitBuyResponse__Output {
+  'success': (boolean);
 }

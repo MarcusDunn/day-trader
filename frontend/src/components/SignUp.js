@@ -9,13 +9,33 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 
 export default function SignUp() {
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const body = {
+      username: data.get('email')
+    }
+    try{
+      const response = await fetch('/api/user/signup', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      })
+      const responseParsed = await response.json();
+      if (responseParsed.status) {
+        localStorage.setItem('jwt', responseParsed.user);
+        window.location.href = "/"
+        setError("");
+      }else{
+        setError("Invalid username or password, please try again");
+      }
+    }catch(error){
+      console.log("error:",error);
+      setError("Invalid username or password, please try again");
+      return;
+    }
   };
 
   return (

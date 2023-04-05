@@ -5,10 +5,12 @@ export interface BuyRequest {
   'userId'?: (string);
   'stockSymbol'?: (string);
   'amount'?: (number | string);
+  'requestNum'?: (number);
 }
 
 export interface BuyRequest__Output {
   'userId': (string);
   'stockSymbol': (string);
   'amount': (number);
+  'requestNum': (number);
 }

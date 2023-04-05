@@ -4,9 +4,11 @@
 export interface CancelSetSellRequest {
   'userId'?: (string);
   'stockSymbol'?: (string);
+  'requestNum'?: (number);
 }
 
 export interface CancelSetSellRequest__Output {
   'userId': (string);
   'stockSymbol': (string);
+  'requestNum': (number);
 }

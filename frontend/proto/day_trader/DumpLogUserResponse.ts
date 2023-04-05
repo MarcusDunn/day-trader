@@ -2,7 +2,9 @@
 
 
 export interface DumpLogUserResponse {
+  'xml'?: (string);
 }
 
 export interface DumpLogUserResponse__Output {
+  'xml': (string);
 }

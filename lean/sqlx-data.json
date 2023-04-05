@@ -126,6 +126,32 @@
     },
     "query": "UPDATE trader SET balance = balance - $1 WHERE user_id = $2 AND balance >= $1"
   },
+  "4f05eb8d55adc5ffb6f2c3bd698813f1b7d34f99985b3937e4077060e3c82e41": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "price",
+          "ordinal": 1,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT stock_symbol as name, amount as price FROM stock WHERE owner_id = $1"
+  },
   "592b2cf584e4e3433508fc4375666734f596e747341513c090252fecc21ef27d": {
     "describe": {
       "columns": [],
@@ -154,6 +180,44 @@
       }
     },
     "query": "INSERT INTO trader (user_id, balance) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET balance = trader.balance + $2"
+  },
+  "61773af25838b0d523415f08caf580e2184c19ed177c3d5f2e9c30baa3f222d4": {
+    "describe": {
+      "columns": [
+        {
+          "name": "username",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "shares_to_sell",
+          "ordinal": 2,
+          "type_info": "Float8"
+        },
+        {
+          "name": "trigger_amount!",
+          "ordinal": 3,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n                SELECT\n                    owner_id as username,\n                    stock_symbol as stock,\n                    amount_stock as shares_to_sell,\n                    trigger_price as \"trigger_amount!\"\n                FROM sell_trigger\n                WHERE owner_id = $1 AND trigger_price IS NOT NULL\n                "
   },
   "667ed4c9ceccf223358b6665d30f028ac3ca594ad1ff8f99b1801144aae86417": {
     "describe": {
@@ -545,6 +609,64 @@
       }
     },
     "query": "SELECT * FROM log_entry ORDER BY timestamp ASC"
+  },
+  "d04627255755f5151a83750b65c8bed9b5ba64d692e3d82764a4075140b54fed": {
+    "describe": {
+      "columns": [
+        {
+          "name": "balance",
+          "ordinal": 0,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT balance FROM trader WHERE user_id = $1"
+  },
+  "e01e7b653209f8b4c361c63105aa5e1e693845675253d88acf750247aad17dd4": {
+    "describe": {
+      "columns": [
+        {
+          "name": "username",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "stock",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "buy_amount",
+          "ordinal": 2,
+          "type_info": "Float8"
+        },
+        {
+          "name": "trigger_amount!",
+          "ordinal": 3,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\n                SELECT\n                    owner_id as username,\n                    stock_symbol as stock,\n                    amount_dollars as buy_amount,\n                    trigger_price as \"trigger_amount!\"\n                FROM buy_trigger\n                WHERE owner_id = $1 AND trigger_price IS NOT NULL\n                "
   },
   "e060004a9682688fd2c9c362e7d4291b42d5e24224792000635bc05aca0d4994": {
     "describe": {

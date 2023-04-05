@@ -1,3 +1,5 @@
+import { Quote } from "../../../clients/DayTraderClient";
+
 const stocks = {
     "ABC": {
         "name": "ABC",
@@ -98,15 +100,10 @@ const stocks = {
 }
 
 export default async function getStocks(req, res){
-    const id = req.query.id.toUpperCase()
-    // const url="http://localhost:4000/stocks/".concat(id);
-    // const options = {
-    //     method: 'GET',
-    //     headers: {
-    //         Accept: 'application/json',
-    //         'Content-Type': 'application/json',
-    //     },
-    // }
-    // const response = await (await fetch(url, options)).json();
-    return stocks[id] ? res.status(200).json(stocks[id]) : res.status(404).json({name: "NOTFOUND"})
+    const username = req.body.username;
+    const stock = req.query.id.toUpperCase()
+    const response = stocks[id] ? stocks[id] : {name: "NOTFOUND"}
+    // const stock = req.query.id.toLowerCase()
+    // const response = await Quote(username, stock, -1);
+    return res.status(200).json(response)
 }

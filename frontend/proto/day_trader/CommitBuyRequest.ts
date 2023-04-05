@@ -3,8 +3,10 @@
 
 export interface CommitBuyRequest {
   'userId'?: (string);
+  'requestNum'?: (number);
 }
 
 export interface CommitBuyRequest__Output {
   'userId': (string);
+  'requestNum': (number);
 }

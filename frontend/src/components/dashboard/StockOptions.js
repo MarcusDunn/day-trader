@@ -145,7 +145,7 @@ export default function StockOptions() {
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Paper className="p-4">
+      <Paper className="p-4" sx={{borderRadius: 3}}>
         <Toolbar className="flex flex-row justify-between">
           <Typography variant="h6" id="tableTitle" component="div">
             Stocks

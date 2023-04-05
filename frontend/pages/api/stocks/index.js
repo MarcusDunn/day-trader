@@ -1,13 +1,6 @@
+import { GetAllStocks } from "../../../clients/DayTraderClient"
+
 export default async function getStocks(req, res){
-    // const url="http://localhost:4000/stocks";
-    // const options = {
-    //     method: 'GET',
-    //     headers: {
-    //         Accept: 'application/json',
-    //         'Content-Type': 'application/json',
-    //     },
-    // }
-    // const response = await (await fetch(url, options)).json();
     const response = {
         "stocks": [
             {
@@ -108,6 +101,6 @@ export default async function getStocks(req, res){
             }
         ]
     }
-      
+    // const response = await GetAllStocks();
     return res.status(200).json(response)
 }

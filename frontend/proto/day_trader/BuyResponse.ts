@@ -2,7 +2,9 @@
 
 
 export interface BuyResponse {
+  'success'?: (boolean);
 }
 
 export interface BuyResponse__Output {
+  'success': (boolean);
 }

@@ -2,7 +2,9 @@
 
 
 export interface CancelSellResponse {
+  'success'?: (boolean);
 }
 
 export interface CancelSellResponse__Output {
+  'success': (boolean);
 }

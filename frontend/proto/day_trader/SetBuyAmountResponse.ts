@@ -2,7 +2,9 @@
 
 
 export interface SetBuyAmountResponse {
+  'success'?: (boolean);
 }
 
 export interface SetBuyAmountResponse__Output {
+  'success': (boolean);
 }

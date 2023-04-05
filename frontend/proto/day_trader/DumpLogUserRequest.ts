@@ -4,9 +4,11 @@
 export interface DumpLogUserRequest {
   'userId'?: (string);
   'filename'?: (string);
+  'requestNum'?: (number);
 }
 
 export interface DumpLogUserRequest__Output {
   'userId': (string);
   'filename': (string);
+  'requestNum': (number);
 }
