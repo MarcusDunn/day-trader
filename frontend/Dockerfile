@@ -4,14 +4,15 @@ WORKDIR /app
 
 COPY package*.json ./
 
+# COPY
+COPY . .
+COPY .env.local .env.local
+
 RUN npm install
 
-COPY . .
 
-RUN npm run build
-
-# Expose the port Next.js will run on
+# Run and expose the server on port 4000
 EXPOSE 3000
 
-# Start the Next.js app
-CMD ["npm", "start"]
+# A command to start the server
+CMD ["npm", "run", "dev"]
