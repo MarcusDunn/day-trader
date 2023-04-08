@@ -75,7 +75,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     oneshot_recv.blocking_recv().expect("failed to revc")
                 })
             })
-                .await??;
+            .await??;
         }
         CommandList::List(commands, mode) => match mode {
             Mode::Sequential | Mode::Slow => {
@@ -90,7 +90,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                 .read_line(&mut input)
                                 .expect("failed to read line");
                         })
-                            .await?
+                        .await?
                     }
                     info!("Executing {command:?}");
                     match command.execute(&mut stack).await {
