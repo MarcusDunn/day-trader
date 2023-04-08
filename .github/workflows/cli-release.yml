@@ -36,14 +36,10 @@ jobs:
       - name: Build
         run: cargo build --release
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+        run: gh release upload ${{ matrix-os }}-${{ github.ref }} target/release/cli
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./cli/target/release/cli
-          asset_name: cli-${{ matrix.os }}
-          asset_content_type: application/octet-stream
+
 
 
 
