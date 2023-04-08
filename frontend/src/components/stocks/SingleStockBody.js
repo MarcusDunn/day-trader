@@ -119,7 +119,7 @@ function SingleStockBody({ stock, userInfo }) {
   const SellTriggerJSX = () => {
       const subtitle = sellTrigger.triggerAmount ? `Selling at $${sellTrigger.triggerAmount.toFixed(2)}` : "No owned sell triggers"
       const value = sellTrigger.triggerAmount ? `${sellTrigger.sharesToSell.toFixed(2)} shares` : ""
-      const button = <Button variant="outlined" primary="outlined" onClick={handleOpenSellTriggerModal}>Sell Triggers</Button>
+      const button = <Button variant="outlined" primary="outlined" onClick={handleOpenSellTriggerModal} disabled={sellTrigger}>Sell Triggers</Button>
       return StockInfo("Sell Triggers", subtitle, value, button)
   }
   
@@ -134,7 +134,7 @@ function SingleStockBody({ stock, userInfo }) {
         open={openTradeModal}
         onClose={handleCloseModal}
       >
-        <TradeModal stock={stock} userInfo={userInfo} handleClose={handleCloseModal} />
+        <TradeModal stock={stock} userInfo={userInfo} ownedStock={ownedStock} handleClose={handleCloseModal} />
       </Dialog>
       <Dialog
         open={openSellTriggerModal}

@@ -114,7 +114,7 @@ export default async function getStocks(req, res){
         const grpcCall = await Quote(username, stock, -1);
         console.log(grpcCall)
         const percentChange = getRandomNumber(-20, 20);
-        const stockChange = grpcCall.price * (1.0 + percentChange/100)
+        const stockChange = grpcCall.price * (percentChange/100)
         const response = {
             name: stock,
             price: grpcCall.price ? grpcCall.price.toFixed(2) : grpcCall.price,

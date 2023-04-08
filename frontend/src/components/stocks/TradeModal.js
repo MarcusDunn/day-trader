@@ -14,7 +14,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../../pages/_app";
 import useInterval from "../../utils/useInterval";
 
-function TradeModal({ stock, userInfo, handleClose }) {
+function TradeModal({ stock, userInfo, ownedStock, handleClose }) {
   const user = useContext(UserContext).user;
   const tick_time = 59;
   const [timer, setTimer] = useState(tick_time);
@@ -27,7 +27,7 @@ function TradeModal({ stock, userInfo, handleClose }) {
   if (!stock || !userInfo || !user) {
     return <></>;
   }
-
+  
   useInterval(() => {
     if (readyToCommit && timer > 0) {
       setTimer(timer - 1);
@@ -142,7 +142,11 @@ function TradeModal({ stock, userInfo, handleClose }) {
   };
 
   const handleAmountChange = (event) => {
-    setAmount(Number(event.target.value));
+    if(action == 'buy'){
+      setAmount(Number(event.target.value) > userInfo.balance ? userInfo.balance : Number(event.target.value));
+    }else{
+      setAmount(Number(event.target.value));
+    }
   };
 
   return (
@@ -161,7 +165,7 @@ function TradeModal({ stock, userInfo, handleClose }) {
               gutterBottom
             >
               Commit {action}ing {(amount/stock.price).toFixed(2)} shares at $
-              {stock.price.toFixed(2)}/share
+              {stock.price ? Number(stock.price).toFixed(2) : 0.0}/share
             </Typography>
             <Typography
               variant="subtitle2"
@@ -210,18 +214,27 @@ function TradeModal({ stock, userInfo, handleClose }) {
                   onChange={(e) => setAction(e.target.value)}
                 >
                   <MenuItem value="buy">Buy</MenuItem>
-                  <MenuItem value="sell">Sell</MenuItem>
+                  <MenuItem value="sell" disabled={ownedStock}>Sell</MenuItem>
                 </Select>
               </div>
               <TextField
                 type="number"
-                inputProps={{}}
+                inputProps={{ min: 0.0, max: userInfo.balance }}
                 label="Amount ($)"
                 value={amount}
                 onChange={handleAmountChange}
                 fullWidth
               />
             </FormControl>
+            <Typography
+              variant="subtitle2"
+              display={"block"}
+              color="secondary"
+              className="mt-3 ml-2"
+              gutterBottom
+            >
+              Account Balance: ${userInfo.balance}
+            </Typography>
 
             <Typography
               variant="subtitle2"
