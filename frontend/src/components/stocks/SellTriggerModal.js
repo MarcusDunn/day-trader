@@ -22,8 +22,8 @@ function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
   }
 
   useEffect(()=> {
-    if(trigger){
-      setAmount(trigger.sellAmount)
+    if(trigger.sharesToSell){
+      setAmount(trigger.sharesToSell)
       setTriggerVal(trigger.triggerAmount)
     }
   }, [trigger])
@@ -184,7 +184,6 @@ function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
             <FormControl className="w-full">
               <TextField
                 type="number"
-                inputProps={{}}
                 label="Set Sell Amount ($)"
                 value={amount}
                 onChange={handleAmountChange}

@@ -132,11 +132,11 @@ function Navigation() {
                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-                <MenuItem onClick={closeAvatarMenu}>
+                <MenuItem onClick={() => {window.location.href="/dashboard"}}>
                     <Avatar sx={{ bgcolor: theme.palette.secondary.main }}/> {user}
                 </MenuItem>
                 <Divider />
-                <MenuItem onClick={closeAvatarMenu}>
+                <MenuItem onClick={() => {window.location.href="/settings"}}>
                     <ListItemIcon>
                         <Settings fontSize="small" />
                     </ListItemIcon>

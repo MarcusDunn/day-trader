@@ -125,7 +125,7 @@ function BuyTriggerModal({ stock, userInfo, handleClose, trigger }) {
   };
 
   const handleAmountChange = (event) => {
-    setAmount(Number(event.target.value));
+    setAmount(Number(event.target.value) > userInfo.balance ? userInfo.balance : event.target.value);
   };
   const handleTriggerValChange = (event) => {
     setTriggerVal(Number(event.target.value));
@@ -191,7 +191,15 @@ function BuyTriggerModal({ stock, userInfo, handleClose, trigger }) {
                 fullWidth
               />
             </FormControl>
-
+            <Typography
+              variant="subtitle2"
+              display={"block"}
+              color="secondary"
+              className="mt-3 ml-2"
+              gutterBottom
+            >
+             Account Balance: ${userInfo.balance}
+            </Typography>
             <Typography
               variant="subtitle2"
               display={"block"}

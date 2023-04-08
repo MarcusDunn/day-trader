@@ -110,7 +110,7 @@ function SingleStockBody({ stock, userInfo }) {
   
   const BuyTriggerJSX = () => {
       const subtitle = buyTrigger.triggerAmount ? `Buying at $${buyTrigger.triggerAmount.toFixed(2)}` : "No owned buy triggers"
-      const value = buyTrigger.triggerAmount ? `${buyTrigger.buyAmount.toFixed(2)} shares` : ""
+      const value = buyTrigger.triggerAmount ? `$${buyTrigger.buyAmount.toFixed(2)} of shares` : ""
       const button = <Button variant="outlined" primary="outlined" onClick={handleOpenBuyTriggerModal}>Buy Triggers</Button>
       return StockInfo("Buy Triggers", subtitle, value, button)
   }
@@ -118,10 +118,11 @@ function SingleStockBody({ stock, userInfo }) {
   
   const SellTriggerJSX = () => {
       const subtitle = sellTrigger.triggerAmount ? `Selling at $${sellTrigger.triggerAmount.toFixed(2)}` : "No owned sell triggers"
-      const value = sellTrigger.triggerAmount ? `${sellTrigger.sharesToSell.toFixed(2)} shares` : ""
-      const button = <Button variant="outlined" primary="outlined" onClick={handleOpenSellTriggerModal} disabled={sellTrigger}>Sell Triggers</Button>
+      const value = sellTrigger.triggerAmount ? `$${sellTrigger.sharesToSell.toFixed(2)} of shares` : ""
+      const button = <Button variant="outlined" primary="outlined" onClick={handleOpenSellTriggerModal} disabled={!sellTrigger.sharesToSell}>Sell Triggers</Button>
       return StockInfo("Sell Triggers", subtitle, value, button)
   }
+  console.log("sellTrigger",sellTrigger)
   
   return (
     <div className="flex flex-row justify-between flex-wrap">

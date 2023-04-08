@@ -145,7 +145,7 @@ function TradeModal({ stock, userInfo, ownedStock, handleClose }) {
     if(action == 'buy'){
       setAmount(Number(event.target.value) > userInfo.balance ? userInfo.balance : Number(event.target.value));
     }else{
-      setAmount(Number(event.target.value));
+      setAmount(Number(event.target.value) > ownedStock.stock*stock.price ? (ownedStock.stock*stock.price).toFixed(2) : Number(event.target.value));
     }
   };
 
@@ -214,12 +214,11 @@ function TradeModal({ stock, userInfo, ownedStock, handleClose }) {
                   onChange={(e) => setAction(e.target.value)}
                 >
                   <MenuItem value="buy">Buy</MenuItem>
-                  <MenuItem value="sell" disabled={ownedStock}>Sell</MenuItem>
+                  <MenuItem value="sell" disabled={!ownedStock.stock}>Sell</MenuItem>
                 </Select>
               </div>
               <TextField
                 type="number"
-                inputProps={{ min: 0.0, max: userInfo.balance }}
                 label="Amount ($)"
                 value={amount}
                 onChange={handleAmountChange}
@@ -233,7 +232,7 @@ function TradeModal({ stock, userInfo, ownedStock, handleClose }) {
               className="mt-3 ml-2"
               gutterBottom
             >
-              Account Balance: ${userInfo.balance}
+             { action=="buy" ?  `Account Balance: ${userInfo.balance}` : `Stock Owned: $${(ownedStock.stock*stock.price).toFixed(2)}`}
             </Typography>
 
             <Typography
