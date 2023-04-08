@@ -9,6 +9,7 @@ use tonic::{IntoRequest, Request};
 pub struct LoadTestUserIdStockSymbolCommand {
     pub user_id: String,
     pub stock_symbol: String,
+    #[arg(default_value_t = -1)]
     pub request_num: i32,
 }
 

@@ -3,6 +3,7 @@ use proptest::prelude::{any_with, TestCaseError};
 use proptest::strategy::SBoxedStrategy;
 use proptest::test_runner::{Config, TestCaseResult, TestRunner};
 use std::collections::BTreeMap;
+use std::env;
 use std::fs::{metadata, File};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
@@ -16,8 +17,15 @@ use cli::command::LoadTestCommand;
 use cli::fuzz::LoadTestCommandType;
 use cli::services::DayTraderServicesStack;
 
+const DEFAULT_RUST_LOG: &str = "none,cli=debug";
+
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
+    if env::var("RUST_LOG").is_err() {
+        eprintln!("RUST_LOG not set, defaulting to {DEFAULT_RUST_LOG}");
+        env::set_var("RUST_LOG", DEFAULT_RUST_LOG);
+    }
+
     tracing_subscriber::fmt()
         .with_ansi(true)
         .with_env_filter(EnvFilter::from_default_env())
