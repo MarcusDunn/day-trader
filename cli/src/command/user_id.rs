@@ -1,5 +1,6 @@
 use crate::protos::{
-    CancelBuyRequest, CancelSellRequest, CommitBuyRequest, CommitSellRequest, DisplaySummaryRequest,
+    CancelBuyRequest, CancelSellRequest, CommitBuyRequest, CommitSellRequest,
+    DisplaySummaryRequest, GetUserInfoRequest,
 };
 use crate::split_ext::CommandParseIterExt;
 use crate::CommandParseFailure;
@@ -66,6 +67,14 @@ impl IntoRequest<CancelBuyRequest> for LoadTestUserIdCommand {
         Request::new(CancelBuyRequest {
             user_id: self.user_id,
             request_num: self.request_num,
+        })
+    }
+}
+
+impl IntoRequest<GetUserInfoRequest> for LoadTestUserIdCommand {
+    fn into_request(self) -> Request<GetUserInfoRequest> {
+        Request::new(GetUserInfoRequest {
+            user_id: self.user_id,
         })
     }
 }
