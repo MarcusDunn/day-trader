@@ -39,6 +39,7 @@ impl TryFrom<(i32, Split<'_, char>)> for DumpLog {
 #[derive(Clone, Debug, clap::Args, PartialEq, Arbitrary)]
 pub struct LoadTestDumpLogFileName {
     pub file_name: String,
+    #[arg(default_value_t = -1)]
     pub request_num: i32,
 }
 

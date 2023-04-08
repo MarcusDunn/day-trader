@@ -11,6 +11,7 @@ use tonic::{IntoRequest, Request};
 #[derive(Debug, PartialEq, clap::Args, Clone, Arbitrary)]
 pub struct LoadTestUserIdCommand {
     pub user_id: String,
+    #[arg(default_value_t = -1)]
     pub request_num: i32,
 }
 

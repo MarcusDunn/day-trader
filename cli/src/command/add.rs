@@ -9,7 +9,7 @@ use tonic::{IntoRequest, Request};
 pub struct LoadTestAdd {
     pub user_id: String,
     pub amount: f64,
-    #[arg(default_value_t = 0)]
+    #[arg(default_value_t = -1)]
     pub request_num: i32,
 }
 

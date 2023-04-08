@@ -5,7 +5,9 @@ use tonic::{IntoRequest, Request};
 #[derive(Clone, Debug, clap::Args, PartialEq, Arbitrary)]
 pub struct LoadTestDumpLogUserIdFileName {
     pub user_id: String,
+    #[arg(default_value_t = String::from("log.xml"))]
     pub file_name: String,
+    #[arg(default_value_t = -1)]
     pub request_num: i32,
 }
 
