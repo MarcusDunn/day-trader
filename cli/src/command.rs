@@ -52,6 +52,8 @@ pub enum LoadTestCommand {
     DumpLogFileName(LoadTestDumpLogFileName),
     /// Print out the history of the users transactions to the user specified file
     DumpLogUser(LoadTestDumpLogUserIdFileName),
+    /// Get the information about the user's current state
+    GetUserInfo(LoadTestUserIdCommand),
 }
 
 impl LoadTestCommand {
@@ -106,6 +108,9 @@ impl LoadTestCommand {
             }
             LoadTestCommand::DumpLogFileName(_) => None,
             LoadTestCommand::DumpLogUser(LoadTestDumpLogUserIdFileName { user_id, .. }) => {
+                Some(user_id.clone())
+            }
+            LoadTestCommand::GetUserInfo(LoadTestUserIdCommand { user_id, .. }) => {
                 Some(user_id.clone())
             }
         }
@@ -196,6 +201,11 @@ impl LoadTestCommand {
             LoadTestCommand::DumpLogUser(dump_log_user) => client
                 .day_trader
                 .dump_log_user(dump_log_user)
+                .await
+                .map(|resp| debug!("{resp:?}")),
+            LoadTestCommand::GetUserInfo(get_user_info) => client
+                .day_trader
+                .get_user_info(get_user_info)
                 .await
                 .map(|resp| debug!("{resp:?}")),
         }
