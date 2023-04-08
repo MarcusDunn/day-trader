@@ -33,14 +33,14 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Build
-        run: cargo install --path .
+        run: cargo build --release
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: /usr/local/cargo/bin/cli
+          asset_path: ./target/release/cli
           asset_name: cli-${{ matrix.os }}
           asset_content_type: application/octet-stream
 
