@@ -17,9 +17,7 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install Rust
-        uses: dtolnay/setup-rust@v1
-        with:
-          rust-version: stable
+        uses: dtolnay/rust-toolchain@stable
       - name: Build
         run: cargo install --path cli
       - name: Upload Release Asset
