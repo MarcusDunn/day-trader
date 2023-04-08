@@ -33,7 +33,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Build
-        run: cargo install --path cli
+        run: cargo install --path .
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
