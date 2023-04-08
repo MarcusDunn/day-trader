@@ -8,6 +8,7 @@ jobs:
   release:
     name: release ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    permissions: write-all
     defaults:
       run:
         working-directory: cli
