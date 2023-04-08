@@ -9,18 +9,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-musl, x86_64-apple-darwin]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@master
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Compile and release
-        uses: rust-build/rust-build.action@v1.4.3
+      - name: Install Rust
+        uses: dtolnay/setup-rust@v1
+        with:
+          rust-version: stable
+      - name: Build
+        run: cargo install --path cli
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          SRC_DIR: cli
-          MINIFY: true
-          RUSTTARGET: ${{ matrix.target }}
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: .cli/target/release/cli
+          asset_name: cli-${{ matrix.os }}
+          asset_content_type: application/octet-stream
+
+
+
