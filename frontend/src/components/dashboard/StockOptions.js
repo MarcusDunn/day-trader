@@ -106,8 +106,8 @@ export default function StockOptions() {
   const getStocks = async () => {
     try {
       const response = await (await fetch("/api/stocks")).json();
-      setRawStocks(response.stocks);
-      setStocks(response.stocks);
+      setRawStocks(response);
+      setStocks(response);
       setSearchString("");
     } catch (error) {
       console.log(error);

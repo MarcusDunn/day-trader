@@ -41,19 +41,22 @@ function OwnedStocks() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                    {stocks.map((stock) => (
+                    {stocks ? stocks.map((stock) => (
                         <TableRow
-                        key={stock.name}
-                        >
-                            <TableCell align="left">{stock.name}</TableCell>
-                            <TableCell align="right">{stock.stock}</TableCell>
-                            <TableCell align="right">
-                                <Button variant="outlined" href={"/stocks/".concat(stock.name)}>
-                                    View
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                    ))}
+                            key={stock.name}
+                            >
+                                <TableCell align="left">{stock.name}</TableCell>
+                                <TableCell align="right">{stock.stock}</TableCell>
+                                <TableCell align="right">
+                                    <Button variant="outlined" href={"/stocks/".concat(stock.name)}>
+                                        View
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))
+                            :
+                        <></>
+                    }
                     </TableBody>
                 </Table>
             </TableContainer>

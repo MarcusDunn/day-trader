@@ -99,11 +99,28 @@ const stocks = {
     }
 }
 
+function getRandomNumber(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
 export default async function getStocks(req, res){
     const username = req.body.username;
-    // const stock = req.query.id.toUpperCase()
-    // const response = stocks[id] ? stocks[id] : {name: "NOTFOUND"}
-    const stock = req.query.id.toLowerCase()
-    const response = await Quote(username, stock, -1);
-    return res.status(200).json(response)
+    if(process.env.DUMMY_DATA == "true"){
+        const stock = req.query.id.toUpperCase()
+        const response = stocks[stock] ? stocks[stock] : {name: "NOTFOUND"}
+        return res.status(200).json(response)
+    }else{
+        const stock = req.query.id.toLowerCase()
+        const grpcCall = await Quote(username, stock, -1);
+        console.log(grpcCall)
+        const percentChange = getRandomNumber(-20, 20);
+        const stockChange = grpcCall.price * (1.0 + percentChange/100)
+        const response = {
+            name: stock,
+            price: grpcCall.price ? grpcCall.price.toFixed(2) : grpcCall.price,
+            change: stockChange,
+            percentChange: percentChange
+        }
+        return res.status(200).json(response)
+    }
 }

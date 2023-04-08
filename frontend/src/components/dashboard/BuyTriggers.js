@@ -52,18 +52,22 @@ function BuyTriggers() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {buyTriggers.map((trigger) => (
-            <TableRow key={trigger.name}>
-              <TableCell align="left">{trigger.name}</TableCell>
-              <TableCell align="right">${trigger.triggerAmount.toFixed(2)}</TableCell>
-              <TableCell align="right">{trigger.buyAmount.toFixed(2)}</TableCell>
-              <TableCell align="right">
-                <Button variant="outlined" href={'/stocks/'.concat(trigger.name)}>
-                  View
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {buyTriggers ? 
+            buyTriggers.map((trigger) => (
+              <TableRow key={trigger.name}>
+                <TableCell align="left">{trigger.name}</TableCell>
+                <TableCell align="right">${trigger.triggerAmount.toFixed(2)}</TableCell>
+                <TableCell align="right">{trigger.buyAmount.toFixed(2)}</TableCell>
+                <TableCell align="right">
+                  <Button variant="outlined" href={'/stocks/'.concat(trigger.name)}>
+                    View
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+            :
+            <></>
+          }
         </TableBody>
       </Table>
     </TableContainer>

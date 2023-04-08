@@ -160,8 +160,8 @@ function TradeModal({ stock, userInfo, handleClose }) {
               className="text-lg"
               gutterBottom
             >
-              Commit {action}ing {actionResponse.shares.toFixed(2)} shares at $
-              {(amount / actionResponse.shares).toFixed(2)}/share
+              Commit {action}ing {(amount/stock.price).toFixed(2)} shares at $
+              {stock.price.toFixed(2)}/share
             </Typography>
             <Typography
               variant="subtitle2"
