@@ -27,7 +27,13 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Build
         run: cargo build --release
+      - name: rename binary
+        continue-on-error: true
+        run: mv target/release/cli target/release/cli-${{ matrix.os }}
+      - name: rename window binary
+        continue-on-error: true
+        run: mv target/release/cli.exe target/release/cli-${{ matrix.os }}.exe
       - name: Upload Release Asset
-        run: gh release upload ${{ github.event.release.tag_name }} target/release/cli* --repo ${{ github.repository }}
+        run: gh release upload ${{ github.event.release.tag_name }} target/release/cli-${{ matrix.os }}* --repo ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
