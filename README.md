@@ -14,6 +14,7 @@ There are downloadable binaries for the CLI on the releases pages. `cli --help` 
 ### GUI
 
 `cd frontend`
+
 `npm run dev`
 
 The where the frontend is running should be displayed in the terminal.
