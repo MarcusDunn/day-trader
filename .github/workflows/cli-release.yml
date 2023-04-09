@@ -33,7 +33,13 @@ jobs:
       - name: rename window binary
         continue-on-error: true
         run: mv target/release/cli.exe target/release/cli-${{ matrix.os }}.exe
-      - name: Upload Release Asset
-        run: gh release upload ${{ github.event.release.tag_name }} target/release/cli-${{ matrix.os }}* --repo ${{ github.repository }}
+      - name: Upload Release Asset nix
+        continue-on-error: true
+        run: gh release upload ${{ github.event.release.tag_name }} target/release/cli-${{ matrix.os }} --repo ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release Asset windows
+        continue-on-error: true
+        run: gh release upload ${{ github.event.release.tag_name }} target/release/cli-${{ matrix.os }}.exe --repo ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
