@@ -28,6 +28,6 @@ jobs:
       - name: Build
         run: cargo build --release
       - name: Upload Release Asset
-        run: gh release upload ${{ matrix.os }}-${{ github.ref }} target/release/cli*
+        run: gh release upload ${{ github.ref }} target/release/cli*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
