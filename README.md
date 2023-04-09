@@ -3,6 +3,21 @@
 
 This is an implementation of a scalable day trading application for UVic's Scalable Systems offering (SENG 468).
 
+## Running
+
+`docker compose up` will get the server running. It expects your computer has 16GB of ram and allocates memory between containers accordingly.
+
+### CLI
+
+There are downloadable binaries for the CLI on the releases pages. `cli --help` will display available commands.
+
+### GUI
+
+`cd frontend`
+`npm run dev`
+
+The where the frontend is running should be displayed in the terminal.
+
 ## Architecture
 
 ```mermaid
