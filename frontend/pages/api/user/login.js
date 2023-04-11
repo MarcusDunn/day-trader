@@ -10,7 +10,6 @@ export default async function login(req, res){
         return res.status(200).json(response)
     }else{
         const grpcCall = await Login(req.body.username);
-        console.log(grpcCall);
         const response = {
             success: grpcCall.success,
             user: grpcCall.userId,

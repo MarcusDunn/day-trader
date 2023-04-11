@@ -232,7 +232,7 @@ function TradeModal({ stock, userInfo, ownedStock, handleClose }) {
               className="mt-3 ml-2"
               gutterBottom
             >
-             { action=="buy" ?  `Account Balance: ${userInfo.balance}` : `Stock Owned: $${(ownedStock.stock*stock.price).toFixed(2)}`}
+             { action=="buy" ?  `Account Balance: $${userInfo.balance ? userInfo.balance.toFixed(2) : 0.00}` : `Stock Owned: $${(ownedStock.stock*stock.price).toFixed(2)}`}
             </Typography>
 
             <Typography

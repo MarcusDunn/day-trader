@@ -122,7 +122,6 @@ function SingleStockBody({ stock, userInfo }) {
       const button = <Button variant="outlined" primary="outlined" onClick={handleOpenSellTriggerModal} disabled={!sellTrigger.sharesToSell}>Sell Triggers</Button>
       return StockInfo("Sell Triggers", subtitle, value, button)
   }
-  console.log("sellTrigger",sellTrigger)
   
   return (
     <div className="flex flex-row justify-between flex-wrap">

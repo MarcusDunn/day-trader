@@ -198,7 +198,7 @@ function BuyTriggerModal({ stock, userInfo, handleClose, trigger }) {
               className="mt-3 ml-2"
               gutterBottom
             >
-             Account Balance: ${userInfo.balance}
+             Account Balance: ${userInfo.balance ? userInfo.balance.toFixed(2) : 0.00}
             </Typography>
             <Typography
               variant="subtitle2"

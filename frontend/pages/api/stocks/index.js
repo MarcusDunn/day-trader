@@ -109,6 +109,9 @@ export default async function getStocks(req, res){
         return res.status(200).json(dummy_stocks)
     }else{
         const grpcCall = (await GetAllStocks()).stocks;
+        if(grpcCall === undefined){
+            return res.status(200).json([]);
+        }
         const response = grpcCall.map((stock) => {
             const percentChange = getRandomNumber(-20, 20);
             const stockChange = stock.price * (percentChange/100.0)

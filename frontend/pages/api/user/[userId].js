@@ -58,7 +58,6 @@ export default async function getuser(req, res){
         return res.status(200).json(dummy_data)
     }else{
         const grpcCall = await GetUserInfo(userId);
-        console.log(grpcCall);
         const response = {
             balance: grpcCall.balance,
             stock: grpcCall.stock,

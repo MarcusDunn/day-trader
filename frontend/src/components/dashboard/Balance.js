@@ -30,8 +30,7 @@ function Balance() {
     const url = '/api/user/'.concat(user);
     try {
       const response_parsed = await (await fetch(url)).json();
-      setBalance(response_parsed.balance.toFixed(2));
-      console.log("GetBalance",response_parsed.balance)
+      setBalance(response_parsed.balance ? response_parsed.balance.toFixed(2) : 0.00 );
     } catch (error) {
       console.log(error);
     }
