@@ -46,3 +46,11 @@ services:
       QUOTE_SERVER_URI: FAKE
       RUST_LOG: "none,quote_server_adaptor=info"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+  swift-trader-frontend:
+    # image: ghcr.io/marcusdunn/day-trader/swifttrader
+    image: swifttrader
+    environment:
+      - DUMMY_DATA=false
+      - FRONTEND_URL=http://swift-trader-frontend:3000/
+    ports:
+      - "3000:3000"

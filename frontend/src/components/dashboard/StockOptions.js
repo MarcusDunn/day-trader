@@ -87,7 +87,7 @@ function EnhancedTableHead(props) {
   );
 }
 
-export default function StockOptions() {
+export default function StockOptions({ largeView }) {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("change_perc");
   const [page, setPage] = useState(0);
@@ -101,6 +101,9 @@ export default function StockOptions() {
       await getStocks();
     };
     populatePage();
+    if(largeView){
+      setRowsPerPage(10)
+    }
   }, []);
 
   const getStocks = async () => {
