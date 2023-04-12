@@ -60,6 +60,17 @@ function settings() {
         try{
             const response_parsed = await (await fetch(url, fetchArgs)).json()
             console.log(response_parsed);
+            
+            // Create a link element and set its download attribute
+            const link = document.createElement('a');
+            link.download = 'UserSummary.json';
+            
+            // Create a Blob with the contents of response_parsed
+            const blob = new Blob([JSON.stringify(response_parsed)], {type: 'application/json'});
+            
+            // Set the href of the link to the URL of the Blob and click the link to download the file
+            link.href = URL.createObjectURL(blob);
+            link.click();
         }catch(error){
             console.log(error);
         }

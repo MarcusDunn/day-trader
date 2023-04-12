@@ -5,9 +5,12 @@ import {
   FormControl,
   DialogContent,
   DialogActions,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../../pages/_app";
+import DeleteIcon from '@mui/icons-material/Delete';
 
 function getOwnedStock(stock, userInfo){
   if(!userInfo.stock){
@@ -178,23 +181,32 @@ function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
               {error}
             </Typography>
           </DialogContent>
-          <DialogActions>
-            <Button
-              className="mr-4"
-              variant="outlined"
-              color="primary"
-              onClick={CancelAction}
-            >
-              Delete
-            </Button>
-            <Button
-              className="mr-4"
-              variant="outlined"
-              color="secondary"
-              onClick={CommitActionTrigger}
-            >
-              Set Sell Trigger
-            </Button>
+          <DialogActions className="flex flex-row justify-between">
+            <div>
+              <IconButton onClick={CancelAction} disabled={!trigger.buyAmount}>
+                <Tooltip title="Delete Buy Trigger">
+                  <DeleteIcon />
+                </Tooltip>
+              </IconButton>
+            </div>
+            <div>
+              <Button
+                className="mr-4"
+                variant="outlined"
+                color="primary"
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="mr-4"
+                variant="outlined"
+                color="secondary"
+                onClick={CommitActionTrigger}
+              >
+                Set Sell Trigger
+              </Button>
+            </div>
           </DialogActions>
         </div>
       ) : (

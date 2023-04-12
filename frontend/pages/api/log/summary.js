@@ -9,6 +9,7 @@ export default async function userSummary(req, res){
         }
         return res.status(200).json(response)
     }else{
+        console.log(user);
         const grpcCall = await DisplaySummary(user, -1);
         const response = {
             user_commands: grpcCall.userCommands,
