@@ -13,6 +13,7 @@ pub struct LoadTestUserIdStockSymbolAmountCommand {
     pub user_id: String,
     pub stock_symbol: String,
     pub amount: f64,
+    #[arg(default_value_t = -1)]
     pub request_num: i32,
 }
 

@@ -1,0 +1,45 @@
+name: CLI Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  release:
+    name: release ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    permissions: write-all
+    defaults:
+      run:
+        working-directory: cli
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --release
+      - name: rename binary
+        continue-on-error: true
+        run: mv target/release/cli target/release/cli-${{ matrix.os }}
+      - name: rename window binary
+        continue-on-error: true
+        run: mv target/release/cli.exe target/release/cli-${{ matrix.os }}.exe
+      - name: Upload Release Asset nix
+        continue-on-error: true
+        run: gh release upload ${{ github.event.release.tag_name }} target/release/cli-${{ matrix.os }} --repo ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release Asset windows
+        continue-on-error: true
+        run: gh release upload ${{ github.event.release.tag_name }} target/release/cli-${{ matrix.os }}.exe --repo ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
