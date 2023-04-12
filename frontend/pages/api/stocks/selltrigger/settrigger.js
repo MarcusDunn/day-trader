@@ -1,4 +1,4 @@
-import { SetSellTrigger } from "../../../../clients/DayTraderClient";
+import { SetSellTrigger } from "../../clients/DayTraderClient";
 
 
 export default async function setSellTrigger(req, res){

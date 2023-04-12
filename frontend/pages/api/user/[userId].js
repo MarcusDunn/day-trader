@@ -1,4 +1,4 @@
-import { GetUserInfo } from "../../../clients/DayTraderClient";
+import { GetUserInfo } from "../clients/DayTraderClient";
 
 const dummy_data = {
     balance: 523.45,

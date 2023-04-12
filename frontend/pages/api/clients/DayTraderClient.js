@@ -1,7 +1,9 @@
 import * as grpc from '@grpc/grpc-js';
 import {loadSync} from "@grpc/proto-loader";
+import path from "path";
 
-const def = loadSync("C:\\Users\\user 1\\Source\\day-trader\\frontend\\clients\\day-trader.proto")
+const protoPath = path.join(process.cwd(), 'pages', 'api', 'clients', 'day-trader.proto');
+const def = loadSync(protoPath)
 const definitions = grpc.loadPackageDefinition(def)
 const DayTraderClient = new definitions.day_trader.DayTrader(process.env.transactionURI || 'localhost:80', grpc.credentials.createInsecure());
 

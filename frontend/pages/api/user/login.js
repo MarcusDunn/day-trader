@@ -1,4 +1,4 @@
-import { Login } from "../../../clients/DayTraderClient";
+import { Login } from "../clients/DayTraderClient";
 
 
 export default async function login(req, res){

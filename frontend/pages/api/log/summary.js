@@ -1,4 +1,4 @@
-import { DisplaySummary } from "../../../clients/DayTraderClient";
+import { DisplaySummary } from "../clients/DayTraderClient";
 
 export default async function userSummary(req, res){
     const user = req.body.username;

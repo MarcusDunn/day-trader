@@ -1,4 +1,4 @@
-import { Add } from "../../../clients/DayTraderClient";
+import { Add } from "../clients/DayTraderClient";
 
 export default async function addBalance(req, res){
     const userId = req.body.username;

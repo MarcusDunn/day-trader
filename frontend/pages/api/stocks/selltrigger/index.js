@@ -1,4 +1,4 @@
-import { SetSellAmount } from "../../../../clients/DayTraderClient";
+import { SetSellAmount } from "../../clients/DayTraderClient";
 
 
 export default async function setSellAmount(req, res){

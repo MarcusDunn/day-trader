@@ -1,4 +1,4 @@
-import { GetAllStocks, Quote } from "../../../clients/DayTraderClient";
+import { GetAllStocks, Quote } from "../clients/DayTraderClient";
 
 const dummy_stocks = [
     {

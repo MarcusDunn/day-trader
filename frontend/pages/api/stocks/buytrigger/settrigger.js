@@ -1,4 +1,4 @@
-import { SetBuyTrigger } from "../../../../clients/DayTraderClient";
+import { SetBuyTrigger } from "../../clients/DayTraderClient";
 
 export default async function setBuyTrigger(req, res){
     const username = req.body.username;

@@ -47,10 +47,11 @@ services:
       RUST_LOG: "none,quote_server_adaptor=info"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
   swift-trader-frontend:
-    # image: ghcr.io/marcusdunn/day-trader/swifttrader
-    image: swifttrader
+    image: ghcr.io/marcusdunn/day-trader/swifttrader
+    container_name: swift-trader-frontend
     environment:
       - DUMMY_DATA=false
       - FRONTEND_URL=http://swift-trader-frontend:3000/
+      - transactionURI=lean:8000
     ports:
       - "3000:3000"

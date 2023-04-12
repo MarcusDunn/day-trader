@@ -1,4 +1,4 @@
-import { DumpLogUser } from "../../../clients/DayTraderClient";
+import { DumpLogUser } from "../clients/DayTraderClient";
 
 export default async function userLog(req, res){
     const user = req.body.username;

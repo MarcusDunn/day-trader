@@ -1,4 +1,4 @@
-import { SetBuyAmount } from "../../../../clients/DayTraderClient";
+import { SetBuyAmount } from "../../clients/DayTraderClient";
 
 export default async function setBuyAmount(req, res){
     const username = req.body.username;

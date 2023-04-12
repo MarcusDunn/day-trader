@@ -1,4 +1,4 @@
-import { CancelSetBuy } from "../../../../clients/DayTraderClient";
+import { CancelSetBuy } from "../../clients/DayTraderClient";
 
 
 export default async function cancelSetBuy(req, res){

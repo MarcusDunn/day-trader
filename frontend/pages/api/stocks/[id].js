@@ -1,4 +1,4 @@
-import { Quote } from "../../../clients/DayTraderClient";
+import { Quote } from "../clients/DayTraderClient";
 
 const stocks = {
     "ABC": {

@@ -1,4 +1,4 @@
-import { CommitBuy } from "../../../../clients/DayTraderClient";
+import { CommitBuy } from "../../clients/DayTraderClient";
 
 
 export default async function commitBuy(req, res){
