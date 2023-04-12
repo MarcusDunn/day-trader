@@ -42,7 +42,7 @@ function OwnedStocks() {
                     </TableHead>
                     <TableBody>
                     {stocks ? stocks.map((stock) => (
-                        stock.stock ? 
+                        stock.stock && stock.stock >= 0.01 ? 
                             <TableRow
                                 key={stock.name}
                             >

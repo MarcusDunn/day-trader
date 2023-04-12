@@ -123,8 +123,8 @@ function SingleStockBody({ stock }) {
   }
 
   const OwnedStockJSX = () => {
-      const subtitle = ownedStock.stock ? `$${(ownedStock.stock*stock.price).toFixed(2)} of ${stock.name}` : "No stock owned"
-      const value = ownedStock.stock ? `${ownedStock.stock.toFixed(2)} Shares` : ""
+      const subtitle = ownedStock.stock && ownedStock.stock >= 0.01 ? `$${(ownedStock.stock*stock.price).toFixed(2)} of ${stock.name}` : "No stock owned"
+      const value = ownedStock.stock && ownedStock.stock >= 0.01 ? `${ownedStock.stock.toFixed(2)} Shares` : ""
       const button = (
         <Button variant="outlined" primary="outlined" onClick={handleOpenTradeModal}>
           Trade {stock.name}

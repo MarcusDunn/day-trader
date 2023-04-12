@@ -101,7 +101,7 @@ function BuyTriggerModal({ stock, userInfo, handleClose, trigger }) {
     const url = `/api/stocks/buytrigger/cancel`;
     const body = {
       username: user,
-      stock_symbol: stock.name,
+      stock: stock.name,
     };
     const fetchArgs = {
       method: "POST",
@@ -113,7 +113,7 @@ function BuyTriggerModal({ stock, userInfo, handleClose, trigger }) {
     try {
       const response_parsed = await (await fetch(url, fetchArgs)).json();
       if (response_parsed.success == true) {
-        setReadyToCommit(false);
+        handleClose();
       } else {
         setError(
           `Unsuccessful Delete Trigger Attempt`
@@ -159,14 +159,8 @@ function BuyTriggerModal({ stock, userInfo, handleClose, trigger }) {
               {error}
             </Typography>
           </DialogContent>
-          <DialogActions className="flex flex-row justify-between">
-            <div>
-              <IconButton onClick={CancelAction} disabled={!trigger.buyAmount}>
-                <Tooltip title="Delete Buy Trigger">
-                  <DeleteIcon />
-                </Tooltip>
-              </IconButton>
-            </div>
+          <DialogActions>
+            
             <div>
               <Button
                 className="mr-4"
@@ -221,24 +215,33 @@ function BuyTriggerModal({ stock, userInfo, handleClose, trigger }) {
               {error}
             </Typography>
           </DialogContent>
-          <DialogActions>
-            <Button
-              className="mr-4"
-              variant="outlined"
-              color="primary"
-              onClick={handleClose}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="mr-4"
-              variant="outlined"
-              color="secondary"
-              onClick={executeAction}
-              disabled={amount <= 0.0}
-            >
-              Set Buy Amount
-            </Button>
+          <DialogActions className="flex flex-row justify-between">
+            <div>
+              <IconButton className={!trigger.buyAmount ? "hidden" : ""} onClick={CancelAction} disabled={!trigger.buyAmount}>
+                <Tooltip title="Delete Set Buy">
+                  <DeleteIcon />
+                </Tooltip>
+              </IconButton>
+            </div>
+            <div>
+              <Button
+                className="mr-4"
+                variant="outlined"
+                color="primary"
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="mr-4"
+                variant="outlined"
+                color="secondary"
+                onClick={executeAction}
+                disabled={amount <= 0.0}
+              >
+                Set Buy Amount
+              </Button>
+            </div>
           </DialogActions>
         </div>
       )}
