@@ -41,19 +41,25 @@ function OwnedStocks() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                    {stocks.map((stock) => (
-                        <TableRow
-                        key={stock.name}
-                        >
-                            <TableCell align="left">{stock.name}</TableCell>
-                            <TableCell align="right">{stock.stock}</TableCell>
-                            <TableCell align="right">
-                                <Button variant="outlined" href={"/stocks/".concat(stock.name)}>
-                                    View
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                    ))}
+                    {stocks ? stocks.map((stock) => (
+                        stock.stock && stock.stock >= 0.01 ? 
+                            <TableRow
+                                key={stock.name}
+                            >
+                                <TableCell align="left">{stock.name}</TableCell>
+                                <TableCell align="right">{stock.stock ? stock.stock.toFixed(2) : 0.00}</TableCell>
+                                <TableCell align="right">
+                                    <Button variant="outlined" href={"/stocks/".concat(stock.name)}>
+                                        View
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                            :
+                            <></>
+                        ))
+                            :
+                        <></>
+                    }
                     </TableBody>
                 </Table>
             </TableContainer>

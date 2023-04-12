@@ -52,18 +52,22 @@ function SellTriggers() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {sellTriggers.map((trigger) => (
-            <TableRow key={trigger.name}>
-              <TableCell align="left">{trigger.name}</TableCell>
-              <TableCell align="right">${trigger.triggerAmount.toFixed(2)}</TableCell>
-              <TableCell align="right">{trigger.sharesToSell.toFixed(2)}</TableCell>
-              <TableCell align="right">
-                <Button variant="outlined" href={'/stocks/'.concat(trigger.name)}>
-                  View
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {sellTriggers ? 
+            sellTriggers.map((trigger) => (
+              <TableRow key={trigger.stock}>
+                <TableCell align="left">{trigger.stock}</TableCell>
+                <TableCell align="right">${trigger.triggerAmount.toFixed(2)}</TableCell>
+                <TableCell align="right">{trigger.sharesToSell.toFixed(2)}</TableCell>
+                <TableCell align="right">
+                  <Button variant="outlined" href={'/stocks/'.concat(trigger.stock)}>
+                    View
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+            :
+            <></>
+          }
         </TableBody>
       </Table>
     </TableContainer>

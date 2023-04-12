@@ -14,7 +14,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../../pages/_app";
 import useInterval from "../../utils/useInterval";
 
-function TradeModal({ stock, userInfo, handleClose }) {
+function TradeModal({ stock, userInfo, ownedStock, handleClose }) {
   const user = useContext(UserContext).user;
   const tick_time = 59;
   const [timer, setTimer] = useState(tick_time);
@@ -27,7 +27,7 @@ function TradeModal({ stock, userInfo, handleClose }) {
   if (!stock || !userInfo || !user) {
     return <></>;
   }
-
+  
   useInterval(() => {
     if (readyToCommit && timer > 0) {
       setTimer(timer - 1);
@@ -77,7 +77,7 @@ function TradeModal({ stock, userInfo, handleClose }) {
   const CommitAction = async () => {
     const url = `/api/stocks/${action}/commit`;
     const body = {
-      username: userInfo.username,
+      username: user,
     };
     const fetchArgs = {
       method: "POST",
@@ -110,7 +110,7 @@ function TradeModal({ stock, userInfo, handleClose }) {
   const CancelAction = async () => {
     const url = `/api/stocks/${action}/cancel`;
     const body = {
-      username: userInfo.username,
+      username: user,
     };
     const fetchArgs = {
       method: "POST",
@@ -142,7 +142,11 @@ function TradeModal({ stock, userInfo, handleClose }) {
   };
 
   const handleAmountChange = (event) => {
-    setAmount(Number(event.target.value));
+    if(action == 'buy'){
+      setAmount(Number(event.target.value) > userInfo.balance ? userInfo.balance : Number(event.target.value));
+    }else{
+      setAmount(Number(event.target.value) > ownedStock.stock*stock.price ? (ownedStock.stock*stock.price).toFixed(2) : Number(event.target.value));
+    }
   };
 
   return (
@@ -160,8 +164,8 @@ function TradeModal({ stock, userInfo, handleClose }) {
               className="text-lg"
               gutterBottom
             >
-              Commit {action}ing {actionResponse.shares.toFixed(2)} shares at $
-              {(amount / actionResponse.shares).toFixed(2)}/share
+              Commit {action}ing {(amount/stock.price).toFixed(2)} shares at $
+              {stock.price ? Number(stock.price).toFixed(2) : 0.0}/share
             </Typography>
             <Typography
               variant="subtitle2"
@@ -210,18 +214,26 @@ function TradeModal({ stock, userInfo, handleClose }) {
                   onChange={(e) => setAction(e.target.value)}
                 >
                   <MenuItem value="buy">Buy</MenuItem>
-                  <MenuItem value="sell">Sell</MenuItem>
+                  <MenuItem value="sell" disabled={!ownedStock.stock}>Sell</MenuItem>
                 </Select>
               </div>
               <TextField
                 type="number"
-                inputProps={{}}
                 label="Amount ($)"
                 value={amount}
                 onChange={handleAmountChange}
                 fullWidth
               />
             </FormControl>
+            <Typography
+              variant="subtitle2"
+              display={"block"}
+              color="secondary"
+              className="mt-3 ml-2"
+              gutterBottom
+            >
+             { action=="buy" ?  `Account Balance: $${userInfo.balance ? userInfo.balance.toFixed(2) : 0.00}` : `Stock Owned: $${(ownedStock.stock*stock.price).toFixed(2)}`}
+            </Typography>
 
             <Typography
               variant="subtitle2"

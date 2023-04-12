@@ -1,6 +1,6 @@
-import { GetUserInfo } from "../../../clients/DayTraderClient";
+import { GetUserInfo } from "../clients/DayTraderClient";
 
-const response = {
+const dummy_data = {
     balance: 523.45,
     stock: [
         {
@@ -18,34 +18,34 @@ const response = {
     ],
     SellTriggers: [
         {
-            "name": "ABC",
+            "stock": "ABC",
             "triggerAmount": 500.00,
             "sharesToSell": 22.0,
         },
         {
-            "name": "ASH",
+            "stock": "ASH",
             "triggerAmount": 1000000.00,
             "sharesToSell": 25.0,
         },
         {
-            "name": "DFE",
+            "stock": "DFE",
             "triggerAmount": 1500.00,
             "sharesToSell": 65.0,
         },
     ],
     BuyTriggers: [
         {
-            "name": "ABC",
+            "stock": "ABC",
             "triggerAmount": 500.00,
             "buyAmount": 22.0,
         },
         {
-            "name": "ASH",
+            "stock": "ASH",
             "triggerAmount": 1000000.00,
             "buyAmount": 25.0,
         },
         {
-            "name": "DFE",
+            "stock": "DFE",
             "triggerAmount": 1500.00,
             "buyAmount": 65.0,
         },
@@ -54,7 +54,21 @@ const response = {
 
 export default async function getuser(req, res){
     const userId = req.query.userId;
-    // GetUserInfo
-    const response = await GetUserInfo(userId);
-    return res.status(200).json(response)
+    if(process.env.DUMMY_DATA == "true"){
+        return res.status(200).json(dummy_data)
+    }else{
+        const grpcCall = await GetUserInfo(userId);
+        const response = {
+            balance: grpcCall.balance,
+            stock: grpcCall.stock ? grpcCall.stock.map((stock) => {
+                return  {
+                    name: stock.name,
+                    stock: stock.price
+                }
+            }) : [],
+            SellTriggers: grpcCall.SellTriggers ? grpcCall.SellTriggers : [],
+            BuyTriggers: grpcCall.BuyTriggers ? grpcCall.BuyTriggers : [],
+        }
+        return res.status(200).json(response)
+    }
 }

@@ -6,7 +6,7 @@ function stocks() {
     return (
         <main>
             <Container maxWidth="lg" className="my-20">
-                <StockOptions />
+                <StockOptions largeView/>
             </Container>
         </main>
     )

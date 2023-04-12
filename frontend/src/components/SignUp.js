@@ -24,7 +24,7 @@ export default function SignUp() {
         body: JSON.stringify(body)
       })
       const responseParsed = await response.json();
-      if (responseParsed.status) {
+      if (responseParsed.success) {
         localStorage.setItem('jwt', responseParsed.user);
         window.location.href = "/"
         setError("");

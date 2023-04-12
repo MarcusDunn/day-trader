@@ -8,24 +8,6 @@ import BuyTriggerModal from '../../src/components/stocks/BuyTriggerModal';
 
 function stock({ stock }) {
     const user = useContext(UserContext).user;
-    const [userInfo, setUserInfo] = useState({});
-
-    const getUserInfo = async () => {
-        if (!user) {
-          return;
-        }
-        const url = '/api/user/'.concat(user);
-        try {
-          const response_parsed = await (await fetch(url)).json();
-          setUserInfo(response_parsed);
-        } catch (error) {
-          console.log(error);
-        }
-    };
-
-    useEffect(() => {
-        getUserInfo()
-    }, [user]);
 
     return (
         stock.name !== "NOTFOUND" ? 
@@ -35,7 +17,7 @@ function stock({ stock }) {
                     user ?
                     <div>
                         <Container maxWidth="lg" className="mt-20">
-                            <SingleStockBody className="my-12" stock={stock} userInfo={userInfo} />
+                            <SingleStockBody className="my-12" stock={stock} />
                         </Container>
                         <Container maxWidth="md" className="my-20 text-center">
                             <Typography variant="p" display={'block'} className="my-5 text-xl">

@@ -5,13 +5,30 @@ import {
   FormControl,
   DialogContent,
   DialogActions,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../../pages/_app";
+import DeleteIcon from '@mui/icons-material/Delete';
+
+function getOwnedStock(stock, userInfo){
+  if(!userInfo.stock){
+    return {}
+  }
+  for(const ownedStock of userInfo.stock){
+    if(stock.name == ownedStock.name){
+      console.log(ownedStock);
+      return ownedStock;
+    }
+  }
+  return {}
+}
 
 function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
   const user = useContext(UserContext).user;
-  const [amount, setAmount] = useState(0.0);
+  const [amount, setAmount] = useState({});
+  const [stockOwned, setStockOwned] = useState(0.0);
   const [triggerVal, setTriggerVal] = useState(0.0);
   const [actionResponse, setActionResponse] = useState({});
   const [readyToCommit, setReadyToCommit] = useState(false);
@@ -21,9 +38,13 @@ function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
     return <></>;
   }
 
+  useEffect(() => {
+    setStockOwned(getOwnedStock(stock, userInfo));
+  }, [stock, userInfo]);
+
   useEffect(()=> {
-    if(trigger){
-      setAmount(trigger.sellAmount)
+    if(trigger.sharesToSell){
+      setAmount(trigger.sharesToSell)
       setTriggerVal(trigger.triggerAmount)
     }
   }, [trigger])
@@ -65,7 +86,7 @@ function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
   const CommitActionTrigger = async () => {
     const url = `/api/stocks/selltrigger/settrigger`;
     const body = {
-      username: userInfo.username,
+      username: user,
       stock: stock.name,
       amount: triggerVal,
     };
@@ -97,8 +118,8 @@ function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
   const CancelAction = async () => {
     const url = `/api/stocks/selltrigger/cancel`;
     const body = {
-      username: userInfo.username,
-      stock_symbol: stock.name,
+      username: user,
+      stock: stock.name,
     };
     const fetchArgs = {
       method: "POST",
@@ -110,7 +131,7 @@ function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
     try {
       const response_parsed = await (await fetch(url, fetchArgs)).json();
       if (response_parsed.success == true) {
-        setReadyToCommit(false);
+        handleClose(false);
       } else {
         setError(
           `Unsuccessful Delete Trigger Attempt`
@@ -125,7 +146,11 @@ function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
   };
 
   const handleAmountChange = (event) => {
-    setAmount(Number(event.target.value));
+    let maximumValAloud = stockOwned.stock
+    if(trigger.sharesToSell){
+      maximumValAloud = maximumValAloud + trigger.sharesToSell
+    }
+    setAmount(Number(event.target.value) < maximumValAloud ? Number(event.target.value) : maximumValAloud );
   };
   const handleTriggerValChange = (event) => {
     setTriggerVal(Number(event.target.value));
@@ -161,9 +186,9 @@ function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
               className="mr-4"
               variant="outlined"
               color="primary"
-              onClick={CancelAction}
+              onClick={handleClose}
             >
-              Delete
+              Cancel
             </Button>
             <Button
               className="mr-4"
@@ -179,18 +204,26 @@ function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
         <div>
           <DialogContent sx={{width: 450}}>
             <Typography variant="h5" className="mb-6">
-              Set Sell Amount on Trigger - {stock.name}
+              Set Shares to Sell on Trigger - {stock.name}
             </Typography>
             <FormControl className="w-full">
               <TextField
                 type="number"
-                inputProps={{}}
-                label="Set Sell Amount ($)"
+                label="Set Amount of Shares to Sell"
                 value={amount}
                 onChange={handleAmountChange}
                 fullWidth
               />
             </FormControl>
+            <Typography
+              variant="subtitle2"
+              display={"block"}
+              color="secondary"
+              className="mt-3 ml-2"
+              gutterBottom
+            >
+             Shares Owned: {stockOwned.stock ? stockOwned.stock.toFixed(2) : 0.00}
+            </Typography>
 
             <Typography
               variant="subtitle2"
@@ -201,24 +234,33 @@ function SellTriggerModal({ stock, userInfo, handleClose, trigger }) {
               {error}
             </Typography>
           </DialogContent>
-          <DialogActions>
-            <Button
-              className="mr-4"
-              variant="outlined"
-              color="primary"
-              onClick={handleClose}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="mr-4"
-              variant="outlined"
-              color="secondary"
-              onClick={executeAction}
-              disabled={amount <= 0.0}
-            >
-              Set Sell Amount
-            </Button>
+          <DialogActions className="flex flex-row justify-between">
+            <div>
+              <IconButton className={!trigger.sharesToSell ? "hidden" : ""} onClick={CancelAction} disabled={!trigger.sharesToSell}>
+                <Tooltip title="Delete Sell Trigger">
+                  <DeleteIcon />
+                </Tooltip>
+              </IconButton>
+            </div>
+            <div>
+              <Button
+                className="mr-4"
+                variant="outlined"
+                color="primary"
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="mr-4"
+                variant="outlined"
+                color="secondary"
+                onClick={executeAction}
+                disabled={amount <= 0.0}
+              >
+                Set Sell Amount
+              </Button>
+            </div>
           </DialogActions>
         </div>
       )}

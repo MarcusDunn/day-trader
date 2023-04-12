@@ -1,0 +1,41 @@
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+name: Publish Swift Trader Docker image
+
+jobs:
+  push_to_registry:
+    name: Push Docker image to GitHub Packages
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: PrepareReg Names
+        run: |
+          echo IMAGE_REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+
+      - name: Log in to GitHub Docker Registry
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          registry: docker.pkg.github.com
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: .
+          file: frontend.Dockerfile
+          push: true
+          tags: |
+            docker.pkg.github.com/${{ env.IMAGE_REPOSITORY }}/swifttrader:${{ github.sha }}
+            docker.pkg.github.com/${{ env.IMAGE_REPOSITORY }}/swifttrader:${{ github.event.release.tag_name }}
+            docker.pkg.github.com/${{ env.IMAGE_REPOSITORY }}/swifttrader:latest

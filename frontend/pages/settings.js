@@ -60,6 +60,12 @@ function settings() {
         try{
             const response_parsed = await (await fetch(url, fetchArgs)).json()
             console.log(response_parsed);
+            
+            const link = document.createElement('a');
+            link.download = 'UserSummary.json';
+            const blob = new Blob([JSON.stringify(response_parsed)], {type: 'application/json'});
+            link.href = URL.createObjectURL(blob);
+            link.click();
         }catch(error){
             console.log(error);
         }
