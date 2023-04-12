@@ -18,34 +18,34 @@ const dummy_data = {
     ],
     SellTriggers: [
         {
-            "name": "ABC",
+            "stock": "ABC",
             "triggerAmount": 500.00,
             "sharesToSell": 22.0,
         },
         {
-            "name": "ASH",
+            "stock": "ASH",
             "triggerAmount": 1000000.00,
             "sharesToSell": 25.0,
         },
         {
-            "name": "DFE",
+            "stock": "DFE",
             "triggerAmount": 1500.00,
             "sharesToSell": 65.0,
         },
     ],
     BuyTriggers: [
         {
-            "name": "ABC",
+            "stock": "ABC",
             "triggerAmount": 500.00,
             "buyAmount": 22.0,
         },
         {
-            "name": "ASH",
+            "stock": "ASH",
             "triggerAmount": 1000000.00,
             "buyAmount": 25.0,
         },
         {
-            "name": "DFE",
+            "stock": "DFE",
             "triggerAmount": 1500.00,
             "buyAmount": 65.0,
         },
@@ -60,9 +60,14 @@ export default async function getuser(req, res){
         const grpcCall = await GetUserInfo(userId);
         const response = {
             balance: grpcCall.balance,
-            stock: grpcCall.stock,
-            SellTriggers: grpcCall.SellTriggers,
-            BuyTriggers: grpcCall.BuyTriggers,
+            stock: grpcCall.stock ? grpcCall.stock.map((stock) => {
+                return  {
+                    name: stock.name,
+                    stock: stock.price
+                }
+            }) : [],
+            SellTriggers: grpcCall.SellTriggers ? grpcCall.SellTriggers : [],
+            BuyTriggers: grpcCall.BuyTriggers ? grpcCall.BuyTriggers : [],
         }
         return res.status(200).json(response)
     }

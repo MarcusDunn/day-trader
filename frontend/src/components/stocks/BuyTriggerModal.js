@@ -65,7 +65,7 @@ function BuyTriggerModal({ stock, userInfo, handleClose, trigger }) {
   const CommitActionTrigger = async () => {
     const url = `/api/stocks/buytrigger/settrigger`;
     const body = {
-      username: userInfo.username,
+      username: user,
       stock: stock.name,
       amount: triggerVal,
     };
@@ -97,7 +97,7 @@ function BuyTriggerModal({ stock, userInfo, handleClose, trigger }) {
   const CancelAction = async () => {
     const url = `/api/stocks/buytrigger/cancel`;
     const body = {
-      username: userInfo.username,
+      username: user,
       stock_symbol: stock.name,
     };
     const fetchArgs = {

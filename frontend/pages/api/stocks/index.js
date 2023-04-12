@@ -1,4 +1,4 @@
-import { GetAllStocks } from "../../../clients/DayTraderClient";
+import { GetAllStocks, Quote } from "../../../clients/DayTraderClient";
 
 const dummy_stocks = [
     {
@@ -99,6 +99,21 @@ const dummy_stocks = [
     }
 ]
 
+const defaultSearchStocks = [
+    "ABC",
+    "BCD",
+    "CDE",
+    "DEF",
+    "YED",
+    "JDZ",
+    "TSL",
+    "ZEL",
+    "MNO",
+    "QQQ",
+    "FDE",
+    "TES",
+]
+
 
 function getRandomNumber(min, max) {
     return Math.random() * (max - min) + min;
@@ -108,9 +123,13 @@ export default async function getStocks(req, res){
     if(process.env.DUMMY_DATA == "true"){
         return res.status(200).json(dummy_stocks)
     }else{
-        const grpcCall = (await GetAllStocks()).stocks;
+        var grpcCall = (await GetAllStocks()).stocks;
         if(grpcCall === undefined){
-            return res.status(200).json([]);
+            // get quotes on default stocks with startup user ID
+            for(const stock of defaultSearchStocks){
+                const grpcCall = await Quote("admin_startup_user", stock, -1);
+            }
+            grpcCall = (await GetAllStocks()).stocks;
         }
         const response = grpcCall.map((stock) => {
             const percentChange = getRandomNumber(-20, 20);

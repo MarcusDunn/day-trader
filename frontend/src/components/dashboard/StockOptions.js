@@ -91,7 +91,7 @@ export default function StockOptions() {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("change_perc");
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [rawStocks, setRawStocks] = useState([]);
   const [stocks, setStocks] = useState([]);
   const [searchString, setSearchString] = useState("");

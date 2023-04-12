@@ -77,7 +77,7 @@ function TradeModal({ stock, userInfo, ownedStock, handleClose }) {
   const CommitAction = async () => {
     const url = `/api/stocks/${action}/commit`;
     const body = {
-      username: userInfo.username,
+      username: user,
     };
     const fetchArgs = {
       method: "POST",
@@ -110,7 +110,7 @@ function TradeModal({ stock, userInfo, ownedStock, handleClose }) {
   const CancelAction = async () => {
     const url = `/api/stocks/${action}/cancel`;
     const body = {
-      username: userInfo.username,
+      username: user,
     };
     const fetchArgs = {
       method: "POST",

@@ -1,15 +1,16 @@
 import { Box, Button, Dialog, Divider, Typography } from '@mui/material';
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import TradeModal from './TradeModal';
-import SellTriggerModal from './SELLTriggerModal';
+import SellTriggerModal from './SellTriggerModal';
 import BuyTriggerModal from './BuyTriggerModal';
+import { UserContext } from '../../../pages/_app';
 
 function getSellTrigger(stock, userInfo){
   if(!userInfo.SellTriggers){
     return {}
   }
   for(const trigger of userInfo.SellTriggers){
-    if(trigger.name == stock.name){
+    if(trigger.stock == stock.name){
       return trigger;
     }
   }
@@ -20,7 +21,8 @@ function getBuyTrigger(stock, userInfo){
     return {}
   }
   for(const trigger of userInfo.BuyTriggers){
-    if(trigger.name == stock.name){
+    console.log("Buy trigger:",trigger)
+    if(trigger.stock == stock.name){
       return trigger;
     }
   }
@@ -30,15 +32,18 @@ function getOwnedStock(stock, userInfo){
   if(!userInfo.stock){
     return {}
   }
-  for(const stock of userInfo.stock){
-    if(stock.name == stock.name){
-      return stock;
+  for(const ownedStock of userInfo.stock){
+    if(stock.name == ownedStock.name){
+      console.log(stock);
+      return ownedStock;
     }
   }
   return {}
 }
 
-function SingleStockBody({ stock, userInfo }) {
+function SingleStockBody({ stock }) {
+  const user = useContext(UserContext).user;
+  const [userInfo, setUserInfo] = useState({});
   const [ownedStock, setOwnedStock] = useState({});
   const [sellTrigger, setSellTrigger] = useState({});
   const [buyTrigger, setBuyTrigger] = useState({});
@@ -46,13 +51,27 @@ function SingleStockBody({ stock, userInfo }) {
   const [openSellTriggerModal, setOpenSellTriggerModal] = useState(false);
   const [openBuyTriggerModal, setOpenBuyTriggerModal] = useState(false);
 
-  // Add these functions
+  const getUpdatedUser = async () => {
+    if (!user) {
+      return;
+    }
+    const url = '/api/user/'.concat(user);
+    try {
+      const response_parsed = await (await fetch(url)).json();
+      setUserInfo(response_parsed);
+      console.log("Got updated user",response_parsed)
+    } catch (error) {
+        console.log(error);
+      }
+  };
+
   const handleOpenTradeModal = () => {
     setOpenTradeModal(true);
   };
 
   const handleCloseModal = () => {
     setOpenTradeModal(false);
+    getUpdatedUser();
   };
 
   const handleOpenSellTriggerModal = () => {
@@ -61,6 +80,7 @@ function SingleStockBody({ stock, userInfo }) {
 
   const handleCloseSellTriggerModal = () => {
     setOpenSellTriggerModal(false);
+    getUpdatedUser();
   };
   const handleOpenBuyTriggerModal = () => {
     setOpenBuyTriggerModal(true);
@@ -68,6 +88,7 @@ function SingleStockBody({ stock, userInfo }) {
 
   const handleCloseBuyTriggerModal = () => {
     setOpenBuyTriggerModal(false);
+    getUpdatedUser();
   };
   
   useEffect(()=>{
@@ -75,6 +96,10 @@ function SingleStockBody({ stock, userInfo }) {
     setBuyTrigger(getBuyTrigger(stock, userInfo))
     setOwnedStock(getOwnedStock(stock, userInfo))
   }, [userInfo] )
+
+  useEffect(()=>{
+    getUpdatedUser();
+  }, [] )
 
   const StockInfo = (title, subtitle, value, button) => {
     return(
@@ -99,7 +124,7 @@ function SingleStockBody({ stock, userInfo }) {
 
   const OwnedStockJSX = () => {
       const subtitle = ownedStock.stock ? `$${(ownedStock.stock*stock.price).toFixed(2)} of ${stock.name}` : "No stock owned"
-      const value = ownedStock.stock ? `${ownedStock.stock} Shares` : ""
+      const value = ownedStock.stock ? `${ownedStock.stock.toFixed(2)} Shares` : ""
       const button = (
         <Button variant="outlined" primary="outlined" onClick={handleOpenTradeModal}>
           Trade {stock.name}
@@ -118,8 +143,8 @@ function SingleStockBody({ stock, userInfo }) {
   
   const SellTriggerJSX = () => {
       const subtitle = sellTrigger.triggerAmount ? `Selling at $${sellTrigger.triggerAmount.toFixed(2)}` : "No owned sell triggers"
-      const value = sellTrigger.triggerAmount ? `$${sellTrigger.sharesToSell.toFixed(2)} of shares` : ""
-      const button = <Button variant="outlined" primary="outlined" onClick={handleOpenSellTriggerModal} disabled={!sellTrigger.sharesToSell}>Sell Triggers</Button>
+      const value = sellTrigger.triggerAmount ? `${sellTrigger.sharesToSell.toFixed(2)} shares` : ""
+      const button = <Button variant="outlined" primary="outlined" onClick={handleOpenSellTriggerModal} disabled={!ownedStock.stock}>Sell Triggers</Button>
       return StockInfo("Sell Triggers", subtitle, value, button)
   }
   

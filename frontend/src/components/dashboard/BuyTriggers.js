@@ -47,19 +47,19 @@ function BuyTriggers() {
           <TableRow>
             <TableCell>Stock</TableCell>
             <TableCell align="right">Trigger Amount</TableCell>
-            <TableCell align="right">Shares to Buy</TableCell>
+            <TableCell align="right">Shares to Buy ($)</TableCell>
             <TableCell align="right">View</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {buyTriggers ? 
             buyTriggers.map((trigger) => (
-              <TableRow key={trigger.name}>
-                <TableCell align="left">{trigger.name}</TableCell>
+              <TableRow key={trigger.stock}>
+                <TableCell align="left">{trigger.stock}</TableCell>
                 <TableCell align="right">${trigger.triggerAmount.toFixed(2)}</TableCell>
-                <TableCell align="right">{trigger.buyAmount.toFixed(2)}</TableCell>
+                <TableCell align="right">${trigger.buyAmount.toFixed(2)}</TableCell>
                 <TableCell align="right">
-                  <Button variant="outlined" href={'/stocks/'.concat(trigger.name)}>
+                  <Button variant="outlined" href={'/stocks/'.concat(trigger.stock)}>
                     View
                   </Button>
                 </TableCell>
