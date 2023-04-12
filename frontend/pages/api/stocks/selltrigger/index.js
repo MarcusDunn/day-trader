@@ -11,9 +11,6 @@ export default async function setSellAmount(req, res){
         }
         return res.status(200).json(response)
     }else{
-        console.log("username",username);
-        console.log("stock_symbol",stock_symbol);
-        console.log("amount",amount);
         const grpcCall = await SetSellAmount(username, stock_symbol, amount, -1);
         const response = {
             success: grpcCall.success,

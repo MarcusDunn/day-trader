@@ -1,11 +1,11 @@
-version: '3.8.0'
+version: '3.8'
 services:
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
       - "16686:16686"
     environment:
-      COLLECTOR_OTLP_ENABLED: true
+      COLLECTOR_OTLP_ENABLED: 'true'
   postgres:
     image: postgres:latest
     shm_size: 14g
