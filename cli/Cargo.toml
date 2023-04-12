@@ -13,7 +13,7 @@ clap = { version = "4.2.1", features = ["derive"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
 tonic = "0.9.1"
-prost = "0.11.8"
+prost = "0.11.9"
 anyhow = "1.0.70"
 thiserror = "1.0.40"
 proptest-derive = "0.3.0"
