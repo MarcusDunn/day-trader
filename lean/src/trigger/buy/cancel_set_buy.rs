@@ -1,6 +1,6 @@
+use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::{PgPool, Postgres, Transaction};
-use crate::log::AccountTransaction;
 
 #[tracing::instrument(skip(pool))]
 pub async fn cancel_set_buy(

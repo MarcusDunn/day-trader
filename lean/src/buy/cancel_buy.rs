@@ -1,8 +1,8 @@
+use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::types::time::{OffsetDateTime, PrimitiveDateTime};
 use sqlx::{PgPool, Postgres, Transaction};
 use std::time::Duration;
-use crate::log::AccountTransaction;
 
 #[derive(Debug, PartialEq)]
 pub struct AmountDollarsTimeCreated {
@@ -15,7 +15,7 @@ pub async fn cancel_buy(pool: &PgPool, user_id: &str) -> anyhow::Result<AccountT
     let mut transaction = begin_transaction(pool).await?;
 
     let amount_dollars_time_created = delete_queued_buy(user_id, &mut transaction).await?;
-    
+
     let now = OffsetDateTime::now_utc();
     let now = PrimitiveDateTime::new(now.date(), now.time());
     if amount_dollars_time_created.time_created + Duration::from_secs(60) < now {
@@ -23,7 +23,8 @@ pub async fn cancel_buy(pool: &PgPool, user_id: &str) -> anyhow::Result<AccountT
         anyhow::bail!("no queued buy for user_id {user_id}");
     }
 
-    let account_transaction = update_trader_balance(user_id, &mut transaction, &amount_dollars_time_created).await?;
+    let account_transaction =
+        update_trader_balance(user_id, &mut transaction, &amount_dollars_time_created).await?;
 
     commit_transaction(transaction).await?;
 
@@ -44,7 +45,9 @@ async fn update_trader_balance(
     .execute(transaction)
     .await?;
 
-    Ok(AccountTransaction(amount_dollars_time_created.amount_dollars))
+    Ok(AccountTransaction(
+        amount_dollars_time_created.amount_dollars,
+    ))
 }
 
 #[tracing::instrument(skip_all)]

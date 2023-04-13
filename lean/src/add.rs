@@ -1,13 +1,13 @@
+use crate::log::AccountTransaction;
 use anyhow::bail;
 use sqlx::{query, PgPool};
-use crate::log::AccountTransaction;
 
 #[tracing::instrument(skip(pool))]
 pub async fn add(pool: &PgPool, user_id: &str, amount: f64) -> anyhow::Result<AccountTransaction> {
     if !amount.is_sign_positive() {
         bail!("amount must be positive")
     }
-    
+
     query!(
         "INSERT INTO trader (user_id, balance) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET balance = trader.balance + $2",
         user_id,

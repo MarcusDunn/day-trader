@@ -3,7 +3,6 @@ use anyhow::bail;
 use sqlx::postgres::PgQueryResult;
 use sqlx::{PgPool, Postgres, Transaction};
 
-
 #[derive(PartialEq, Debug)]
 struct QueuedSell {
     user_id: String,

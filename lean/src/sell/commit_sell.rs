@@ -1,8 +1,8 @@
+use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
 use sqlx::{PgPool, Postgres, Transaction};
 use time::PrimitiveDateTime;
-use crate::log::AccountTransaction;
 
 #[tracing::instrument(skip(pool))]
 pub async fn commit_sell(pool: &PgPool, user_id: String) -> anyhow::Result<AccountTransaction> {
