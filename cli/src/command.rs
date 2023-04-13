@@ -1,6 +1,7 @@
 use crate::command::add::LoadTestAdd;
 use crate::command::command_user_id_file_name::LoadTestDumpLogUserIdFileName;
 use crate::command::dump_log::{DumpLog, LoadTestDumpLogFileName};
+use crate::command::load_test_file::LoadTestFileCommand;
 use crate::command::user_id::LoadTestUserIdCommand;
 use crate::command::user_id_stock_symbol::LoadTestUserIdStockSymbolCommand;
 use crate::command::user_id_stock_symbol_amount_created::LoadTestUserIdStockSymbolAmountCommand;
@@ -12,6 +13,7 @@ use tracing::debug;
 pub mod add;
 pub mod command_user_id_file_name;
 pub mod dump_log;
+pub mod load_test_file;
 pub mod user_id;
 pub mod user_id_stock_symbol;
 pub mod user_id_stock_symbol_amount_created;
@@ -54,6 +56,8 @@ pub enum LoadTestCommand {
     DumpLogUser(LoadTestDumpLogUserIdFileName),
     /// Get the information about the user's current state
     GetUserInfo(LoadTestUserIdCommand),
+    /// Get a log file from the server
+    File(LoadTestFileCommand),
 }
 
 impl LoadTestCommand {
@@ -113,6 +117,7 @@ impl LoadTestCommand {
             LoadTestCommand::GetUserInfo(LoadTestUserIdCommand { user_id, .. }) => {
                 Some(user_id.clone())
             }
+            LoadTestCommand::File(_) => None,
         }
     }
 
@@ -206,6 +211,11 @@ impl LoadTestCommand {
             LoadTestCommand::GetUserInfo(get_user_info) => client
                 .day_trader
                 .get_user_info(get_user_info)
+                .await
+                .map(|resp| debug!("{resp:?}")),
+            LoadTestCommand::File(file) => client
+                .day_trader
+                .file(file)
                 .await
                 .map(|resp| debug!("{resp:?}")),
         }
