@@ -1,3 +1,4 @@
+use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::types::time::{OffsetDateTime, PrimitiveDateTime};
 use sqlx::{PgPool, Postgres, Transaction};
@@ -10,12 +11,13 @@ pub struct AmountDollarsTimeCreated {
 }
 
 #[tracing::instrument(skip(pool))]
-pub async fn cancel_buy(pool: &PgPool, user_id: &str) -> anyhow::Result<()> {
+pub async fn cancel_buy(pool: &PgPool, user_id: &str) -> anyhow::Result<AccountTransaction> {
     let mut transaction = begin_transaction(pool).await?;
 
     let amount_dollars_time_created = delete_queued_buy(user_id, &mut transaction).await?;
 
-    update_trader_balance(user_id, &mut transaction, &amount_dollars_time_created).await?;
+    let account_transaction =
+        update_trader_balance(user_id, &mut transaction, &amount_dollars_time_created).await?;
 
     let now = OffsetDateTime::now_utc();
     let now = PrimitiveDateTime::new(now.date(), now.time());
@@ -26,7 +28,7 @@ pub async fn cancel_buy(pool: &PgPool, user_id: &str) -> anyhow::Result<()> {
 
     commit_transaction(transaction).await?;
 
-    Ok(())
+    Ok(account_transaction)
 }
 
 #[tracing::instrument]
@@ -34,7 +36,7 @@ async fn update_trader_balance(
     user_id: &str,
     transaction: &mut Transaction<'static, Postgres>,
     amount_dollars_time_created: &AmountDollarsTimeCreated,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<AccountTransaction> {
     sqlx::query!(
         "UPDATE trader SET balance = balance + $1 WHERE user_id = $2",
         amount_dollars_time_created.amount_dollars,
@@ -43,7 +45,9 @@ async fn update_trader_balance(
     .execute(transaction)
     .await?;
 
-    Ok(())
+    Ok(AccountTransaction(
+        amount_dollars_time_created.amount_dollars,
+    ))
 }
 
 #[tracing::instrument(skip_all)]

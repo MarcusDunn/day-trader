@@ -1,13 +1,14 @@
+use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
 use sqlx::{PgPool, Postgres, Transaction};
 use time::PrimitiveDateTime;
 
 #[tracing::instrument(skip(pool))]
-pub async fn commit_sell(pool: &PgPool, user_id: String) -> anyhow::Result<()> {
+pub async fn commit_sell(pool: &PgPool, user_id: String) -> anyhow::Result<AccountTransaction> {
     let mut transaction = begin_transaction(pool).await?;
 
-    let queued_sell = get_queued_sell_by_user(&user_id, &mut transaction).await?;
+    let queued_sell = delete_queued_sell_by_user(&user_id, &mut transaction).await?;
 
     let now = time::OffsetDateTime::now_utc();
     let now = PrimitiveDateTime::new(now.date(), now.time());
@@ -18,18 +19,18 @@ pub async fn commit_sell(pool: &PgPool, user_id: String) -> anyhow::Result<()> {
         bail!("queued sell expired");
     }
 
-    update_balance(user_id, &mut transaction, queued_sell).await?;
+    let acc_trans = update_balance(user_id, &mut transaction, queued_sell).await?;
 
     commit_transaction(transaction).await?;
 
-    Ok(())
+    Ok(acc_trans)
 }
 
 async fn update_balance(
     user_id: String,
     transaction: &mut Transaction<'static, Postgres>,
     queued_sell: Record,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<AccountTransaction> {
     sqlx::query!(
         "
         UPDATE trader SET balance = balance + $1 WHERE user_id = $2;
@@ -40,7 +41,7 @@ async fn update_balance(
     .execute(transaction)
     .await?;
 
-    Ok(())
+    Ok(AccountTransaction(queued_sell.amount_dollars))
 }
 
 #[tracing::instrument(skip_all)]
@@ -69,7 +70,7 @@ struct Record {
 }
 
 #[tracing::instrument(skip_all)]
-async fn get_queued_sell_by_user(
+async fn delete_queued_sell_by_user(
     user_id: &String,
     transaction: &mut Transaction<'static, Postgres>,
 ) -> anyhow::Result<Record> {
