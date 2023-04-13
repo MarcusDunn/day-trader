@@ -2,16 +2,32 @@ use serde::{Deserialize, Serialize};
 use sqlx::pool::PoolConnection;
 use sqlx::types::JsonValue;
 use sqlx::{PgExecutor, PgPool, Postgres};
+use std::ops::Add;
 
 use sqlx::types::time::PrimitiveDateTime;
 use tracing::info;
 
-struct DbLogEntry {
-    timestamp: PrimitiveDateTime,
-    server: String,
-    transaction_num: i32,
-    username: String,
-    log: JsonValue,
+/**
+ * Used by classes to return how much the given account changed by.
+ */
+#[derive(Debug, PartialEq, Copy, Clone, PartialOrd)]
+#[must_use]
+pub struct AccountTransaction(pub f64);
+
+impl Add for AccountTransaction {
+    type Output = AccountTransaction;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        AccountTransaction(self.0.add(rhs.0))
+    }
+}
+
+pub struct DbLogEntry {
+    pub timestamp: PrimitiveDateTime,
+    pub server: String,
+    pub transaction_num: i32,
+    pub username: String,
+    pub log: JsonValue,
 }
 
 pub struct Logger {
@@ -226,7 +242,6 @@ impl TryFrom<DbLogEntry> for LogEntry {
 pub struct LogEntry {
     pub timestamp: PrimitiveDateTime,
     pub server: String,
-    // todo - add this to CLI
     pub transaction_num: i32,
     pub username: String,
     pub log: Log,

@@ -1,21 +1,22 @@
 use crate::{begin_transaction, commit_transaction};
 use sqlx::{PgPool, Postgres, Transaction};
+use crate::log::AccountTransaction;
 
 #[tracing::instrument(skip(pool))]
 pub async fn cancel_set_buy(
     pool: &PgPool,
     user_id: &str,
     stock_symbol: &str,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<AccountTransaction> {
     let mut transaction = begin_transaction(pool).await?;
 
     let record = delete_buy_trigger(user_id, stock_symbol, &mut transaction).await?;
 
-    update_trader_balance(user_id, &mut transaction, record).await?;
+    let acc_trans = update_trader_balance(user_id, &mut transaction, record).await?;
 
     commit_transaction(transaction).await?;
 
-    Ok(())
+    Ok(acc_trans)
 }
 
 #[tracing::instrument(skip_all)]
@@ -23,7 +24,7 @@ async fn update_trader_balance(
     user_id: &str,
     transaction: &mut Transaction<'static, Postgres>,
     record: Record,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<AccountTransaction> {
     sqlx::query!(
         "UPDATE trader SET balance = balance + $1 WHERE user_id = $2",
         record.amount_dollars,
@@ -32,7 +33,7 @@ async fn update_trader_balance(
     .execute(transaction)
     .await?;
 
-    Ok(())
+    Ok(AccountTransaction(record.amount_dollars))
 }
 
 struct Record {

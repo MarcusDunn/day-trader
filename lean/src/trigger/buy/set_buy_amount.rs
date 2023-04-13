@@ -1,3 +1,4 @@
+use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
 use sqlx::postgres::PgQueryResult;
@@ -9,22 +10,19 @@ pub async fn set_buy_amount(
     user_id: &str,
     stock_symbol: &str,
     amount_dollars: f64,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<AccountTransaction> {
     let mut transaction = begin_transaction(pool).await?;
 
-    let result = remove_requisite_balance(user_id, amount_dollars, &mut transaction).await?;
+    let acc_trans = remove_requisite_balance(user_id, amount_dollars, &mut transaction).await?;
 
-    if result.rows_affected() == 0 {
-        bail!("Insufficient funds");
-    }
-
-    remove_previous_buy_trigger(user_id, stock_symbol, &mut transaction).await?;
+    let acc_trans =
+        acc_trans + remove_previous_buy_trigger(user_id, stock_symbol, &mut transaction).await?;
 
     create_buy_trigger(&mut transaction, user_id, stock_symbol, amount_dollars).await?;
 
     commit_transaction(transaction).await?;
 
-    Ok(())
+    Ok(acc_trans)
 }
 
 #[tracing::instrument(skip_all)]
@@ -50,20 +48,23 @@ async fn remove_previous_buy_trigger(
     user_id: &str,
     stock_symbol: &str,
     transaction: &mut Transaction<'static, Postgres>,
-) -> anyhow::Result<()> {
-    if let Some(record) = sqlx::query!("DELETE FROM buy_trigger WHERE owner_id = $1 AND stock_symbol = $2 RETURNING amount_dollars", user_id, stock_symbol)
+) -> anyhow::Result<AccountTransaction> {
+    Ok(match sqlx::query!("DELETE FROM buy_trigger WHERE owner_id = $1 AND stock_symbol = $2 RETURNING amount_dollars", user_id, stock_symbol)
         .fetch_optional(&mut *transaction)
         .await? {
-        sqlx::query!(
+        Some(record) => {
+            sqlx::query!(
                 "UPDATE trader SET balance = balance + $1 WHERE user_id = $2",
                 record.amount_dollars,
                 user_id
             )
-            .execute(&mut *transaction)
-            .await?;
-    }
+                .execute(&mut *transaction)
+                .await?;
 
-    Ok(())
+            AccountTransaction(record.amount_dollars)
+        }
+        None => AccountTransaction(0.0)
+    })
 }
 
 #[tracing::instrument(skip_all)]
@@ -71,15 +72,20 @@ async fn remove_requisite_balance(
     user_id: &str,
     amount_dollars: f64,
     transaction: &mut Transaction<'static, Postgres>,
-) -> anyhow::Result<PgQueryResult> {
+) -> anyhow::Result<AccountTransaction> {
     let result = sqlx::query!(
-        "UPDATE trader SET balance = balance - $1 WHERE user_id = $2 AND balance >= $1",
+        "UPDATE trader SET balance = balance - $1 WHERE user_id = $2 AND balance >= $1 RETURNING balance",
         amount_dollars,
         user_id,
     )
-    .execute(transaction)
-    .await?;
-    Ok(result)
+        .fetch_one(transaction)
+        .await?;
+
+    if result.balance.is_sign_positive() {
+        Ok(AccountTransaction(-amount_dollars))
+    } else {
+        bail!("Insufficient funds")
+    }
 }
 
 #[cfg(test)]

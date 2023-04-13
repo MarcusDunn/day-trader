@@ -1,3 +1,4 @@
+use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::{PgPool, Postgres, Transaction};
 
@@ -13,12 +14,13 @@ pub async fn init_buy(
     stock_symbol: &str,
     quoted_price: f64,
     amount_dollars: f64,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<AccountTransaction> {
     let mut transaction = begin_transaction(pool).await?;
 
-    delete_and_maybe_update(user_id, &mut transaction).await?;
+    let changes = delete_and_maybe_update(user_id, &mut transaction).await?;
 
-    update_trader_balance(user_id, amount_dollars, &mut transaction).await?;
+    let changes =
+        changes + update_trader_balance(user_id, amount_dollars, &mut transaction).await?;
 
     insert_queued_buy(
         user_id,
@@ -31,7 +33,7 @@ pub async fn init_buy(
 
     commit_transaction(transaction).await?;
 
-    Ok(())
+    Ok(changes)
 }
 
 #[tracing::instrument(skip_all)]
@@ -61,7 +63,7 @@ async fn update_trader_balance(
     user_id: &str,
     amount_dollars: f64,
     transaction: &mut Transaction<'static, Postgres>,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<AccountTransaction> {
     let postgres_result = sqlx::query!(
         "UPDATE trader SET balance = balance - $1 WHERE user_id = $2 AND balance >= $1",
         amount_dollars,
@@ -74,30 +76,33 @@ async fn update_trader_balance(
         anyhow::bail!("no trader for user_id {user_id}");
     }
 
-    Ok(())
+    Ok(AccountTransaction(-amount_dollars))
 }
 
 #[tracing::instrument(skip_all)]
 async fn delete_and_maybe_update(
     user_id: &str,
     transaction: &mut Transaction<'static, Postgres>,
-) -> anyhow::Result<()> {
-    if let Some(AmountDollars { amount_dollars }) = sqlx::query_as!(
+) -> anyhow::Result<AccountTransaction> {
+    let old_buy = sqlx::query_as!(
         AmountDollars,
         "DELETE FROM queued_buy WHERE user_id = $1 RETURNING amount_dollars",
         user_id
     )
     .fetch_optional(&mut *transaction)
-    .await?
-    {
-        sqlx::query!(
-            "UPDATE trader SET balance = balance + $1 WHERE user_id = $2",
-            amount_dollars,
-            user_id
-        )
-        .execute(&mut *transaction)
-        .await?;
-    }
+    .await?;
 
-    Ok(())
+    match old_buy {
+        Some(AmountDollars { amount_dollars }) => {
+            sqlx::query!(
+                "UPDATE trader SET balance = balance + $1 WHERE user_id = $2",
+                amount_dollars,
+                user_id
+            )
+            .execute(&mut *transaction)
+            .await?;
+            Ok(AccountTransaction(amount_dollars))
+        }
+        None => Ok(AccountTransaction(0.0)),
+    }
 }

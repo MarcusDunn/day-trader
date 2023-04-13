@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use sqlx::{PgPool, Postgres, Transaction};
+use std::fmt::{Display, Formatter};
 use tokio::sync::mpsc::Sender;
 use tonic::transport::channel::Channel;
 use tonic::{Request, Response, Status};
@@ -35,7 +36,10 @@ pub mod proto {
     tonic::include_proto!("day_trader");
 }
 
-use crate::log::{CommandType, ErrorEventLog, Log, LogEntry, QuoteServerLog, UserCommandLog};
+use crate::log::{
+    AccountTransaction, AccountTransactionLog, CommandType, ErrorEventLog, Log, LogEntry,
+    QuoteServerLog, UserCommandLog,
+};
 use crate::trigger::{Triggerer, UpdatedPrice};
 use log::Logger;
 
@@ -49,7 +53,7 @@ mod add;
 
 mod log;
 
-mod audit {}
+mod account;
 
 pub struct DayTraderImpl {
     postgres: PgPool,
@@ -58,6 +62,30 @@ pub struct DayTraderImpl {
 }
 
 impl DayTraderImpl {
+    #[tracing::instrument(skip(self))]
+    pub(crate) async fn log_display_summary_request(
+        &self,
+        display_summary_request: &DisplaySummaryRequest,
+    ) {
+        let log_entry = LogEntry::new(
+            display_summary_request.request_num,
+            display_summary_request.user_id.clone(),
+            Log::UserCommand(UserCommandLog {
+                command: CommandType::DisplaySummary,
+                stock_symbol: None,
+                funds: None,
+                filename: None,
+            }),
+        );
+
+        if let Err(err) = self.log_sender.send(log_entry).await {
+            error!("failed to send log entry: {err}");
+        }
+    }
+}
+
+impl DayTraderImpl {
+    #[tracing::instrument(skip(self))]
     pub async fn log_dump_log_user_request(
         &self,
         DumpLogUserRequest {
@@ -79,6 +107,49 @@ impl DayTraderImpl {
 
         if let Err(err) = self.log_sender.send(log_entry).await {
             error!("failed to send log entry: {err}");
+        }
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn log_account_tnx(
+        &self,
+        transaction_num: i32,
+        user_id: &str,
+        AccountTransaction(account_transaction): AccountTransaction,
+    ) -> Result<(), Status> {
+        self.log_sender
+            .send(LogEntry::new(
+                transaction_num,
+                user_id.to_string(),
+                Log::AccountChanges(AccountTransactionLog {
+                    action: if account_transaction.is_sign_positive() {
+                        TransactionType::Add
+                    } else {
+                        TransactionType::Subtract
+                    }
+                    .to_string(),
+                    funds: account_transaction.abs(),
+                }),
+            ))
+            .await
+            .map_err(|err| {
+                error!("failed to send log entry: {}", err);
+                Status::internal("failed to send log entry")
+            })
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
+enum TransactionType {
+    Add,
+    Subtract,
+}
+
+impl Display for TransactionType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TransactionType::Add => write!(f, "ADD"),
+            TransactionType::Subtract => write!(f, "SUBTRACT"),
         }
     }
 }
@@ -595,6 +666,11 @@ impl DayTraderImpl {
 }
 
 impl DayTraderImpl {
+    /**
+     * Creates a new instance of the DayTraderImpl.
+     * spawns the [Logger] and [Triggerer] tasks. which handle persisting logs and triggering buy and
+     * sell triggers.
+     */
     pub fn new(postgres: PgPool, quote: QuoteClient<Channel>) -> Self {
         let (logger, log_sender) = Logger::new(postgres.clone());
         let (triggerer, quote_update_sender) = Triggerer::new(postgres.clone());
@@ -713,9 +789,36 @@ impl DayTrader for DayTraderImpl {
     #[tracing::instrument(skip_all, name = "grpc_display_summary")]
     async fn display_summary(
         &self,
-        _request: Request<DisplaySummaryRequest>,
+        request: Request<DisplaySummaryRequest>,
     ) -> Result<Response<DisplaySummaryResponse>, Status> {
-        Err(Status::unimplemented("not implemented".to_string()))
+        let display_summary_request = request.into_inner();
+
+        self.log_display_summary_request(&display_summary_request)
+            .await;
+
+        let DisplaySummaryRequest {
+            user_id,
+            request_num,
+        } = display_summary_request;
+
+        match account::display_summary(&self.postgres, &user_id).await {
+            Ok(summary) => Ok(Response::new(summary)),
+            Err(e) => {
+                self.report_error(
+                    request_num,
+                    user_id,
+                    ErrorEventLog {
+                        command: CommandType::DisplaySummary,
+                        stock_symbol: None,
+                        filename: None,
+                        funds: None,
+                        error_message: Some(e.to_string()),
+                    },
+                )
+                .await;
+                Err(Status::internal(format!("failed to display summary: {e}")))
+            }
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_add")]
@@ -724,7 +827,9 @@ impl DayTrader for DayTraderImpl {
         let log = self.log_add_request(add_request.clone());
 
         let AddRequest {
-            user_id, amount, ..
+            user_id,
+            amount,
+            request_num,
         } = add_request;
 
         let add = add::add(&self.postgres, &user_id, amount);
@@ -732,7 +837,11 @@ impl DayTrader for DayTraderImpl {
         let ((), add) = tokio::join!(log, add);
 
         match add {
-            Ok(()) => Ok(Response::new(AddResponse { success: true })),
+            Ok(account_transaction) => {
+                self.log_account_tnx(request_num, &user_id, account_transaction)
+                    .await?;
+                Ok(Response::new(AddResponse { success: true }))
+            }
             Err(e) => {
                 self.report_error(
                     0,
@@ -774,20 +883,24 @@ impl DayTrader for DayTraderImpl {
                     Status::internal(err.to_string())
                 })?;
 
-            buy::init_buy(&self.postgres, &user_id, &stock_symbol, quote, amount)
+            let init_buy = buy::init_buy(&self.postgres, &user_id, &stock_symbol, quote, amount)
                 .await
                 .map_err(|err| {
                     error!("failed to buy: {}", err);
                     Status::internal(err.to_string())
                 })?;
 
-            Ok::<(), Status>(())
+            Ok::<_, Status>(init_buy)
         };
 
         let ((), init_buy) = tokio::join!(log, init_buy);
 
         match init_buy {
-            Ok(()) => Ok(Response::new(BuyResponse { success: true })),
+            Ok(account_transaction) => {
+                self.log_account_tnx(request_num, &user_id, account_transaction)
+                    .await?;
+                Ok(Response::new(BuyResponse { success: true }))
+            }
             Err(e) => {
                 self.report_error(
                     request_num,
@@ -855,7 +968,11 @@ impl DayTrader for DayTraderImpl {
         let ((), cancel) = tokio::join!(log, cancel);
 
         match cancel {
-            Ok(()) => Ok(Response::new(CancelBuyResponse { success: true })),
+            Ok(account_transaction) => {
+                self.log_account_tnx(0, &user_id, account_transaction)
+                    .await?;
+                Ok(Response::new(CancelBuyResponse { success: true }))
+            }
             Err(e) => {
                 self.report_error(
                     0,
@@ -934,7 +1051,11 @@ impl DayTrader for DayTraderImpl {
         let ((), commit_sell) = tokio::join!(log, commit_sell);
 
         match commit_sell {
-            Ok(()) => Ok(Response::new(CommitSellResponse { success: true })),
+            Ok(account_transaction) => {
+                self.log_account_tnx(0, &commit_sell_request.user_id, account_transaction)
+                    .await?;
+                Ok(Response::new(CommitSellResponse { success: true }))
+            }
             Err(e) => {
                 self.report_error(
                     0,
@@ -1008,7 +1129,11 @@ impl DayTrader for DayTraderImpl {
         let ((), set_buy_amount) = tokio::join!(log, set_buy_amount);
 
         match set_buy_amount {
-            Ok(()) => Ok(Response::new(SetBuyAmountResponse { success: true })),
+            Ok(account_transaction) => {
+                self.log_account_tnx(0, &user_id, account_transaction)
+                    .await?;
+                Ok(Response::new(SetBuyAmountResponse { success: true }))
+            }
             Err(e) => {
                 self.report_error(
                     0,
@@ -1047,7 +1172,11 @@ impl DayTrader for DayTraderImpl {
         let ((), cancel_set_buy) = tokio::join!(log, cancel_set_buy);
 
         match cancel_set_buy {
-            Ok(()) => Ok(Response::new(CancelSetBuyResponse {})),
+            Ok(account_transaction) => {
+                self.log_account_tnx(0, &user_id, account_transaction)
+                    .await?;
+                Ok(Response::new(CancelSetBuyResponse {}))
+            }
             Err(e) => {
                 self.report_error(
                     0,
@@ -1319,7 +1448,7 @@ impl DayTrader for DayTraderImpl {
                 .map_err(|err| Status::internal(format!("failed to get user info: {err}")))?;
 
         let Some(balance) = balance else {
-            return Err(Status::not_found(format!("user {user_id} not found")))
+            return Err(Status::not_found(format!("user {user_id} not found")));
         };
 
         Ok(Response::new(GetUserInfoResponse {
@@ -1335,10 +1464,23 @@ impl DayTrader for DayTraderImpl {
         &self,
         request: Request<LoginRequest>,
     ) -> Result<Response<LoginResponse>, Status> {
-        return Ok(Response::new(LoginResponse {
-            success: true,
-            user_id: request.into_inner().user_id,
-        }));
+        let user_id = request.into_inner().user_id;
+
+        let user = sqlx::query!("SELECT user_id FROM trader WHERE user_id = $1", &user_id)
+            .fetch_optional(&self.postgres)
+            .await
+            .map_err(|err| Status::internal(format!("failed to check if user exists: {err}")))?;
+
+        match user {
+            None => Ok(Response::new(LoginResponse {
+                success: false,
+                user_id: user_id.clone(),
+            })),
+            Some(user) => Ok(Response::new(LoginResponse {
+                success: true,
+                user_id: user.user_id,
+            })),
+        }
     }
 
     #[tracing::instrument(skip_all, name = "grpc_quote")]

@@ -530,6 +530,26 @@
     },
     "query": "DELETE FROM queued_buy WHERE user_id = $1 RETURNING amount_dollars"
   },
+  "c733e387ec2e631933472a750a1f69845519228e9a0e54efbde7d3383411ba25": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT user_id FROM trader WHERE user_id = $1"
+  },
   "cb96b90995ac76ea0a68ff99c71866804ab99775b4424fd70dc61d26db2d7f9c": {
     "describe": {
       "columns": [
