@@ -49,8 +49,9 @@ impl Triggerer {
     async fn check_sell_triggers(pool: &PgPool, next: &UpdatedPrice) -> anyhow::Result<()> {
         let sell_triggers = sqlx::query_as!(
             SellTrigger,
-            "DELETE FROM sell_trigger WHERE trigger_price <= $1 RETURNING owner_id, amount_stock",
-            &next.price
+            "DELETE FROM sell_trigger WHERE trigger_price <= $1 AND stock_symbol = $2 RETURNING owner_id, amount_stock",
+            &next.price,
+            &next.symbol,
         )
         .fetch_all(pool)
         .await?;
@@ -72,9 +73,10 @@ impl Triggerer {
             BuyTrigger,
             "
                         DELETE FROM buy_trigger
-                        WHERE trigger_price >= $1 RETURNING owner_id, amount_dollars
+                        WHERE trigger_price >= $1 AND stock_symbol = $2 RETURNING owner_id, amount_dollars
                         ",
-            &next.price
+            &next.price,
+            &next.symbol,
         )
         .fetch_all(pool)
         .await?;
