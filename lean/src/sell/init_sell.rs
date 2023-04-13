@@ -2,7 +2,7 @@ use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
 use sqlx::postgres::PgQueryResult;
 use sqlx::{PgPool, Postgres, Transaction};
-use crate::log::AccountTransaction;
+
 
 #[derive(PartialEq, Debug)]
 struct QueuedSell {

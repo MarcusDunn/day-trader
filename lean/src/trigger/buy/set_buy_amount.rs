@@ -1,7 +1,7 @@
 use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
-use sqlx::postgres::PgQueryResult;
+
 use sqlx::{PgPool, Postgres, Transaction};
 
 #[tracing::instrument(skip(pool))]
@@ -95,7 +95,7 @@ mod tests {
 
     #[sqlx::test]
     async fn test_set_buy_amount_no_user(pool: PgPool) -> anyhow::Result<()> {
-        let set = set_buy_amount(&pool, &"marcus".to_string(), &"AAPL".to_string(), 100_f64).await;
+        let set = set_buy_amount(&pool, "marcus", "AAPL", 100_f64).await;
         assert!(set.is_err(), "expected error but was {set:?}");
 
         Ok(())
@@ -105,7 +105,7 @@ mod tests {
     async fn test_set_buy_amount_sufficient_funds(pool: PgPool) -> anyhow::Result<()> {
         add(&pool, "marcus", 200_f64).await?;
 
-        let set = set_buy_amount(&pool, &"marcus".to_string(), &"AAPL".to_string(), 100_f64).await;
+        let set = set_buy_amount(&pool, "marcus", "AAPL", 100_f64).await;
         assert!(set.is_ok(), "expected ok but was {set:?}");
 
         let buy_trigger = sqlx::query!(
