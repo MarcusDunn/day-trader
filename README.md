@@ -12,12 +12,16 @@ This is an implementation of a scalable day trading application for UVic's Scala
 There are downloadable binaries for the CLI on the releases pages. `cli --help` will display available commands.
 
 ### GUI
+NextJS React Application
 
-`cd frontend`
-
-`npm run dev`
-
-The where the frontend is running should be displayed in the terminal.
+#### Run frontend in development mode
+1. Node 16 or greater must be installed
+2. Run
+```sh
+cd frontend
+npm install
+npm run dev
+```
 
 ## Architecture
 
