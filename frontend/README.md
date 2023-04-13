@@ -7,8 +7,8 @@ NextJS application for managing stock trading operations.
 ## Getting Started
 1. Clone the repository:
 ```sh
-git clone https://github.com/your-username/swift-trader-frontend.git
-cd swift-trader-frontend
+git clone https://github.com/MarcusDunn/day-trader.git
+cd day-trader/frontend
 ```
 
 2. Install the dependencies:
