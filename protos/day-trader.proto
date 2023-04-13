@@ -47,11 +47,11 @@ service DayTrader {
 }
 
 message FileRequest {
-  string filename = 2;
+  string filename = 1;
 }
 
 message FileResponse {
-  bytes contents = 2;
+  bytes contents = 1;
 }
 
 message QuoteRequestSimple {
