@@ -85,32 +85,6 @@
     },
     "query": "UPDATE trader SET balance = balance + $2 WHERE user_id = $1"
   },
-  "46a31e726f8a0ee310cfd16af39a82fb4e82fd9735b15fc97354a4086ca42481": {
-    "describe": {
-      "columns": [
-        {
-          "name": "owner_id",
-          "ordinal": 0,
-          "type_info": "Text"
-        },
-        {
-          "name": "amount_stock",
-          "ordinal": 1,
-          "type_info": "Float8"
-        }
-      ],
-      "nullable": [
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Float8"
-        ]
-      }
-    },
-    "query": "DELETE FROM sell_trigger WHERE trigger_price <= $1 RETURNING owner_id, amount_stock"
-  },
   "474ee94334afdb02642decd9e8964845b355dce81d1c6837d77c44f7fa1bbb81": {
     "describe": {
       "columns": [
@@ -476,7 +450,7 @@
     },
     "query": "UPDATE trader SET balance = balance - $1 WHERE user_id = $2 AND balance >= $1 RETURNING balance"
   },
-  "85c000be4a0b063731d85dc47cd77f0ebda937ac6ff9d5ca8485f9446cbcc682": {
+  "85021a9a4c3c6353de87fee695a3780addfba267652475017084b1a283e58576": {
     "describe": {
       "columns": [
         {
@@ -496,11 +470,12 @@
       ],
       "parameters": {
         "Left": [
-          "Float8"
+          "Float8",
+          "Text"
         ]
       }
     },
-    "query": "\n                        DELETE FROM buy_trigger\n                        WHERE trigger_price >= $1 RETURNING owner_id, amount_dollars\n                        "
+    "query": "\n                        DELETE FROM buy_trigger\n                        WHERE trigger_price >= $1 AND stock_symbol = $2 RETURNING owner_id, amount_dollars\n                        "
   },
   "89a57d157606bce9674a48092115a9ba055aa8caff90cff417a2ec7bbce01a22": {
     "describe": {
@@ -594,6 +569,33 @@
       }
     },
     "query": "DELETE FROM queued_buy WHERE user_id = $1 RETURNING amount_dollars"
+  },
+  "b95f5efd8e3c302373ee2e1c63e83882068b2f15066bd4397524c25629186b1e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "owner_id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "amount_stock",
+          "ordinal": 1,
+          "type_info": "Float8"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Float8",
+          "Text"
+        ]
+      }
+    },
+    "query": "DELETE FROM sell_trigger WHERE trigger_price <= $1 AND stock_symbol = $2 RETURNING owner_id, amount_stock"
   },
   "c733e387ec2e631933472a750a1f69845519228e9a0e54efbde7d3383411ba25": {
     "describe": {
