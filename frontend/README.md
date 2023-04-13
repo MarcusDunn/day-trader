@@ -43,3 +43,11 @@ swift-trader-frontend/
     ├── components/      # Contains reusable UI components
     └── ...           
 ```
+
+## Screenshots
+
+<img src="../readmeimages/1.png" alt="">
+<img src="../readmeimages/2.png" alt="">
+<img src="../readmeimages/3.png" alt="">
+<img src="../readmeimages/4.png" alt="">
+<img src="../readmeimages/5.png" alt="">

@@ -5,7 +5,7 @@ import path from "path";
 const protoPath = path.join(process.cwd(), 'pages', 'api', 'clients', 'day-trader.proto');
 const def = loadSync(protoPath)
 const definitions = grpc.loadPackageDefinition(def)
-const DayTraderClient = new definitions.day_trader.DayTrader(process.env.transactionURI || 'localhost:80', grpc.credentials.createInsecure());
+const DayTraderClient = new definitions.day_trader.DayTrader(process.env.transactionURI || 'localhost:8000', grpc.credentials.createInsecure());
 
 
 export function Add(userId, amount, requestNum) {

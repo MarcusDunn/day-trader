@@ -14,7 +14,11 @@ services:
       POSTGRES_PASSWORD: "daytrader"
     command: postgres -c max_connections=5010 -c fsync=off -c synchronous_commit=off -c full_page_writes=false -c effective_cache_size=8GB
     healthcheck:
-      test: ["CMD-SHELL", "sh -c 'pg_isready -U daytrader -d daytrader'"]
+      test:
+        [
+          "CMD-SHELL",
+          "sh -c 'pg_isready -U daytrader -d daytrader'"
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -38,7 +42,7 @@ services:
         condition: service_started
     init: true
     ports:
-      - "80:8000"
+      - "8000:8000"
   quote-server-adaptor:
     image: ghcr.io/marcusdunn/day-trader/quote-server-adaptor
     init: true
@@ -54,4 +58,4 @@ services:
       - FRONTEND_URL=http://swift-trader-frontend:3000/
       - transactionURI=lean:8000
     ports:
-      - "3000:3000"
+      - "80:3000"

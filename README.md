@@ -5,7 +5,7 @@ This is an implementation of a scalable day trading application for UVic's Scala
 
 ## Running
 
-`docker compose up` will get the server running. It expects your computer has 16GB of ram and allocates memory between containers accordingly.
+`docker compose up` will get the server running. It expects your computer has 16GB of ram and allocates memory between containers accordingly. The frontend will be available at `http://localhost:80`
 
 ### CLI
 
@@ -14,14 +14,11 @@ There are downloadable binaries for the CLI on the releases pages. `cli --help` 
 ### GUI
 NextJS React Application
 
-#### Run frontend in development mode
-1. Node 16 or greater must be installed
-2. Run
-```sh
-cd frontend
-npm install
-npm run dev
-```
+<img src="readmeimages/1.png" alt="">
+<img src="readmeimages/2.png" alt="">
+<img src="readmeimages/3.png" alt="">
+<img src="readmeimages/4.png" alt="">
+<img src="readmeimages/5.png" alt="">
 
 ## Architecture
 
