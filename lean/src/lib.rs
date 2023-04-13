@@ -1,6 +1,7 @@
 use anyhow::anyhow;
 use sqlx::{PgPool, Postgres, Transaction};
 use std::fmt::{Display, Formatter};
+use tokio::io::AsyncReadExt;
 use tokio::sync::mpsc::Sender;
 use tonic::transport::channel::Channel;
 use tonic::{Request, Response, Status};
@@ -15,9 +16,9 @@ use crate::proto::{
     CancelSetBuyResponse, CancelSetSellRequest, CancelSetSellResponse, CommitBuyRequest,
     CommitBuyResponse, CommitSellRequest, CommitSellResponse, DisplaySummaryRequest,
     DisplaySummaryResponse, DumpLogRequest, DumpLogResponse, DumpLogUserRequest,
-    DumpLogUserResponse, GetAllStocksRequest, GetAllStocksResponse, GetUserInfoRequest,
-    GetUserInfoResponse, LoginRequest, LoginResponse, QuoteRequest, QuoteRequestSimple,
-    QuoteResponse, SellRequest, SellResponse, SellTrigger, SetBuyAmountRequest,
+    DumpLogUserResponse, FileRequest, FileResponse, GetAllStocksRequest, GetAllStocksResponse,
+    GetUserInfoRequest, GetUserInfoResponse, LoginRequest, LoginResponse, QuoteRequest,
+    QuoteRequestSimple, QuoteResponse, SellRequest, SellResponse, SellTrigger, SetBuyAmountRequest,
     SetBuyAmountResponse, SetBuyTriggerRequest, SetBuyTriggerResponse, SetSellAmountRequest,
     SetSellAmountResponse, SetSellTriggerRequest, SetSellTriggerResponse, Stock,
 };
@@ -729,7 +730,7 @@ impl DayTrader for DayTraderImpl {
 
         match log::dump_log_user(&self.postgres, &filename.clone(), &user_id.clone()).await {
             Ok(()) => Ok(Response::new(DumpLogUserResponse {
-                xml: "check the file system".to_string(),
+                xml: filename.clone(),
             })),
             Err(e) => {
                 self.report_error(
@@ -765,7 +766,7 @@ impl DayTrader for DayTraderImpl {
 
         match log::dump_log(&self.postgres, &filename.clone()).await {
             Ok(()) => Ok(Response::new(DumpLogResponse {
-                xml: "check the file system".to_string(),
+                xml: filename.clone(),
             })),
             Err(e) => {
                 self.report_error(
@@ -1522,5 +1523,25 @@ impl DayTrader for DayTraderImpl {
                 Err(Status::internal(format!("failed to get quote: {}", e)))
             }
         }
+    }
+
+    #[tracing::instrument(skip_all, name = "grpc_file")]
+    async fn file(&self, request: Request<FileRequest>) -> Result<Response<FileResponse>, Status> {
+        let FileRequest { filename } = request.into_inner();
+
+        let mut file =
+            tokio::io::BufReader::new(tokio::fs::File::open(filename).await.map_err(|e| {
+                error!("failed to open file: {e}");
+                Status::internal("failed to open file")
+            })?);
+
+        let mut buf = Vec::new();
+
+        file.read_to_end(&mut buf).await.map_err(|e| {
+            error!("failed to read file: {e}");
+            Status::internal("failed to read file")
+        })?;
+
+        Ok(Response::new(FileResponse { contents: buf }))
     }
 }
