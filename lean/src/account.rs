@@ -59,3 +59,16 @@ pub async fn display_summary(
     )
     .await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[sqlx::test]
+    async fn test_account_empty(pool: PgPool) -> anyhow::Result<()> {
+        let resp = display_summary(&pool, "marcus").await?;
+        assert_eq!(resp.user_commands.len(), 0);
+        assert_eq!(resp.account_transactions.len(), 0);
+        Ok(())
+    }
+}
