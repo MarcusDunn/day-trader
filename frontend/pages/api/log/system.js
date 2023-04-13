@@ -1,4 +1,4 @@
-import { DumpLog } from "../clients/DayTraderClient";
+import { DumpLog, GetFile } from "../clients/DayTraderClient";
 
 
 export default async function dumplog(req, res){
@@ -9,9 +9,11 @@ export default async function dumplog(req, res){
         }
         return res.status(200).json(response)
     }else{
-        const grpcCall = await DumpLog("dumplog.xml", -1);
+        const filename = "dumplog.xml";
+        const grpcCall = await DumpLog(filename, -1);
+        const grpcFileCall = await GetFile(grpcCall.xml)
         const response = {
-            xml: grpcCall.xml,
+            file: grpcFileCall.contents,
             success: true,
         }
         return res.status(200).json(response)

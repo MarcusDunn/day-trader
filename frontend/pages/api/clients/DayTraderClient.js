@@ -249,4 +249,16 @@ export function Quote(userId, stockSymbol, requestNum) {
     });
 }
 
+export function GetFile(filename) {
+    return new Promise((accept, reject) => {
+        DayTraderClient.File({ filename }, (err, value) => {
+            if (err == null) {
+                accept(value);
+            } else {
+                reject(err);
+            }
+        });
+    });
+}
+
   

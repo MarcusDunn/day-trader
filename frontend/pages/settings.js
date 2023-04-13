@@ -2,6 +2,18 @@ import { Button, Container, Divider, Typography } from '@mui/material'
 import React, { useContext } from 'react'
 import { UserContext } from './_app'
 
+const downloadFile = (filename, data) => {
+    const link = document.createElement('a');
+    link.download = filename;
+    const bufferData = new Uint8Array(data);
+    const textData = new TextDecoder().decode(bufferData);
+    const blob = new Blob([textData], { type: 'text/xml' });
+    link.href = URL.createObjectURL(blob);
+    link.click();
+};
+
+
+
 function settings() {
     const user = useContext(UserContext).user
     if(!user){
@@ -22,6 +34,9 @@ function settings() {
         try{
             const response_parsed = await (await fetch(url, fetchArgs)).json()
             console.log(response_parsed);
+            if (response_parsed.success) {
+                downloadFile('SystemDumpLog.xml', response_parsed.file.data);
+            }
         }catch(error){
             console.log(error);
         }
@@ -41,6 +56,9 @@ function settings() {
         try{
             const response_parsed = await (await fetch(url, fetchArgs)).json()
             console.log(response_parsed);
+            if (response_parsed.success) {
+                downloadFile('UserDumpLog.xml', response_parsed.file.data);
+            }
         }catch(error){
             console.log(error);
         }

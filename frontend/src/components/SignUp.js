@@ -26,11 +26,8 @@ export default function SignUp() {
       const responseParsed = await response.json();
       if (responseParsed.success) {
         localStorage.setItem('jwt', responseParsed.user);
-        window.location.href = "/"
-        setError("");
-      }else{
-        setError("Invalid username or password, please try again");
       }
+      window.location.href = "/"
     }catch(error){
       console.log("error:",error);
       setError("Invalid username or password, please try again");
