@@ -1,6 +1,8 @@
 use anyhow::anyhow;
 use sqlx::{PgPool, Postgres, Transaction};
+use std::env;
 use std::fmt::{Display, Formatter};
+use std::time::Duration;
 use tokio::io::AsyncReadExt;
 use tokio::sync::mpsc::Sender;
 use tonic::transport::channel::Channel;
@@ -536,7 +538,15 @@ impl CachedQuote {
         log_sender: Sender<LogEntry>,
     ) -> Self {
         Self {
-            cache: moka::future::Cache::new(100_000),
+            cache: moka::future::Cache::builder()
+                .max_capacity(100_000)
+                .time_to_live(Duration::from_secs(
+                    env::var("QUOTE_CACHE_TTL")
+                        .unwrap_or_else(|_| (60 * 5).to_string())
+                        .parse::<u64>()
+                        .expect("failed to parse QUOTE_CACHE_TTL"),
+                ))
+                .build(),
             quote,
             quote_update_sender,
             log_sender,

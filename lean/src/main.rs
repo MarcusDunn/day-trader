@@ -22,10 +22,17 @@ use lean::proto::day_trader_server::DayTraderServer;
 use lean::proto::quote_client::QuoteClient;
 use lean::DayTraderImpl;
 
+const DEFAULT_RUST_LOG: &str = "none,lean=info";
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     if let Err(err) = dotenvy::dotenv() {
         warn!("failed to load dotenv: {err}")
+    }
+
+    if env::var("RUST_LOG").is_err() {
+        println!("setting RUST_LOG to {}", DEFAULT_RUST_LOG);
+        env::set_var("RUST_LOG", DEFAULT_RUST_LOG);
     }
 
     let trace_id_ratio = env::var("TRACE_ID_RATIO")
