@@ -3,16 +3,16 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "monthly"
   - package-ecosystem: "cargo"
     directory: "quote-server-adaptor"
     schedule:
-      interval: "daily"
+      interval: "monthly"
   - package-ecosystem: "cargo"
     directory: "cli"
     schedule:
-      interval: "daily"
+      interval: "monthly"
   - package-ecosystem: "cargo"
     directory: "lean"
     schedule:
-      interval: "daily"
+      interval: "monthly"
