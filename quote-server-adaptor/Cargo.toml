@@ -7,7 +7,7 @@ edition = "2021"
 tokio = { version = "1.29.1", features = ["io-util", "rt-multi-thread", "macros", "net", "sync", "signal"] }
 tonic = "0.9.2"
 prost = "0.11.9"
-tracing = "0.1.37"
+tracing = "0.1.40"
 rand = "0.8.5"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 tracing-opentelemetry = "0.18.0"
