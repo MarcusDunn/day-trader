@@ -221,9 +221,9 @@ fn spawn_commands(
     let start = SystemTime::now();
     let mut join_set = JoinSet::new();
     let commands_by_user = commands.into_iter().map(|it| (it.user(), it)).fold(
-        BTreeMap::new(),
+        BTreeMap::<_, Vec<_>>::new(),
         |mut acc, (user, cmd)| {
-            acc.entry(user).or_insert_with(Vec::new).push(cmd);
+            acc.entry(user).or_default().push(cmd);
             acc
         },
     );

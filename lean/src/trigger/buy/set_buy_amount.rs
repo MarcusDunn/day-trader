@@ -105,7 +105,7 @@ mod tests {
 
     #[sqlx::test]
     async fn test_set_buy_amount_sufficient_funds(pool: PgPool) -> anyhow::Result<()> {
-        add(&pool, "marcus", 200_f64).await?;
+        let _log = add(&pool, "marcus", 200_f64).await?;
 
         let set = set_buy_amount(&pool, "marcus", "AAPL", 100_f64).await;
         assert!(set.is_ok(), "expected ok but was {set:?}");
@@ -131,7 +131,7 @@ mod tests {
 
     #[sqlx::test]
     async fn test_set_buy_with_already_existing_buy(pool: PgPool) -> anyhow::Result<()> {
-        add(&pool, "marcus", 200_f64).await?;
+        let _log = add(&pool, "marcus", 200_f64).await?;
 
         let set = set_buy_amount(&pool, "marcus", "AAPL", 100_f64).await;
         assert!(set.is_ok(), "expected ok but was {set:?}");

@@ -104,8 +104,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_commit_sell_with_pending_sell(pool: PgPool) -> anyhow::Result<()> {
-        add(&pool, "marcus", 200_f64).await?;
-        init_buy(&pool, "marcus", "AAPL", 100_f64, 100_f64).await?;
+        let _log = add(&pool, "marcus", 200_f64).await?;
+        let _log = init_buy(&pool, "marcus", "AAPL", 100_f64, 100_f64).await?;
         commit_buy(&pool, "marcus").await?;
 
         init_sell::init_sell(&pool, "marcus", "AAPL", 100_f64, 100_f64).await?;
@@ -145,8 +145,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_commit_sell_with_expired_queued_sell(pool: PgPool) -> anyhow::Result<()> {
-        add(&pool, "marcus", 200_f64).await?;
-        init_buy(&pool, "marcus", "AAPL", 100_f64, 100_f64).await?;
+        let _log = add(&pool, "marcus", 200_f64).await?;
+        let _log = init_buy(&pool, "marcus", "AAPL", 100_f64, 100_f64).await?;
         commit_buy(&pool, "marcus").await?;
 
         init_sell::init_sell(&pool, "marcus", "AAPL", 100_f64, 100_f64).await?;

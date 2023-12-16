@@ -73,8 +73,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_cancel_set_buy_with_buy(pool: PgPool) -> anyhow::Result<()> {
-        add(&pool, "marcus", 100_f64).await?;
-        set_buy_amount(&pool, "marcus", "APPL", 100_f64).await?;
+        let _log = add(&pool, "marcus", 100_f64).await?;
+        let _log = set_buy_amount(&pool, "marcus", "APPL", 100_f64).await?;
 
         let cancel = cancel_set_buy(&pool, "marcus", "APPL").await;
         assert!(cancel.is_ok(), "expected ok but was {cancel:?}");

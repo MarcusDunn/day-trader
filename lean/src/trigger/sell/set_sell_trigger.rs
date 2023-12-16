@@ -33,8 +33,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_set_sell_trigger_no_set_amount(pool: PgPool) -> anyhow::Result<()> {
-        add(&pool, "marcus", 100.0).await?;
-        init_buy(&pool, "marcus", "TEST", 50_f64, 100.0).await?;
+        let _log = add(&pool, "marcus", 100.0).await?;
+        let _log = init_buy(&pool, "marcus", "TEST", 50_f64, 100.0).await?;
         commit_buy(&pool, "marcus").await?;
 
         let result = set_sell_trigger(&pool, "marcus", "TEST", 1.0).await;
@@ -55,8 +55,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_set_sell_trigger_with_set_amount(pool: PgPool) -> anyhow::Result<()> {
-        add(&pool, "marcus", 100.0).await?;
-        init_buy(&pool, "marcus", "TEST", 50_f64, 100.0).await?;
+        let _log = add(&pool, "marcus", 100.0).await?;
+        let _log = init_buy(&pool, "marcus", "TEST", 50_f64, 100.0).await?;
         commit_buy(&pool, "marcus").await?;
 
         set_sell_amount(&pool, "marcus", "TEST", 1_f64).await?;

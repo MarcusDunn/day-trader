@@ -147,8 +147,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_init_sell_with_stocks_to_sell(pool: PgPool) -> anyhow::Result<()> {
-        crate::add::add(&pool, "marcus", 100_f64).await?;
-        crate::buy::init_buy(&pool, "marcus", "APPL", 50_f64, 100_f64).await?;
+        let _log = crate::add::add(&pool, "marcus", 100_f64).await?;
+        let _log = crate::buy::init_buy(&pool, "marcus", "APPL", 50_f64, 100_f64).await?;
         crate::buy::commit_buy(&pool, "marcus").await?;
 
         let sell = init_sell(&pool, "marcus", "APPL", 50_f64, 100_f64).await;
@@ -197,8 +197,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_init_buy_with_insufficient_stocks_to_sell(pool: PgPool) -> anyhow::Result<()> {
-        crate::add::add(&pool, "marcus", 100_f64).await?;
-        crate::buy::init_buy(&pool, "marcus", "APPL", 50_f64, 100_f64).await?;
+        let _log = crate::add::add(&pool, "marcus", 100_f64).await?;
+        let _log = crate::buy::init_buy(&pool, "marcus", "APPL", 50_f64, 100_f64).await?;
         crate::buy::commit_buy(&pool, "marcus").await?;
 
         let sell = init_sell(&pool, "marcus", "APPL", 50_f64, 200_f64).await;
@@ -231,8 +231,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_override_queued_sell(pool: PgPool) -> anyhow::Result<()> {
-        crate::add::add(&pool, "marcus", 400_f64).await?;
-        crate::buy::init_buy(&pool, "marcus", "APPL", 50_f64, 200_f64).await?;
+        let _log = crate::add::add(&pool, "marcus", 400_f64).await?;
+        let _log = crate::buy::init_buy(&pool, "marcus", "APPL", 50_f64, 200_f64).await?;
         crate::buy::commit_buy(&pool, "marcus").await?;
 
         init_sell(&pool, "marcus", "APPL", 50_f64, 200_f64).await?;

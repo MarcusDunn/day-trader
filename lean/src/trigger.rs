@@ -165,7 +165,7 @@ mod tests {
             amount_dollars: 100.0,
         };
 
-        add(&pool, "test", 100_f64).await?;
+        let _log = add(&pool, "test", 100_f64).await?;
 
         execute_buy_triggers(&pool, vec![trigger], "APPL", 1_f64).await?;
 

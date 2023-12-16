@@ -40,9 +40,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_set_buy_trigger_with_set_buy(pool: PgPool) -> anyhow::Result<()> {
-        add(&pool, "marcus", 1000_f64).await?;
-
-        set_buy_amount(&pool, "marcus", "AAPL", 100_f64).await?;
+        let _log = add(&pool, "marcus", 1000_f64).await?;
+        let _log = set_buy_amount(&pool, "marcus", "AAPL", 100_f64).await?;
         let set = set_buy_trigger(&pool, "marcus", "AAPL", 100_f64).await;
         assert!(set.is_ok(), "expected error but was {set:?}");
 

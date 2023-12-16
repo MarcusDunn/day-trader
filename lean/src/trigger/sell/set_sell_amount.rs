@@ -109,8 +109,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_set_sell_amount_with_stock(pool: PgPool) -> anyhow::Result<()> {
-        add(&pool, "marcus", 1000_f64).await?;
-        init_buy(&pool, "marcus", "AAPL", 50_f64, 100_f64).await?;
+        let _log = add(&pool, "marcus", 1000_f64).await?;
+        let _log = init_buy(&pool, "marcus", "AAPL", 50_f64, 100_f64).await?;
         commit_buy(&pool, "marcus").await?;
 
         let stock = sqlx::query!(
@@ -153,8 +153,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_set_sell_amount_with_prev_sell_trigger(pool: PgPool) -> anyhow::Result<()> {
-        add(&pool, "marcus", 1000_f64).await?;
-        init_buy(&pool, "marcus", "AAPL", 50_f64, 100_f64).await?;
+        let _log = add(&pool, "marcus", 1000_f64).await?;
+        let _log = init_buy(&pool, "marcus", "AAPL", 50_f64, 100_f64).await?;
         commit_buy(&pool, "marcus").await?;
 
         set_sell_amount(&pool, "marcus", "AAPL", 2_f64).await?;

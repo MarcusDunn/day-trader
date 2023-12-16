@@ -39,7 +39,7 @@ mod tests {
 
     #[sqlx::test]
     async fn test_sufficient_funds(pool: PgPool) -> anyhow::Result<()> {
-        crate::add::add(&pool, "marcus", 100_f64).await?;
+        let _log = crate::add::add(&pool, "marcus", 100_f64).await?;
         let buy = init_buy(&pool, "marcus", "APPL", 50_f64, 100_f64).await;
 
         assert!(buy.is_ok(), "expected ok but was {buy:?}");
@@ -75,7 +75,7 @@ mod tests {
 
     #[sqlx::test]
     async fn test_insufficient_funds(pool: PgPool) -> anyhow::Result<()> {
-        crate::add::add(&pool, "marcus", 100_f64).await?;
+        let _log = crate::add::add(&pool, "marcus", 100_f64).await?;
         let buy = init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await;
         assert!(buy.is_err(), "expected error but was {buy:?}");
         Ok(())
@@ -83,8 +83,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_override_queued_buy(pool: PgPool) -> anyhow::Result<()> {
-        crate::add::add(&pool, "marcus", 400_f64).await?;
-        init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
+        let _log = crate::add::add(&pool, "marcus", 400_f64).await?;
+        let _log = init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
 
         let buy = init_buy(&pool, "marcus", "TSLA", 50_f64, 100_f64).await;
 
@@ -124,8 +124,8 @@ mod tests {
 
     #[sqlx::test]
     async fn init_buy_removes_funds(pool: PgPool) -> anyhow::Result<()> {
-        crate::add::add(&pool, "marcus", 400_f64).await?;
-        init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
+        let _log = crate::add::add(&pool, "marcus", 400_f64).await?;
+        let _log = init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
 
         let Balance { balance } = sqlx::query_as!(
             Balance,
@@ -167,8 +167,8 @@ mod tests {
 
     #[sqlx::test]
     async fn commit_buy_with_buy(pool: PgPool) -> anyhow::Result<()> {
-        crate::add::add(&pool, "marcus", 400_f64).await?;
-        init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
+        let _log = crate::add::add(&pool, "marcus", 400_f64).await?;
+        let _log = init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
         let buy = commit_buy(&pool, "marcus").await;
         assert!(buy.is_ok(), "expected error but was {buy:?}");
 
@@ -202,9 +202,9 @@ mod tests {
 
     #[sqlx::test]
     async fn commit_timed_out_buy(pool: PgPool) -> anyhow::Result<()> {
-        crate::add::add(&pool, "marcus", 400_f64).await?;
+        let _log = crate::add::add(&pool, "marcus", 400_f64).await?;
 
-        init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
+        let _log = init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
 
         sqlx::query!("UPDATE queued_buy SET time_created = time_created - interval '6 minutes' WHERE user_id = 'marcus'")
             .execute(&pool)
@@ -244,8 +244,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_cancel_buy_with_pending_buy(pool: PgPool) -> anyhow::Result<()> {
-        crate::add::add(&pool, "marcus", 400_f64).await?;
-        init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
+        let _log = crate::add::add(&pool, "marcus", 400_f64).await?;
+        let _log = init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
         let cancel = cancel_buy(&pool, "marcus").await;
         assert!(cancel.is_ok(), "expected ok but was {cancel:?}");
 
@@ -275,8 +275,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_cancel_buy_with_expired_queued_buy(pool: PgPool) -> anyhow::Result<()> {
-        crate::add::add(&pool, "marcus", 400_f64).await?;
-        init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
+        let _log = crate::add::add(&pool, "marcus", 400_f64).await?;
+        let _log = init_buy(&pool, "marcus", "AAPL", 50_f64, 200_f64).await?;
 
         sqlx::query!("UPDATE queued_buy SET time_created = now() - interval '6 minutes' WHERE user_id = 'marcus'")
             .execute(&pool)

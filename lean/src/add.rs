@@ -26,7 +26,7 @@ mod tests {
 
     #[sqlx::test]
     async fn test_add_new_user(pool: PgPool) -> anyhow::Result<()> {
-        add(&pool, "marcus", 100_f64).await?;
+        let _log = add(&pool, "marcus", 100_f64).await?;
 
         struct Trader {
             user_id: String,
@@ -48,7 +48,7 @@ mod tests {
     async fn test_add_old_user(pool: PgPool) -> anyhow::Result<()> {
         let add1 = add(&pool, "marcus", 100_f64);
         let add2 = add(&pool, "marcus", 100_f64);
-        tokio::try_join!(add1, add2)?;
+        let (_log1, _log2) = tokio::try_join!(add1, add2)?;
 
         struct Trader {
             user_id: String,
