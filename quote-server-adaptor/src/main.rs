@@ -1,9 +1,8 @@
-use opentelemetry::runtime::Tokio;
-use opentelemetry::sdk::Resource;
+use opentelemetry_sdk::runtime::Tokio;
+use opentelemetry_sdk::Resource;
 use opentelemetry::{global, KeyValue};
 
-use opentelemetry::sdk::trace::Config;
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::trace::Config;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};
 use quote_server_adaptor::{QuoteRequest, QuoteResponse};
 use rand::distributions::Alphanumeric;
@@ -31,7 +30,7 @@ use tracing_subscriber::{EnvFilter, Layer};
 async fn main() -> Result<(), Box<dyn Error>> {
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
-        .with_exporter(opentelemetry_otlp::new_exporter().tonic().with_env())
+        .with_exporter(opentelemetry_otlp::new_exporter().tonic())
         .with_trace_config(
             Config::default().with_resource(Resource::new(vec![KeyValue::new(
                 "service.name",
