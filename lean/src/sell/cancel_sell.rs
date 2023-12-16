@@ -1,3 +1,4 @@
+use std::ops::DerefMut;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::{PgPool, Postgres, Transaction};
 
@@ -32,7 +33,7 @@ async fn update_stock_holdings(
         record.stock_symbol,
         record.amount_dollars / record.quoted_price
     )
-    .execute(transaction)
+    .execute(transaction.deref_mut())
     .await?;
 
     Ok(())
@@ -53,7 +54,7 @@ async fn delete_queued_sell(
         "DELETE FROM queued_sell WHERE user_id = $1 RETURNING amount_dollars, stock_symbol, quoted_price",
         user_id
     )
-        .fetch_one(transaction)
+        .fetch_one(transaction.deref_mut())
         .await?;
     Ok(record)
 }
@@ -89,13 +90,13 @@ mod tests {
             "marcus",
             "AAPL"
         )
-        .fetch_one(&pool)
+        .fetch_one(&mut *pool)
         .await?;
 
         assert_eq!(stock.amount, 1_f64);
 
         let queued_sell = sqlx::query!("SELECT * FROM queued_sell WHERE user_id = $1", "marcus")
-            .fetch_optional(&pool)
+            .fetch_optional(&mut *pool)
             .await?;
 
         assert!(

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO queued_sell (user_id, stock_symbol, quoted_price, amount_dollars)\n        VALUES ($1, $2, $3, $4)\n        ON CONFLICT (user_id)\n        DO UPDATE SET\n            stock_symbol = $2,\n            quoted_price = $3,\n            amount_dollars = $4,\n            time_created = NOW()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Float8",
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9842e265cf3f4009847049f64e60f8591c319bcbb7131975b0d21940e8c8d32f"
+}

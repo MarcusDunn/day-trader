@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM buy_trigger WHERE owner_id = $1 AND stock_symbol = $2 RETURNING amount_dollars",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "amount_dollars",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "745eb81b99a74f49dcc4b587bd42fe8c0bf3e5339b12420dbfac087b9a166a76"
+}

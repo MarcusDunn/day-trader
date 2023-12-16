@@ -1,6 +1,7 @@
+use std::ops::DerefMut;
 use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
-use sqlx::{PgPool, Postgres, Transaction};
+use sqlx::{PgConnection, PgPool, Postgres, Transaction};
 
 #[derive(Debug, PartialEq)]
 pub struct AmountDollars {
@@ -44,6 +45,7 @@ async fn insert_queued_buy(
     amount_dollars: f64,
     transaction: &mut Transaction<'static, Postgres>,
 ) -> anyhow::Result<()> {
+    let connection: &mut PgConnection = &mut *transaction;
     sqlx::query!(
         "INSERT INTO queued_buy (user_id, stock_symbol, quoted_price, amount_dollars)\
      VALUES ($1, $2, $3, $4)",
@@ -52,7 +54,7 @@ async fn insert_queued_buy(
         quoted_price,
         amount_dollars,
     )
-    .execute(transaction)
+    .execute(connection)
     .await?;
 
     Ok(())
@@ -64,12 +66,13 @@ async fn update_trader_balance(
     amount_dollars: f64,
     transaction: &mut Transaction<'static, Postgres>,
 ) -> anyhow::Result<AccountTransaction> {
+    let connection = transaction.deref_mut();
     let postgres_result = sqlx::query!(
         "UPDATE trader SET balance = balance - $1 WHERE user_id = $2 AND balance >= $1",
         amount_dollars,
         user_id,
     )
-    .execute(transaction)
+    .execute(connection)
     .await?;
 
     if postgres_result.rows_affected() == 0 {
@@ -84,12 +87,13 @@ async fn delete_and_maybe_update(
     user_id: &str,
     transaction: &mut Transaction<'static, Postgres>,
 ) -> anyhow::Result<AccountTransaction> {
+    let connection = transaction.deref_mut();
     let old_buy = sqlx::query_as!(
         AmountDollars,
         "DELETE FROM queued_buy WHERE user_id = $1 RETURNING amount_dollars",
         user_id
     )
-    .fetch_optional(&mut *transaction)
+    .fetch_optional(&mut *connection)
     .await?;
 
     match old_buy {
@@ -99,7 +103,7 @@ async fn delete_and_maybe_update(
                 amount_dollars,
                 user_id
             )
-            .execute(&mut *transaction)
+            .execute(&mut *connection)
             .await?;
             Ok(AccountTransaction(amount_dollars))
         }

@@ -1,3 +1,4 @@
+use std::ops::DerefMut;
 use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::{PgPool, Postgres, Transaction};
@@ -30,7 +31,7 @@ async fn update_trader_balance(
         record.amount_dollars,
         user_id
     )
-    .execute(transaction)
+    .execute(transaction.deref_mut())
     .await?;
 
     Ok(AccountTransaction(record.amount_dollars))
@@ -51,7 +52,7 @@ async fn delete_buy_trigger(
         user_id,
         stock_symbol
     )
-        .fetch_one(transaction)
+        .fetch_one(transaction.deref_mut())
         .await?;
 
     Ok(record)

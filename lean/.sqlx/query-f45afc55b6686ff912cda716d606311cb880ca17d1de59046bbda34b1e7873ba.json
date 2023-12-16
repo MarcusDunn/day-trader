@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO queued_buy (user_id, stock_symbol, quoted_price, amount_dollars)VALUES ($1, $2, $3, $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Float8",
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f45afc55b6686ff912cda716d606311cb880ca17d1de59046bbda34b1e7873ba"
+}

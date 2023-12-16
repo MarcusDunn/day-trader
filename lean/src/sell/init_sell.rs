@@ -1,3 +1,4 @@
+use std::ops::{Deref, DerefMut};
 use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
 use sqlx::postgres::PgQueryResult;
@@ -56,6 +57,7 @@ async fn resolve_old_queued_sell(
     user_id: &str,
     transaction: &mut Transaction<'static, Postgres>,
 ) -> anyhow::Result<()> {
+    let transaction = transaction.deref_mut();
     if let Some(record) = sqlx::query!("DELETE FROM queued_sell WHERE user_id = $1 returning quoted_price, amount_dollars, stock_symbol", user_id)
         .fetch_optional(&mut *transaction)
         .await? {
@@ -91,7 +93,7 @@ async fn created_queued_sell(
         quote,
         dollar_amount
     )
-    .execute(transaction)
+    .execute(transaction.deref_mut())
     .await?;
 
     Ok(())
@@ -117,7 +119,7 @@ async fn update_stock_holdings(
         user_id,
         stock_symbol
     )
-    .execute(transaction)
+    .execute(transaction.deref_mut())
     .await?;
 
     Ok(query_result)
@@ -161,7 +163,7 @@ mod tests {
             "marcus",
             "APPL",
         )
-        .fetch_optional(&pool)
+        .fetch_optional(&mut *pool)
         .await?
         .expect("expected sell to exist");
 
@@ -177,7 +179,7 @@ mod tests {
         );
 
         let stock = sqlx::query_as!(Stock, "SELECT * FROM stock WHERE owner_id = 'marcus'")
-            .fetch_optional(&pool)
+            .fetch_optional(&mut *pool)
             .await?
             .expect("expected stock to exist");
 
@@ -203,7 +205,7 @@ mod tests {
         assert!(sell.is_err(), "expected error but was {sell:?}");
 
         let queued_sell = sqlx::query!("SELECT * FROM queued_sell WHERE user_id = 'marcus'")
-            .fetch_optional(&pool)
+            .fetch_optional(&mut *pool)
             .await?;
 
         assert!(
@@ -212,7 +214,7 @@ mod tests {
         );
 
         let stock = sqlx::query_as!(Stock, "SELECT * FROM stock WHERE owner_id = 'marcus'")
-            .fetch_one(&pool)
+            .fetch_one(&mut *pool)
             .await?;
 
         assert_eq!(

@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM queued_sell WHERE user_id = $1 RETURNING amount_dollars, time_created, quoted_price, stock_symbol",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "amount_dollars",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 1,
+        "name": "time_created",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 2,
+        "name": "quoted_price",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "stock_symbol",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "667ed4c9ceccf223358b6665d30f028ac3ca594ad1ff8f99b1801144aae86417"
+}

@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    owner_id as username,\n                    stock_symbol as stock,\n                    amount_stock as shares_to_sell,\n                    trigger_price as \"trigger_amount!\"\n                FROM sell_trigger\n                WHERE owner_id = $1 AND trigger_price IS NOT NULL\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "stock",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "shares_to_sell",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "trigger_amount!",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "61773af25838b0d523415f08caf580e2184c19ed177c3d5f2e9c30baa3f222d4"
+}

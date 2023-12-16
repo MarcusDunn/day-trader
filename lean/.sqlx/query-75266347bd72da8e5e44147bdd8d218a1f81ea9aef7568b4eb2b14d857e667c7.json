@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO buy_trigger (owner_id, stock_symbol, amount_dollars) VALUES ($1, $2, $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "75266347bd72da8e5e44147bdd8d218a1f81ea9aef7568b4eb2b14d857e667c7"
+}

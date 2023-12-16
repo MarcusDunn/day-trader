@@ -127,15 +127,16 @@ async fn main() -> anyhow::Result<()> {
     );
 
     Server::builder()
-        .layer(tower_http::request_id::SetRequestIdLayer::x_request_id(
-            MakeRequestUuid,
-        ))
-        .layer(metrics_layer)
-        .layer(
-            tower_http::trace::TraceLayer::new_for_grpc()
-                .on_response(DefaultOnResponse::default().latency_unit(LatencyUnit::Micros))
-                .make_span_with(DefaultMakeSpan::new().include_headers(true)),
-        )
+        // https://github.com/hyperium/tonic/issues/1579
+        // .layer(tower_http::request_id::SetRequestIdLayer::x_request_id(
+        //     MakeRequestUuid,
+        // ))
+        // .layer(metrics_layer)
+        // .layer(
+        //     tower_http::trace::TraceLayer::new_for_grpc()
+        //         .on_response(DefaultOnResponse::default().latency_unit(LatencyUnit::Micros))
+        //         .make_span_with(DefaultMakeSpan::new().include_headers(true)),
+        // )
         .add_service(DayTraderServer::new(DayTraderImpl::new(pool, quote_client)))
         .serve_with_shutdown(server_addr, async {
             tokio::signal::ctrl_c().await.unwrap();

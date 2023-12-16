@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n    INSERT INTO log_entry (timestamp, server, transaction_num, username, log) \n    SELECT * FROM UNNEST ($1::timestamp[],$2::text[],$3::int[],$4::text[],$5::jsonb[])\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TimestampArray",
+        "TextArray",
+        "Int4Array",
+        "TextArray",
+        "JsonbArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "592b2cf584e4e3433508fc4375666734f596e747341513c090252fecc21ef27d"
+}

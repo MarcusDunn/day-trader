@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE trader SET balance = balance + $1 WHERE user_id = $2;\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "89a57d157606bce9674a48092115a9ba055aa8caff90cff417a2ec7bbce01a22"
+}

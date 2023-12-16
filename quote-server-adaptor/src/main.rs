@@ -19,6 +19,7 @@ use tokio::net::TcpStream;
 use tokio::task::JoinSet;
 use tonic::transport::Server;
 use tonic::{async_trait, Request, Response, Status};
+use tower::ServiceBuilder;
 use tower_http::trace::{DefaultOnRequest, DefaultOnResponse};
 use tower_http::LatencyUnit;
 use tracing::{info, instrument};
@@ -64,15 +65,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .parse()?;
 
     let server = Server::builder()
-        .layer(
-            tower_http::trace::TraceLayer::new_for_grpc()
-                .on_request(DefaultOnRequest::default().level(tracing::Level::INFO))
-                .on_response(
-                    DefaultOnResponse::default()
-                        .level(tracing::Level::INFO)
-                        .latency_unit(LatencyUnit::Micros),
-                ),
-        )
+        // https://github.com/hyperium/tonic/issues/1579
+        // .layer(
+        //         tower_http::trace::TraceLayer::new_for_grpc()
+        //             .on_request(DefaultOnRequest::default().level(tracing::Level::INFO))
+        //             .on_response(
+        //                 DefaultOnResponse::default()
+        //                     .level(tracing::Level::INFO)
+        //                     .latency_unit(LatencyUnit::Micros),
+        //             )
+        // )
         .add_service(QuoteServer::new(quoter))
         .serve_with_shutdown(addr, async {
             tokio::signal::ctrl_c().await.unwrap();
@@ -256,7 +258,7 @@ where
     W: AsyncWrite + Unpin + Debug,
     R: AsyncBufRead + Unpin + Debug,
 {
-    if (writer.write_all(message.as_bytes()).await).is_err() {
+    if writer.write_all(message.as_bytes()).await.is_err() {
         return Err("Failed to write to socket.");
     }
 

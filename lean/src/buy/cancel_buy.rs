@@ -1,3 +1,4 @@
+use std::ops::DerefMut;
 use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::types::time::{OffsetDateTime, PrimitiveDateTime};
@@ -42,7 +43,7 @@ async fn update_trader_balance(
         amount_dollars_time_created.amount_dollars,
         user_id
     )
-    .execute(transaction)
+    .execute(transaction.deref_mut())
     .await?;
 
     Ok(AccountTransaction(
@@ -60,7 +61,7 @@ async fn delete_queued_buy(
         "DELETE FROM queued_buy WHERE user_id = $1 RETURNING amount_dollars, time_created",
         user_id
     )
-        .fetch_optional(transaction)
+        .fetch_optional(transaction.deref_mut())
         .await? else {
         anyhow::bail!("no queued buy for user_id {user_id}");
     };

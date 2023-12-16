@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE sell_trigger SET trigger_price = $1 WHERE owner_id = $2 AND stock_symbol = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "70bc7b299211efca9ed60559752901da8bf354a7547b715eed0d4941e1a21874"
+}

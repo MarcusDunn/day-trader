@@ -1,3 +1,4 @@
+use std::ops::DerefMut;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::types::time::{OffsetDateTime, PrimitiveDateTime};
 use sqlx::{PgPool, Postgres, Transaction};
@@ -38,12 +39,13 @@ async fn update_trader_balance(
     transaction: &mut Transaction<'static, Postgres>,
     queued_buy_no_user_id: &QueuedBuyNoUserId,
 ) -> anyhow::Result<()> {
+    let connection = transaction.deref_mut();
     sqlx::query!(
         "UPDATE trader SET balance = balance + $1 WHERE user_id = $2",
         queued_buy_no_user_id.amount_dollars,
         user_id
     )
-    .execute(transaction)
+    .execute(&mut *connection)
     .await?;
     Ok(())
 }
@@ -54,13 +56,14 @@ async fn update_stock(
     transaction: &mut Transaction<'static, Postgres>,
     queued_buy_no_user_id: QueuedBuyNoUserId,
 ) -> anyhow::Result<()> {
+    let connection = transaction.deref_mut();
     sqlx::query!(
     "INSERT INTO stock (owner_id, stock_symbol, amount) VALUES ($1, $2, $3) ON CONFLICT (owner_id, stock_symbol) DO UPDATE SET amount = stock.amount + $3",
     user_id,
     queued_buy_no_user_id.stock_symbol,
     queued_buy_no_user_id.amount_dollars / queued_buy_no_user_id.quoted_price,
 )
-        .execute(transaction)
+        .execute(&mut *connection)
         .await?;
 
     Ok(())
@@ -71,12 +74,13 @@ async fn delete_queued_buy(
     user_id: &str,
     transaction: &mut Transaction<'static, Postgres>,
 ) -> anyhow::Result<QueuedBuyNoUserId> {
+    let connection = transaction.deref_mut();
     let Some(queued_buy_no_user_id) = sqlx::query_as!(
         QueuedBuyNoUserId,
         "DELETE FROM queued_buy WHERE user_id = $1 RETURNING stock_symbol, quoted_price, amount_dollars, time_created",
         user_id
     )
-        .fetch_optional(transaction)
+        .fetch_optional(&mut *connection)
         .await? else {
         anyhow::bail!("no queued buy for user_id {user_id}");
     };

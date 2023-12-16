@@ -1,3 +1,4 @@
+use std::ops::DerefMut;
 use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
 use sqlx::postgres::PgQueryResult;
@@ -40,7 +41,7 @@ async fn insert_sell_trigger(
         stock_symbol,
         amount_stock
     )
-    .execute(transaction)
+    .execute(transaction.deref_mut())
     .await?;
 
     Ok(())
@@ -58,7 +59,7 @@ async fn remove_stock(
         amount_stock,
         user_id,
         stock_symbol
-    ).execute(transaction).await?;
+    ).execute(transaction.deref_mut()).await?;
     Ok(result)
 }
 
@@ -68,6 +69,7 @@ async fn remove_prev_sell_trigger(
     stock_symbol: &str,
     transaction: &mut Transaction<'static, Postgres>,
 ) -> anyhow::Result<()> {
+    let transaction = transaction.deref_mut();
     if let Some(record) = sqlx::query!(
         "DELETE FROM sell_trigger WHERE owner_id = $1 AND stock_symbol = $2 RETURNING amount_stock",
         user_id,

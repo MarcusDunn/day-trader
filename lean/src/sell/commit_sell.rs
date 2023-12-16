@@ -1,3 +1,4 @@
+use std::ops::DerefMut;
 use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
@@ -38,7 +39,7 @@ async fn update_balance(
         queued_sell.amount_dollars,
         user_id
     )
-    .execute(transaction)
+    .execute(transaction.deref_mut())
     .await?;
 
     Ok(AccountTransaction(queued_sell.amount_dollars))
@@ -56,7 +57,7 @@ async fn restore_stock(
         user_id,
         queued_sell.stock_symbol
     )
-    .execute(transaction)
+    .execute(transaction.deref_mut())
     .await?;
 
     Ok(())
@@ -78,7 +79,7 @@ async fn delete_queued_sell_by_user(
         "DELETE FROM queued_sell WHERE user_id = $1 RETURNING amount_dollars, time_created, quoted_price, stock_symbol",
         user_id
     )
-        .fetch_optional(transaction)
+        .fetch_optional(transaction.deref_mut())
         .await? else {
         bail!("no queued sell for user_id {user_id}");
     };

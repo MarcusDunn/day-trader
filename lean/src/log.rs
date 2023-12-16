@@ -122,7 +122,7 @@ impl Logger {
             Some(c) => c,
         };
 
-        save_log_entry_bulk(&mut conn, timestamp, server, transaction_num, username, log).await?;
+        save_log_entry_bulk(&mut *conn, timestamp, server, transaction_num, username, log).await?;
 
         *connection = Some(conn);
 

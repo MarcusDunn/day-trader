@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO stock (owner_id, stock_symbol, amount) VALUES ($1, $2, $3) ON CONFLICT (owner_id, stock_symbol) DO UPDATE SET amount = stock.amount + $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "67fad622f62c146d64639531cae508b513e0ac300dd7b6457d2f111c59a35b64"
+}

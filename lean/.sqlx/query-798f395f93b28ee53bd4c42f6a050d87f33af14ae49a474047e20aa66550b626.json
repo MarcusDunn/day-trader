@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE trader SET balance = balance - $1 WHERE user_id = $2 AND balance >= $1 RETURNING balance",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "balance",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Float8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "798f395f93b28ee53bd4c42f6a050d87f33af14ae49a474047e20aa66550b626"
+}

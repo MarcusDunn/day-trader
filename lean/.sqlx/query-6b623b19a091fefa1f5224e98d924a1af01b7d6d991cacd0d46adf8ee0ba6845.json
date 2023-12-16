@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT timestamp, server, transaction_num, username, log FROM log_entry WHERE username = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "timestamp",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 1,
+        "name": "server",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "transaction_num",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "log",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6b623b19a091fefa1f5224e98d924a1af01b7d6d991cacd0d46adf8ee0ba6845"
+}

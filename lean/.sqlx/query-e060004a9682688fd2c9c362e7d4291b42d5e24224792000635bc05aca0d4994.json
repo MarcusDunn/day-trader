@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE stock SET amount = amount + $1 WHERE owner_id = $2 AND stock_symbol = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e060004a9682688fd2c9c362e7d4291b42d5e24224792000635bc05aca0d4994"
+}

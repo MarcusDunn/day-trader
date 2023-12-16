@@ -1,3 +1,4 @@
+use std::ops::DerefMut;
 use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
@@ -38,7 +39,7 @@ async fn create_buy_trigger(
         stock_symbol,
         amount_dollars,
     )
-    .execute(transaction)
+    .execute(transaction.deref_mut())
     .await?;
 
     Ok(())
@@ -49,6 +50,7 @@ async fn remove_previous_buy_trigger(
     stock_symbol: &str,
     transaction: &mut Transaction<'static, Postgres>,
 ) -> anyhow::Result<AccountTransaction> {
+    let transaction = transaction.deref_mut();
     Ok(match sqlx::query!("DELETE FROM buy_trigger WHERE owner_id = $1 AND stock_symbol = $2 RETURNING amount_dollars", user_id, stock_symbol)
         .fetch_optional(&mut *transaction)
         .await? {
@@ -78,7 +80,7 @@ async fn remove_requisite_balance(
         amount_dollars,
         user_id,
     )
-        .fetch_one(transaction)
+        .fetch_one(transaction.deref_mut())
         .await?;
 
     if result.balance.is_sign_positive() {
