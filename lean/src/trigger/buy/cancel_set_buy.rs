@@ -1,7 +1,7 @@
-use std::ops::DerefMut;
 use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::{PgPool, Postgres, Transaction};
+use std::ops::DerefMut;
 
 #[tracing::instrument(skip(pool))]
 pub async fn cancel_set_buy(

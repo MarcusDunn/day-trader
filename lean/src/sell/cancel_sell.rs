@@ -1,6 +1,6 @@
-use std::ops::DerefMut;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::{PgPool, Postgres, Transaction};
+use std::ops::DerefMut;
 
 #[tracing::instrument(skip(pool))]
 pub async fn cancel_sell(pool: &PgPool, user_id: String) -> anyhow::Result<()> {

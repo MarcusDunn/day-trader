@@ -42,12 +42,18 @@ async fn delete_sell_trigger(
     user_id: &str,
     stock_symbol: &str,
 ) -> anyhow::Result<Record> {
-    let Some(record) = sqlx::query_as!(Record,
+    let Some(record) =
+        sqlx::query_as!(Record,
         "DELETE FROM sell_trigger WHERE owner_id = $1 AND stock_symbol = $2 RETURNING amount_stock",
         user_id,
         stock_symbol
-    ).fetch_optional(pool).await? else {
-        return Err(anyhow::anyhow!("no sell trigger set for {user_id} {stock_symbol}"));
+    )
+        .fetch_optional(pool)
+        .await?
+    else {
+        return Err(anyhow::anyhow!(
+            "no sell trigger set for {user_id} {stock_symbol}"
+        ));
     };
 
     Ok(record)

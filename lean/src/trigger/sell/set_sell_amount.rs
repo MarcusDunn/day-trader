@@ -1,8 +1,8 @@
-use std::ops::DerefMut;
 use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
 use sqlx::postgres::PgQueryResult;
 use sqlx::{PgPool, Postgres, Transaction};
+use std::ops::DerefMut;
 
 #[tracing::instrument(skip_all)]
 pub async fn set_sell_amount(

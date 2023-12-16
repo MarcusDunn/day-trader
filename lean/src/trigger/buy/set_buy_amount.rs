@@ -1,7 +1,7 @@
-use std::ops::DerefMut;
 use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
+use std::ops::DerefMut;
 
 use sqlx::{PgPool, Postgres, Transaction};
 

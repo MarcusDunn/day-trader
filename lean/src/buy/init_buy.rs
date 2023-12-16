@@ -1,7 +1,7 @@
-use std::ops::DerefMut;
 use crate::log::AccountTransaction;
 use crate::{begin_transaction, commit_transaction};
 use sqlx::{PgConnection, PgPool, Postgres, Transaction};
+use std::ops::DerefMut;
 
 #[derive(Debug, PartialEq)]
 pub struct AmountDollars {
