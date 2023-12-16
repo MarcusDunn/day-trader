@@ -19,9 +19,7 @@ use tokio::net::TcpStream;
 use tokio::task::JoinSet;
 use tonic::transport::Server;
 use tonic::{async_trait, Request, Response, Status};
-use tower::ServiceBuilder;
-use tower_http::trace::{DefaultOnRequest, DefaultOnResponse};
-use tower_http::LatencyUnit;
+
 use tracing::{info, instrument};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
