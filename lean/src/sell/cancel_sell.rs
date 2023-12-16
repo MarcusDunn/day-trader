@@ -90,13 +90,13 @@ mod tests {
             "marcus",
             "AAPL"
         )
-        .fetch_one(&mut *pool)
+        .fetch_one(&pool)
         .await?;
 
         assert_eq!(stock.amount, 1_f64);
 
         let queued_sell = sqlx::query!("SELECT * FROM queued_sell WHERE user_id = $1", "marcus")
-            .fetch_optional(&mut *pool)
+            .fetch_optional(&pool)
             .await?;
 
         assert!(

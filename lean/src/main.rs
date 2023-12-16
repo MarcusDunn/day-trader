@@ -9,8 +9,6 @@ use std::env;
 use std::time::Duration;
 use tonic::transport::{Channel, Server};
 
-
-
 use tracing::{info, warn};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::prelude::*;

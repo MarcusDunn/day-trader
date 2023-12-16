@@ -1,6 +1,6 @@
+use opentelemetry::{global, KeyValue};
 use opentelemetry_sdk::runtime::Tokio;
 use opentelemetry_sdk::Resource;
-use opentelemetry::{global, KeyValue};
 
 use opentelemetry_sdk::trace::Config;
 use quote_server_adaptor::quote_server::{Quote, QuoteServer};

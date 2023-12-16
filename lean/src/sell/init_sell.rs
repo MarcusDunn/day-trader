@@ -2,7 +2,7 @@ use crate::{begin_transaction, commit_transaction};
 use anyhow::bail;
 use sqlx::postgres::PgQueryResult;
 use sqlx::{PgPool, Postgres, Transaction};
-use std::ops::{DerefMut};
+use std::ops::DerefMut;
 
 #[derive(PartialEq, Debug)]
 struct QueuedSell {
@@ -163,7 +163,7 @@ mod tests {
             "marcus",
             "APPL",
         )
-        .fetch_optional(&mut *pool)
+        .fetch_optional(&pool)
         .await?
         .expect("expected sell to exist");
 
@@ -179,7 +179,7 @@ mod tests {
         );
 
         let stock = sqlx::query_as!(Stock, "SELECT * FROM stock WHERE owner_id = 'marcus'")
-            .fetch_optional(&mut *pool)
+            .fetch_optional(&pool)
             .await?
             .expect("expected stock to exist");
 
@@ -196,7 +196,7 @@ mod tests {
     }
 
     #[sqlx::test]
-    fn test_init_buy_with_insufficient_stocks_to_sell(pool: PgPool) -> anyhow::Result<()> {
+    async fn test_init_buy_with_insufficient_stocks_to_sell(pool: PgPool) -> anyhow::Result<()> {
         crate::add::add(&pool, "marcus", 100_f64).await?;
         crate::buy::init_buy(&pool, "marcus", "APPL", 50_f64, 100_f64).await?;
         crate::buy::commit_buy(&pool, "marcus").await?;
@@ -205,7 +205,7 @@ mod tests {
         assert!(sell.is_err(), "expected error but was {sell:?}");
 
         let queued_sell = sqlx::query!("SELECT * FROM queued_sell WHERE user_id = 'marcus'")
-            .fetch_optional(&mut *pool)
+            .fetch_optional(&pool)
             .await?;
 
         assert!(
@@ -214,7 +214,7 @@ mod tests {
         );
 
         let stock = sqlx::query_as!(Stock, "SELECT * FROM stock WHERE owner_id = 'marcus'")
-            .fetch_one(&mut *pool)
+            .fetch_one(&pool)
             .await?;
 
         assert_eq!(
