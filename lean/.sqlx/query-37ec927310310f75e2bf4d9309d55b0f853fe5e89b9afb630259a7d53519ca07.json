@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM queued_buy WHERE user_id = 'marcus'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "stock_symbol",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "quoted_price",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "amount_dollars",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "time_created",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "37ec927310310f75e2bf4d9309d55b0f853fe5e89b9afb630259a7d53519ca07"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE queued_buy SET time_created = time_created - interval '6 minutes' WHERE user_id = 'marcus'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "712ab6b9397a831489c2f91a790fb8bd70314a8c6fbd21a9139c45b1bac873d9"
+}

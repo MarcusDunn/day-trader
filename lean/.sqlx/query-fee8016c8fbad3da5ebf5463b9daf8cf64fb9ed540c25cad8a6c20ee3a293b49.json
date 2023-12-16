@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM buy_trigger WHERE owner_id = 'marcus' AND stock_symbol = 'APPL'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "owner_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "stock_symbol",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "amount_dollars",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "trigger_price",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "fee8016c8fbad3da5ebf5463b9daf8cf64fb9ed540c25cad8a6c20ee3a293b49"
+}

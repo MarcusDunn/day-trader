@@ -8,9 +8,9 @@ use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::time::Duration;
 use tonic::transport::{Channel, Server};
-use tower_http::request_id::MakeRequestUuid;
-use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse};
-use tower_http::LatencyUnit;
+
+
+
 use tracing::{info, warn};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::prelude::*;
@@ -117,7 +117,7 @@ async fn main() -> anyhow::Result<()> {
         .parse()
         .map_err(|e| anyhow!("failed to parse SERVER_ADDR into an SocketAddr: {e}"))?;
 
-    let (metrics_layer, counter) =
+    let (_metrics_layer, counter) =
         tower_http::metrics::in_flight_requests::InFlightRequestsLayer::pair();
 
     tokio::spawn(
