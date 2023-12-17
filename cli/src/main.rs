@@ -128,7 +128,7 @@ enum CliCommand {
     #[command(flatten)]
     Single(LoadTestCommand),
     /// Run a load test file.
-    File {
+    LoadTest {
         file: PathBuf,
         #[arg(value_enum, default_value_t = Mode::Sequential)]
         mode: Mode,
@@ -258,7 +258,7 @@ enum CommandList {
 
 fn command_list_from_cli_command(command: &CliCommand) -> Result<CommandList, anyhow::Error> {
     Ok(match command {
-        CliCommand::File { file, mode } => {
+        CliCommand::LoadTest { file, mode } => {
             CommandList::List(parse_commands_from_file(file)?, *mode)
         }
         CliCommand::Single(single) => CommandList::List(vec![single.clone()], Mode::Sequential),
