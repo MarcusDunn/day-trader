@@ -9,7 +9,7 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros"] }
-clap = { version = "4.4.11", features = ["derive"] }
+clap = { version = "4.4.12", features = ["derive"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tonic = "0.10.2"
