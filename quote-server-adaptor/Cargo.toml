@@ -18,7 +18,7 @@ tower-http = { version = "0.5.0", features = ["full"] }
 tower = "0.4.13"
 hyper = "1.0.0-rc.3"
 futures = "0.3.28"
-futures-util = "0.3.26"
+futures-util = "0.3.30"
 
 [build-dependencies]
 tonic-build = "0.10.2"
