@@ -17,7 +17,7 @@ sqlx = { version = "0.7.3", features = ["runtime-tokio-rustls", "postgres", "tim
 dotenvy = "0.15.7"
 time = { version = "0.3.31", features = ["formatting"] }
 anyhow = "1.0.70"
-serde = { version = "1.0.160", features = ["derive"] }
+serde = { version = "1.0.196", features = ["derive"] }
 thiserror = "1.0.53"
 serde_json = { version = "1.0.96", features = ["raw_value"] }
 moka = { version = "0.12.1", features = ["future"] }
