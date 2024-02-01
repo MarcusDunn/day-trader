@@ -15,7 +15,7 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["fmt", "env-filter"] }
 sqlx = { version = "0.7.3", features = ["runtime-tokio-rustls", "postgres", "time", "json"] }
 dotenvy = "0.15.7"
-time = { version = "0.3.31", features = ["formatting"] }
+time = { version = "0.3.32", features = ["formatting"] }
 anyhow = "1.0.70"
 serde = { version = "1.0.196", features = ["derive"] }
 thiserror = "1.0.53"
