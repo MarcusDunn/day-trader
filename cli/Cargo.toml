@@ -12,7 +12,7 @@ tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros"] }
 clap = { version = "4.4.18", features = ["derive"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-tonic = "0.10.2"
+tonic = "0.11.0"
 prost = "0.12.3"
 anyhow = "1.0.79"
 thiserror = "1.0.57"
